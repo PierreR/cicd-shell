@@ -126,7 +126,13 @@ refresh_pillar () {
 }
 
 # For efficiency sake, cache the completion result in a dot file
-pepper '*' test.ping | jq '.return[0]' | jq keys | jq -r 'join (" ")' > ".nodes-${zone}"
+cache_completion () {
+    pepper '*' test.ping | jq '.return[0]' | jq keys | jq -r 'join (" ")' > ".nodes-${zone}"
+}
+
+if ! [[ -f ".nodes-${zone}" ]]; then
+    cache_completion
+fi
 
 set +o pipefail
 set +e
