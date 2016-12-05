@@ -39,13 +39,14 @@ You will also need to fetch the `nixpkgs` source for https://github.com/CIRB/dev
 The name of the command line utility is #cicd#. The first mandatory position argument is the zone (dev, testing, staging or prod):
 
 ```*help*
-→ cicd
-→ cicd ZONE stack
-→ cicd ZONE node
-→ cicd ZONE node run-puppet
-→ cicd ZONE orch
-→ cicd ZONE result
+→ cicd -h <1>
+→ cicd ZONE stack -h
+→ cicd ZONE node -h
+→ cicd ZONE node run-puppet -h
+→ cicd ZONE orch -h
+→ cicd ZONE result -h
 ```
+<1> you can omit `-h` except when the command is valid as is
 
 Here are some examples:
 ```

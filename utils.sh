@@ -8,6 +8,7 @@ set -e
 
 zone=$1
 pgserver="$PGSERVER_URL"
+puppetdb="$PUPPETDB_URL"
 salt_user="$SALTAPI_USER"
 hostgroup="$STACK"
 
@@ -35,12 +36,21 @@ stats () {
     pepper --client=runner manage.status | jq '.return[0] | [.up , .up + .down | length] as $stats | {up, down, stats: "\($stats[0]) up of \($stats[1])"}'
 }
 
+all-facts () {
+    pep '*' grains.item os osrelease fqdn fqdn_ip4 subgroup role | jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", subgroup, role }'
+}
+
 facts () {
     local hostgroup=${1:-"${STACK}"}
     pepper -G "hostgroup:${hostgroup}" grains.item os osrelease fqdn fqdn_ip4 subgroup role | jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", subgroup, role }'
 }
 
 facts_on () {
+    if [ -z "$1" ]; then echo "expect a target"; return; fi
+    pdbquery -t remote  -l "$puppetdb" facts "$1" | jq 'map({"key": .name, value}) | from_entries | {hostgroup, subgroup, role, "os": "\(.operatingsystem) \(.operatingsystemrelease)", "ip": .ipaddress_eth0, uptime}'
+}
+
+_facts_on () {
     if [ -z "$1" ]; then echo "expect a target"; return; fi
     pepper "$1" grains.items | jq "${jq0}"
 }
@@ -126,12 +136,12 @@ refresh_pillar () {
 }
 
 # For efficiency sake, cache the completion result in a dot file
-cache_completion () {
+regenerate_completion () {
     pepper '*' test.ping | jq '.return[0]' | jq keys | jq -r 'join (" ")' > ".nodes-${zone}"
 }
 
 if ! [[ -f ".nodes-${zone}" ]]; then
-    cache_completion
+    regenerate_completion
 fi
 
 set +o pipefail
@@ -179,7 +189,7 @@ _help_completion () {
             ;;
     esac
 }
-complete -F _pep_completion pepper data_on run_puppet_on du_on facts_on
+complete -F _pep_completion pepper data_on run_puppet_on du_on facts_on _facts_on
 complete -F _hostgroup_completion ping facts
 complete -F _help_topic commands_for
 complete -F _help_completion help_for

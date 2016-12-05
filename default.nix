@@ -1,13 +1,14 @@
-{ salt-user, salt-pass, salt-url, pgserver-url, zone, stack }:
+{ salt-user, salt-pass, salt-url, pgserver-url, puppetdb-url, zone, stack }:
 with import <nixpkgs> {};
 stdenv.mkDerivation {
   name = "pepper-env";
-  buildInputs = [ pepper jq];
+  buildInputs = [ pepper jq haskellPackages.language-puppet];
   shellHook = ''
   export SALTAPI_USER="${salt-user}"
   export SALTAPI_PASS="${salt-pass}"
   export SALTAPI_URL="${salt-url}"
   export PGSERVER_URL="${pgserver-url}"
+  export PUPPETDB_URL="${puppetdb-url}"
   export ZONE="${zone}"
   export STACK="${stack}"
   export SALTAPI_EAUTH=ldap

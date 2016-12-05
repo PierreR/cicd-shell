@@ -28,24 +28,23 @@ fi
 case $zone in
     "testing")
         SALT_URL="https://saltmaster.sandbox.srv.cirb.lan:8000"
-        ;;
-    "staging")
-        SALT_URL="https://salt.sta.srv.cirb.lan:8000"
-        ;;
-    "prod")
-        SALT_URL="https://salt.prd.srv.cirb.lan:8000"
+        PGSERVER_URL="http://pgserver.sandbox.srv.cirb.lan/saltstack"
+        PUPPETDB_URL="http://puppetdb.sandbox.srv.cirb.lan:8080"
         ;;
     "dev")
         SALT_URL="https://salt.dev.srv.cirb.lan:8000"
-        ;;
-esac
-
-case $zone in
-    "testing")
-        PGSERVER_URL="http://pgserver.sandbox.srv.cirb.lan/saltstack"
-        ;;
-    *)
         PGSERVER_URL="http://pgserver-cicd.prd.srv.cirb.lan/saltstack-${zone}"
+        PUPPETDB_URL="http://puppetdb.prd.srv.cirb.lan:8080"
+        ;;
+    "staging")
+        SALT_URL="https://salt.sta.srv.cirb.lan:8000"
+        PGSERVER_URL="http://pgserver-cicd.prd.srv.cirb.lan/saltstack-${zone}"
+        PUPPETDB_URL="http://puppetdb.prd.srv.cirb.lan:8080"
+        ;;
+    "prod")
+        SALT_URL="https://salt.prd.srv.cirb.lan:8000"
+        PGSERVER_URL="http://pgserver-cicd.prd.srv.cirb.lan/saltstack"
+        PUPPETDB_URL="http://puppetdb.prd.srv.cirb.lan:8080"
         ;;
 esac
 
@@ -57,6 +56,7 @@ cat <<EOF > ${zone}.nix
   salt-pass    = "$SALT_PASS";
   salt-url     = $SALT_URL;
   pgserver-url = $PGSERVER_URL;
+  puppetdb-url = $PUPPETDB_URL;
 }
 EOF
 
