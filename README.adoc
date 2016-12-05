@@ -135,3 +135,10 @@ Orchestrate commands can be started using:
 ```
 → cicd testing orch CMD
 ```
+
+## TODO
+
+- [] zsh completion
+- [] in devbox, insert this README
+- [] in devbox, update `language-puppet`
+- [] re-use cicd in the console (cicd prod stack ping -> stack ping)
