@@ -1,0 +1,137 @@
+# CICD shell
+
+## Quick first time setup
+
+### AD permissions
+
+The permissions to target machines and perform actions are realized through our Active directory. As an example to access the machines of the `middleware` hostgroup, you will need to be part of the `GP_APP_SALT_MIDDLEWARE` group.
+
+
+### Softwares
+
+If you use the [devbox](https://github.com/CIRB/devbox/blob/master/README.md#devbox), you can skip this section.
+
+Otherwise, the requirements are:
+
+* git
+* make
+* nix
+
+If you haven't `nix` installed, here is the quick how to:
+
+```
+bash <(curl https://nixos.org/nix/install)
+```
+This will perform a single-user installation of Nix, meaning that /nix is owned by the invoking user. The script will only invoke `sudo` to create /nix if it doesn’t already exist. At that point, the script will prompt you for a password.
+
+To activate `nix` in your shell, add the following line in your `.bash_profile`:
+
+```
+source ~/.nix-profile/etc/profile.d/nix.sh'
+```
+
+You will also need to fetch the `nixpkgs` source for https://github.com/CIRB/devbox/blob/master/user/config.nix. This includes the pkgs folder.
+
+
+## Usage
+
+### command line
+
+The name of the command line utility is #cicd#. The first mandatory position argument is the zone (dev, testing, staging or prod):
+
+```*help*
+→ cicd
+→ cicd ZONE stack
+→ cicd ZONE node
+→ cicd ZONE node run-puppet
+→ cicd ZONE orch
+→ cicd ZONE result
+```
+
+Here are some examples:
+```
+→ cicd prod stack ping
+→ cicd prod stack facts
+→ cicd staging node data svappcavl703.sta.srv.cirb.lan
+→ cicd staging node run-puppet --init svappcavl703.sta.srv.cirb.lan
+```
+
+[NOTE]
+- These commands are executed remotely (if you have the right to execute them) through an API (see https://docs.saltstack.com/en/latest/topics/netapi/index.html).
+
+- All commands and results are recorded in a centralize database included the date and name of the person that execute them.
+
+### The specialized shell
+
+.Open a specialized #console in staging#
+```
+→ cicd staging console
+```
+
+One great feature of this specialized shell is the *automatic completion* (while typing) of the available nodes, commands, ... It acts as an interactive help to ease the task at hand.
+
+#### examples
+
+- Summary of all machines and a selection of interesting facts about them:
+```
+$ facts
+{
+  "fqdn": "svappcavl703.sta.srv.cirb.lan",
+  "ip": "192.168.22.250",
+  "os": "CentOS 7.2.1511",
+  "subgroup": "",
+  "role": "saltmaster"
+}
+```
+
+- Run puppet via the `pep` alias on two nodes:
+```
+pep -L foreman.sandbox.srv.cirb.lan,puppetdb.sandbox.srv.cirb.lan --client=local_async puppetutils.run_agent
+```
+
+- Disk usage on a node:
+```
+$ du-on svappcavl088.sta.srv.cirb.lan
+{
+  "svappcavl088.sta.srv.cirb.lan": {
+    "/": "23%",
+    "/boot": "69%",
+    "/data": "51%",
+    "/dev/shm": "1%",
+    "/home": "19%",
+    "/tmp": "35%",
+    "/usr": "44%",
+    "/var": "74%",
+    "/var/log": "4%"
+  }
+}
+```
+
+#### available commands
+
+* `ping`: ping all nodes within your hostgroup
+* `ping-by`: ping all nodes by role
+* `facts`: some facts on all machines within your hostgroup
+* `facts_on`: all static information available on a specific node
+* `run_puppet_on` n: run puppet on a specific node `n`
+* `data_on` n: dynamic info from hiera for a specific node `n`
+* `data_for` k : dynamic info given a specific key `k` across all nodes
+* `result` [i] : result of your last `i` command(s)
+* `result_for` jid: result of a specific job specified by its `jid`
+* `orchestrate`: launch an orchestration script
+* `commands`:  list all possible salt execution commands (slow)
+* `du_on` n: disk usage on a node
+* `stats`: status of all the nodes
+
+
+## Orchestration
+
+Salt can run multiple commands as well using the orchestrate runner. The orchestration is executed on the salt master to allow inter minion requisites, like ordering the application of states on different minions that must not happen simultaneously, or for halting the state run on all minions if a minion fails one of its states (see https://docs.saltstack.com/en/latest/topics/tutorials/states_pt5.html#orchestrate-runner).
+
+The orchestration should be defined in the orch folder. You will find examples here: http://stash.cirb.lan/projects/MIDDLEWARE/repos/salt-stack-middleware/browse/orch?at=refs%2Fheads%2Fmiddleware
+
+Orchestrate commands can be started using:
+
+```
+     $ cicd testing orch CMD
+```
