@@ -9,15 +9,14 @@ The permissions to target machines and perform actions are realized through our 
 
 ### Softwares
 
-If you use the [devbox](https://github.com/CIRB/devbox/blob/master/README.md#devbox), you can skip this section.
+If you use the https://github.com/CIRB/devbox/blob/master/README.md#devbox[devbox], everything is already bundled, so you might just skip this section.
 
 Otherwise, the requirements are:
 
 * git
-* make
 * nix
 
-If you haven't `nix` installed, here is the quick how to:
+If you haven't installed `nix` already, here is the quick how to:
 
 ```
 bash <(curl https://nixos.org/nix/install)
@@ -30,7 +29,7 @@ To activate `nix` in your shell, add the following line in your `.bash_profile`:
 source ~/.nix-profile/etc/profile.d/nix.sh'
 ```
 
-You will also need to fetch the `nixpkgs` source for https://github.com/CIRB/devbox/blob/master/user/config.nix. This includes the pkgs folder.
+You will also need to fetch the `nixpkgs` source for https://github.com/CIRB/devbox/blob/master/user/config.nix including the `pkgs` folder.
 
 
 ## Usage
@@ -57,7 +56,7 @@ Here are some examples:
 ```
 
 [NOTE]
-- These commands are executed remotely (if you have the right to execute them) through an API (see https://docs.saltstack.com/en/latest/topics/netapi/index.html).
+- These commands are executed remotely (if you have the right to execute them) through an API. For more information, please look at the https://docs.saltstack.com/en/latest/topics/netapi/index.html[salt netapi topics of saltstack.com].
 
 - All commands and results are recorded in a centralize database included the date and name of the person that execute them.
 
@@ -126,12 +125,12 @@ $ du-on svappcavl088.sta.srv.cirb.lan
 
 ## Orchestration
 
-Salt can run multiple commands as well using the orchestrate runner. The orchestration is executed on the salt master to allow inter minion requisites, like ordering the application of states on different minions that must not happen simultaneously, or for halting the state run on all minions if a minion fails one of its states (see https://docs.saltstack.com/en/latest/topics/tutorials/states_pt5.html#orchestrate-runner).
+Salt can run multiple commands as well using the orchestrate runner. The orchestration is executed on the salt master to allow inter minion requisites, like ordering the application of states on different minions that must not happen simultaneously, or for halting the state run on all minions if a minion fails one of its states (more about this topic can be found https://docs.saltstack.com/en/latest/topics/tutorials/states_pt5.html#orchestrate-runner[in the saltstack website]).
 
-The orchestration should be defined in the orch folder. You will find examples here: http://stash.cirb.lan/projects/MIDDLEWARE/repos/salt-stack-middleware/browse/orch?at=refs%2Fheads%2Fmiddleware
+The orchestration should be defined in the orch folder. You will find some examples http://stash.cirb.lan/projects/MIDDLEWARE/repos/salt-stack-middleware/browse/orch?at=refs%2Fheads%2Fmiddleware[here].
 
 Orchestrate commands can be started using:
 
 ```
-     $ cicd testing orch CMD
+→ cicd testing orch CMD
 ```
