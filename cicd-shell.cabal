@@ -13,6 +13,7 @@ cabal-version:       >=1.10
 executable cicd
   hs-source-dirs:      app
   main-is:             Main.hs
+  other-modules:       Option
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                        , optional-args >= 1.0

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-if [ -z "$ZONE" ] ; then
+zone=${1:-ZONE}
+if [ -z "$zone" ] ; then
     echo "ERROR: expecting a ZONE parameter";
     exit 1;
 fi
@@ -24,7 +25,7 @@ if [ -z "$STACK" ]; then
     STACK=${STACK}
 fi
 
-case $ZONE in
+case $zone in
     "testing")
         SALT_URL="https://saltmaster.sandbox.srv.cirb.lan:8000"
         ;;
@@ -39,18 +40,18 @@ case $ZONE in
         ;;
 esac
 
-case $ZONE in
+case $zone in
     "testing")
         PGSERVER_URL="http://pgserver.sandbox.srv.cirb.lan/saltstack"
         ;;
     *)
-        PGSERVER_URL="http://pgserver-cicd.prd.srv.cirb.lan/saltstack-${ZONE}"
+        PGSERVER_URL="http://pgserver-cicd.prd.srv.cirb.lan/saltstack-${zone}"
         ;;
 esac
 
-cat <<EOF > ${ZONE}.nix
+cat <<EOF > ${zone}.nix
 (import ./.) {
-  zone         = "$ZONE";
+  zone         = "$zone";
   stack        = "$STACK";
   salt-user    = "$SALT_USER";
   salt-pass    = "$SALT_PASS";
@@ -59,4 +60,4 @@ cat <<EOF > ${ZONE}.nix
 }
 EOF
 
-echo "${PWD}/${ZONE}.nix created"
+echo "${PWD}/${zone}.nix created"
