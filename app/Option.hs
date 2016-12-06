@@ -5,8 +5,8 @@ module Option where
 import           Protolude
 import           Turtle    hiding ((<>))
 
-type Role = Text
-type Stack = Text
+type Target = Text
+type StackName = Text
 type Cmd = Text
 
 data Options = Options Text Command
@@ -25,10 +25,10 @@ data ResultArg
   deriving (Show)
 
 data StackCommand
-  = StackPing (Maybe Stack) -- (Maybe Role)
-  | StackFacts (Maybe Stack)
-  | StackSync (Maybe Stack)
-  | StackOrchestrate Cmd
+  = StackPing (Maybe StackName) (Maybe Target)
+  | StackFacts (Maybe StackName)
+  | StackSync (Maybe StackName)
+  | StackOrchestrate (Maybe StackName) Cmd
   deriving (Show)
 
 data NodeCommand
@@ -40,10 +40,10 @@ data NodeCommand
 
 stackParser :: Parser StackCommand
 stackParser =
-      StackPing  <$> subcommand "ping" "Ping nodes" stackArg --stackArg <*> optional (argText "role" "target"))
+      StackPing  <$> (subcommand "ping" "Ping nodes" stackArg) <*> optional (optText "target" 't' "Target with subgroup:role pattern")
   <|> StackFacts <$> subcommand "facts" "Return essential node static information" stackArg
   <|> StackSync  <$> subcommand "sync" "Sync data from master to nodes" stackArg
-  <|> StackOrchestrate <$> subcommand "orch" "Run an orchestration command on the infrastructure" (argText "CMD" "Command to run")
+  <|> StackOrchestrate <$> (subcommand "orch" "Run an orchestration command on the infrastructure" stackArg) <*> (optText "cmd" 'c' "Command to run")
   where
     stackArg = optional (argText "stack" "Name of stack")
 

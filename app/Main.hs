@@ -36,10 +36,11 @@ initEnv zone = do
 
 run (Options zone Console) = sh (runCommand zone empty empty)
 run (Options zone Stats) = sh (runCommand zone "stats" empty)
-run (Options zone (Stack (StackPing stack ))) = sh (runCommand zone "stack_ping" (toList stack)) -- (toList stack <> toList target))
+run (Options zone (Stack (StackPing stack (Just target )))) = sh (runCommand zone "stack_ping_on" (target : toList stack))
+run (Options zone (Stack (StackPing stack Nothing ))) = sh (runCommand zone "stack_ping" (toList stack))
 run (Options zone (Stack (StackFacts stack))) = sh (runCommand zone "stack_facts" (toList stack))
 run (Options zone (Stack (StackSync stack))) = sh (runCommand zone "stack_sync" (toList stack))
-run (Options zone (Stack (StackOrchestrate cmd))) = sh (runCommand zone "stack_orchestrate" [cmd])
+run (Options zone (Stack (StackOrchestrate stack cmd))) = sh (runCommand zone "stack_orchestrate" (cmd : toList stack))
 run (Options zone (Node (NodeFacts node))) = sh (runCommand zone "node_facts" [node])
 run (Options zone (Node (NodeData node))) = sh (runCommand zone "node_data" [node])
 run (Options zone (Node (NodeDu node))) = sh (runCommand zone "node_du" [node])

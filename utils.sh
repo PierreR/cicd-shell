@@ -37,13 +37,12 @@ all-facts () {
 
 stack_ping () {
     local hostgroup=${1:-"$STACK"}
-    local role=${2}
-    local target="G@hostgroup:${hostgroup}"
-    if [[ -n "$role" ]]; then
-        target="$target and G@role:${role}"
-        echo "target is ${target}"
-    fi
-    pepper -C "$target" test.ping | jq "${jq0}"
+    pepper -G "hostgroup:${hostgroup}" test.ping | jq "${jq0}"
+}
+stack_ping_on () {
+    local role=${1}
+    local hostgroup=${2:-"$STACK"}
+    pepper -C "G@role:${role} and G@hostgroup:${hostgroup}" test.ping | jq "${jq0}"
 }
 
 stack_facts () {

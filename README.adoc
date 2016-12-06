@@ -42,6 +42,7 @@ Here are some examples:
 
 ```
 → cicd prod stack ping
+→ cicd prod stack ping --target saltmaster
 → cicd prod stack facts
 → cicd staging node data svappcavl703.sta.srv.cirb.lan
 → cicd staging node du svappcavl703.sta.srv.cirb.lan
@@ -53,16 +54,16 @@ You can request the help at each level. For instance:
 ```
 → cicd -h <1>
 → cicd ZONE stack
-→ cicd ZONE stack orch 
+→ cicd ZONE stack orch -c CMD
 → cicd ZONE node
 → cicd ZONE node run-puppet
 → cicd ZONE result
 ```
-<1> you can omit `-h`
+<1> you can omit `-h` (when the command is invalid it automatically displays the help)
 
 
 [NOTE]
-- These commands are executed remotely (if you have the right to execute them) through an API. Behind the scene they might call either the `puppetdb` or the `saltmaster`. For instance `cicd ZONE node facts NODE` would call the puppetdb and return a result even when the node is down. 
+- These commands are executed remotely (if you have the right to execute them) through an API. Behind the scene they might call either the `puppetdb` or the `saltmaster`. For instance `cicd ZONE node facts NODE` would call the puppetdb and return a result even when the node is down.
 
 - All commands to the saltmaster together with their results are recorded in a centralize database included the date and name of the person that execute them.
 
