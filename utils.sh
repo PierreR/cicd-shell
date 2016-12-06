@@ -27,11 +27,6 @@ help_for () {
     pepper --client=runner "doc.${topic}" | jq -r "${jq0}.\"${key}\""
 }
 
-ping () {
-    local hostgroup=${1:-"$STACK"}
-    pepper -G "hostgroup:${hostgroup}" test.ping | jq "${jq0}"
-}
-
 stats () {
     pepper --client=runner manage.status | jq '.return[0] | [.up , .up + .down | length] as $stats | {up, down, stats: "\($stats[0]) up of \($stats[1])"}'
 }
@@ -40,30 +35,69 @@ all-facts () {
     pep '*' grains.item os osrelease fqdn fqdn_ip4 subgroup role | jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", subgroup, role }'
 }
 
-facts () {
+stack_ping () {
+    local hostgroup=${1:-"$STACK"}
+    local role=${2}
+    local target="G@hostgroup:${hostgroup}"
+    if [[ -n "$role" ]]; then
+        target="$target and G@role:${role}"
+        echo "target is ${target}"
+    fi
+    pepper -C "$target" test.ping | jq "${jq0}"
+}
+
+stack_facts () {
     local hostgroup=${1:-"${STACK}"}
     pepper -G "hostgroup:${hostgroup}" grains.item os osrelease fqdn fqdn_ip4 subgroup role | jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", subgroup, role }'
 }
 
-facts_on () {
+stack_sync () {
+    local hostgroup=${1:-"$STACK"}
+    pepper -G "hostgroup:${hostgroup}" saltutil.sync_all
+}
+
+# launch an orchestration command on your stack (async)
+stack-orchestrate () {
+    local cmd=$1
+    local hostgroup=${2:-"$STACK"}
+    if [ -z "$cmd" ]; then echo "expect a orchestration command"; return; fi
+    pepper state.orchestrate --client=runner mods="orch.${cmd}" saltenv="${hostgroup}"
+}
+
+
+node_facts () {
     if [ -z "$1" ]; then echo "expect a target"; return; fi
     pdbquery -t remote  -l "$puppetdb" facts "$1" | jq 'map({"key": .name, value}) | from_entries | {hostgroup, subgroup, role, "os": "\(.operatingsystem) \(.operatingsystemrelease)", "ip": .ipaddress_eth0, uptime}'
 }
 
-_facts_on () {
-    if [ -z "$1" ]; then echo "expect a target"; return; fi
-    pepper "$1" grains.items | jq "${jq0}"
-}
+# _node_facts () {
+#     if [ -z "$1" ]; then echo "expect a target"; return; fi
+#     pepper "$1" grains.items | jq "${jq0}"
+# }
 
-du_on () {
+node_du () {
     if [ -z "$1" ]; then echo "expect a target"; return; fi
     pepper "$1" disk.percent | jq "${jq0}"
 }
 
 # dynamic info from configuration
-data_on () {
+node_data () {
     if [ -z "$1" ]; then echo "Expect a target"; return; fi
     pepper  "$1" pillar.items delimiter='/' | jq "${jq0}"
+}
+
+# Accept one or several hosts (separated by ',') and wait for the result
+node_runpuppet () {
+    local target=$1
+    if [ -z "$target" ]; then echo "expect one or a list of hosts separated by ','"; return; fi
+	  pepper -L "$target" puppetutils.run_agent | jq -r '.return[] | to_entries | (.[] | if .value.retcode == 0 then "\nSUCCESS for " else "\nFAILURE for " end + .key + ":" , if .value.stderr != "" then .value.stdout + "\n******\n" + .value.stderr else .value.stdout end)'
+
+}
+
+node_runpuppet_init () {
+    local target=$1
+    if [ -z "$target" ]; then echo "expect a target"; return; fi
+	  pepper "$target" puppetutils.run_agent hostgroup="$hostgroup" zone="$zone" | jq -r '.return[] | to_entries | (.[] | if .value.retcode == 0 then "\nSUCCESS for " else "\nFAILURE for " end + .key + ":" , if .value.stderr != "" then .value.stdout + "\n******\n" + .value.stderr else .value.stdout end)'
 }
 
 # dynamic info for all nodes given a specific key (ie: 'docker::version')
@@ -72,20 +106,6 @@ data_for () {
     local hostgroup=${2:-"$STACK"}
     ( pepper -G "hostgroup:${hostgroup}" grains.item fqdn subgroup role \
       ; pepper -G "hostgroup:${hostgroup}" pillar.item "$1" delimiter='/' ) | jq -s '.[0].return[0] * .[1].return[0]' | jq ".[] | { fqdn, subgroup, role, \"$1\"}"
-}
-
-# Accept one or several hosts (separated by ',') and wait for the result
-run_puppet_on () {
-    local target=$1
-    if [ -z "$target" ]; then echo "expect one or a list of hosts separated by ','"; return; fi
-	  pepper -L "$target" puppetutils.run_agent | jq -r '.return[] | to_entries | (.[] | if .value.retcode == 0 then "\nSUCCESS for " else "\nFAILURE for " end + .key + ":" , if .value.stderr != "" then .value.stdout + "\n******\n" + .value.stderr else .value.stdout end)'
-
-}
-
-run_first_puppet_on () {
-    local target=$1
-    if [ -z "$target" ]; then echo "expect a target"; return; fi
-	  pepper "$target" puppetutils.run_agent hostgroup="$hostgroup" zone="$zone" | jq -r '.return[] | to_entries | (.[] | if .value.retcode == 0 then "\nSUCCESS for " else "\nFAILURE for " end + .key + ":" , if .value.stderr != "" then .value.stdout + "\n******\n" + .value.stderr else .value.stdout end)'
 }
 
 run_puppet () {
@@ -98,13 +118,6 @@ run_puppet () {
     fi
 }
 
-# launch an orchestration command on your stack (async)
-orchestrate () {
-    local cmd=$1
-    local hostgroup=${2:-"$STACK"}
-    if [ -z "$cmd" ]; then echo "expect a orchestration command"; return; fi
-    pepper state.orchestrate --client=runner mods="orch.${cmd}" saltenv="${hostgroup}"
-}
 
 result () {
     local nb_items=${1:-'1'}
@@ -121,11 +134,6 @@ result_for () {
     local jid=$1
     local cmd="${pgserver}/salt_result?select=ret&jid=eq.${jid}"
     curl -f -s "$cmd" | jq -r '(.[].ret[] | if .return.retcode == 0 then "SUCCESS for " else "FAILURE for " end + .id + ":", if .return.stderr != "" then .return.stdout + "\n******\n" + .return.stderr + "\n" else .return.stdout + "\n" end)'
-}
-
-sync () {
-    local hostgroup=${1:-"$STACK"}
-    pepper -G "hostgroup:${hostgroup}" saltutil.sync_all
 }
 
 refresh_pillar () {

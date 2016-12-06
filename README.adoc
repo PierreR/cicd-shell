@@ -109,19 +109,19 @@ $ du-on svappcavl088.sta.srv.cirb.lan
 
 #### available commands
 
-* `ping`: ping all nodes within your hostgroup
-* `ping_by`: ping all nodes by role
-* `facts`: some facts on all machines within your hostgroup
-* `facts_on`: all static information available on a specific node
-* `run_puppet_on` n: run puppet on a specific node `n`
-* `data_on` n: dynamic info from hiera for a specific node `n`
-* `data_for` k : dynamic info given a specific key `k` across all nodes
+* `stack_ping`: ping all nodes within your stack
+* `stack_facts`: some facts on all machines within your stack
+* `stack_orchestrate`: launch an orchestration script
+* `node_facts`: all static information available on a specific node
+* `node_runpuppet` n: run puppet on a specific node `n`
+* `node_data` n: dynamic info from hiera for a specific node `n`
+* `node_du` n: disk usage on a node
 * `result` [i] : result of your last `i` command(s)
 * `result_for` jid: result of a specific job specified by its `jid`
-* `orchestrate`: launch an orchestration script
 * `commands`:  list all possible salt execution commands (slow)
-* `du_on` n: disk usage on a node
 * `stats`: status of all the nodes
+* `data_for` k : dynamic info given a specific key `k` across all nodes
+* `ping_by`: ping all nodes by role
 
 
 ## Orchestration

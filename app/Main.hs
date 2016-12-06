@@ -17,11 +17,11 @@ defaultStack = "middleware"
 nixFile z = z <> ".nix"
 nixCommand z = Text.unwords ["nix-shell", nixFile z]
 
-runCommand :: Text -> Optional Text -> Maybe Text -> Shell ExitCode
-runCommand zone cmd stack  =  do
+runCommand :: Text -> Optional Text -> [Text] -> Shell ExitCode
+runCommand zone cmd cargs  =  do
   let
     pgr = nixCommand zone
-    cmdStr = Optional.optional pgr (\c -> pgr <> " --command '" <> (maybe c (\x -> Text.unwords [c, x]) stack) <> "'" ) cmd
+    cmdStr = Optional.optional pgr (\c -> pgr <> " --command '" <> Text.unwords (c : cargs) <> "'" ) cmd
   pushd projectDir
   initEnv zone
   liftIO $ interactive cmdStr
@@ -35,16 +35,18 @@ initEnv zone = do
     else proc "./set_nix.sh" [zone] empty
 
 run (Options zone Console) = sh (runCommand zone empty empty)
-run (Options zone (Stack (StackPing stack))) = sh (runCommand zone "ping" stack)
-run (Options zone (Stack (StackFacts stack))) = sh (runCommand zone "facts" stack)
-run (Options zone (Stack (StackSync stack))) = sh (runCommand zone "sync" stack)
-run (Options zone (Node (NodeFacts node))) = sh (runCommand zone "facts_on" (Just node))
-run (Options zone (Node (NodeData node))) = sh (runCommand zone "data_on" (Just node))
-run (Options zone (Node (NodeRunPuppet (False, node)))) = sh (runCommand zone "run_puppet_on" (Just node))
-run (Options zone (Node (NodeRunPuppet (True, node)))) = sh (runCommand zone "run_first_puppet_on" (Just node))
-run (Options zone (Orchestrate cmd)) = sh (runCommand zone "orchestrate" (Just cmd))
-run (Options zone (Result (ResultNum n))) = sh (runCommand zone "result" (Just (show n )))
-run (Options zone (Result (ResultJob n ))) = sh (runCommand zone "result_for" (Just (show n)))
+run (Options zone Stats) = sh (runCommand zone "stats" empty)
+run (Options zone (Stack (StackPing stack ))) = sh (runCommand zone "stack_ping" (toList stack)) -- (toList stack <> toList target))
+run (Options zone (Stack (StackFacts stack))) = sh (runCommand zone "stack_facts" (toList stack))
+run (Options zone (Stack (StackSync stack))) = sh (runCommand zone "stack_sync" (toList stack))
+run (Options zone (Stack (StackOrchestrate cmd))) = sh (runCommand zone "stack_orchestrate" [cmd])
+run (Options zone (Node (NodeFacts node))) = sh (runCommand zone "node_facts" [node])
+run (Options zone (Node (NodeData node))) = sh (runCommand zone "node_data" [node])
+run (Options zone (Node (NodeDu node))) = sh (runCommand zone "node_du" [node])
+run (Options zone (Node (NodeRunPuppet (False, node)))) = sh (runCommand zone "node_runpuppet" [node])
+run (Options zone (Node (NodeRunPuppet (True, node)))) = sh (runCommand zone "node_runpuppet_init" [node])
+run (Options zone (Result (ResultNum n))) = sh (runCommand zone "result" [show n])
+run (Options zone (Result (ResultJob n ))) = sh (runCommand zone "result_for" [show n])
 
 
 main :: IO ()
