@@ -43,9 +43,8 @@ run (Options zone (Node (NodeData node))) = sh (runCommand zone "data_on" (Just 
 run (Options zone (Node (NodeRunPuppet (False, node)))) = sh (runCommand zone "run_puppet_on" (Just node))
 run (Options zone (Node (NodeRunPuppet (True, node)))) = sh (runCommand zone "run_first_puppet_on" (Just node))
 run (Options zone (Orchestrate cmd)) = sh (runCommand zone "orchestrate" (Just cmd))
-run (Options zone (Result (Nothing, Nothing))) = sh (runCommand zone "result" (Just (show 5)))
-run (Options zone (Result (Just num, Nothing))) = sh (runCommand zone "result" (Just (show num )))
-run (Options zone (Result (_, Just jobid))) = sh (runCommand zone "result_for" (Just (show jobid)))
+run (Options zone (Result (ResultNum n))) = sh (runCommand zone "result" (Just (show n )))
+run (Options zone (Result (ResultJob n ))) = sh (runCommand zone "result_for" (Just (show n)))
 
 
 main :: IO ()

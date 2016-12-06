@@ -7,14 +7,17 @@ import           Turtle    hiding ((<>))
 
 data Options = Options Text Command
 
-type JobId = Int
+data ResultArg
+  = ResultJob Int
+  | ResultNum Int
+  deriving (Show)
 
 data Command
   = Console
   | Stack StackCommand
   | Node NodeCommand
   | Orchestrate Text
-  | Result (Maybe Int, Maybe JobId)
+  | Result ResultArg
   deriving (Show)
 
 data StackCommand
@@ -54,7 +57,7 @@ commandParser =
   <|> Orchestrate <$> subcommand "orch" "Run an orchestration command on the infrastructure" (argText "CMD" "Command to run")
   <|> Result <$> subcommand "result" ("Display the results of the most recent jobs executed by the user or for a specific id") result_parser
   where
-    result_parser = (,) <$> optional (argInt "NUM" "Number of results to display (default to 5)") <*> optional (optInt "job" 'j' "Job id")
+    result_parser = ResultNum <$> (optInt "Num" 'n' "Number of results to display") <|>  ResultJob <$> (optInt "job" 'j' "Job id")
 
 parser :: Parser Options
 parser

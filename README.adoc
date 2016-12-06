@@ -40,13 +40,13 @@ The name of the command line utility is #cicd#. The first mandatory position arg
 
 ```*help*
 → cicd -h <1>
-→ cicd ZONE stack -h
-→ cicd ZONE node -h
-→ cicd ZONE node run-puppet -h
-→ cicd ZONE orch -h
-→ cicd ZONE result -h
+→ cicd ZONE stack
+→ cicd ZONE node
+→ cicd ZONE node run-puppet
+→ cicd ZONE orch
+→ cicd ZONE result
 ```
-<1> you can omit `-h` except when the command is valid as is
+<1> you can omit `-h`
 
 Here are some examples:
 ```
@@ -110,7 +110,7 @@ $ du-on svappcavl088.sta.srv.cirb.lan
 #### available commands
 
 * `ping`: ping all nodes within your hostgroup
-* `ping-by`: ping all nodes by role
+* `ping_by`: ping all nodes by role
 * `facts`: some facts on all machines within your hostgroup
 * `facts_on`: all static information available on a specific node
 * `run_puppet_on` n: run puppet on a specific node `n`
