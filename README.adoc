@@ -38,28 +38,34 @@ You will also need to fetch the `nixpkgs` source for https://github.com/CIRB/dev
 
 The name of the command line utility is #cicd#. The first mandatory position argument is the zone (dev, testing, staging or prod):
 
-```*help*
-→ cicd -h <1>
-→ cicd ZONE stack
-→ cicd ZONE node
-→ cicd ZONE node run-puppet
-→ cicd ZONE orch
-→ cicd ZONE result
-```
-<1> you can omit `-h`
-
 Here are some examples:
+
 ```
 → cicd prod stack ping
 → cicd prod stack facts
 → cicd staging node data svappcavl703.sta.srv.cirb.lan
+→ cicd staging node du svappcavl703.sta.srv.cirb.lan
 → cicd staging node run-puppet --init svappcavl703.sta.srv.cirb.lan
+→ cicd testing result -n 2
 ```
 
-[NOTE]
-- These commands are executed remotely (if you have the right to execute them) through an API. For more information, please look at the https://docs.saltstack.com/en/latest/topics/netapi/index.html[salt netapi topics of saltstack.com].
+You can request the help at each level. For instance:
+```
+→ cicd -h <1>
+→ cicd ZONE stack
+→ cicd ZONE stack orch 
+→ cicd ZONE node
+→ cicd ZONE node run-puppet
+→ cicd ZONE result
+```
+<1> you can omit `-h`
 
-- All commands and results are recorded in a centralize database included the date and name of the person that execute them.
+
+[NOTE]
+- These commands are executed remotely (if you have the right to execute them) through an API. Behind the scene they might call either the `puppetdb` or the `saltmaster`. For instance `cicd ZONE node facts NODE` would call the puppetdb and return a result even when the node is down. 
+
+- All commands to the saltmaster together with their results are recorded in a centralize database included the date and name of the person that execute them.
+
 
 ### The specialized shell
 
