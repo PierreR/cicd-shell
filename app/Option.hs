@@ -27,9 +27,9 @@ data ResultArg
 
 data StackCommand
   = StackData (Maybe StackName) Key
-  | StackFacts (Maybe StackName)
+  | StackFacts (Maybe StackName) (Maybe Target)
   | StackOrchestrate (Maybe StackName) Cmd
-  | StackPing (Maybe StackName) (Maybe Target)
+  | StackPing (Maybe StackName)
   | StackRunPuppet (Maybe StackName) Target
   | StackSync (Maybe StackName)
   deriving (Show)
@@ -44,9 +44,9 @@ data NodeCommand
 stackParser :: Parser StackCommand
 stackParser =
       StackData <$> (subcommand "data" "Return configuration data for a specific property" stackArg) <*> (optText "key" 'k' "Property to look up for")
-  <|> StackFacts <$> subcommand "facts" "Return essential node static information" stackArg
+  <|> StackFacts <$> (subcommand "facts" "Return essential node static information" stackArg) <*> optional (optText "target" 't' "Target subgroup.role")
   <|> StackOrchestrate <$> (subcommand "orch" "Run an orchestration command on the infrastructure" stackArg) <*> (optText "cmd" 'c' "Command to run")
-  <|> StackPing <$> (subcommand "ping" "Ping nodes" stackArg) <*> optional (optText "target" 't' "Target subgroup.role")
+  <|> StackPing <$> subcommand "ping" "Ping nodes" stackArg 
   <|> StackRunPuppet <$> (subcommand "runpuppet" "Apply puppet configuration on a specific subgroup.role (async)" stackArg) <*> (optText "target" 't' "Target subgroup.role")
   <|> StackSync  <$> subcommand "sync" "Sync data from master to nodes" stackArg
   where

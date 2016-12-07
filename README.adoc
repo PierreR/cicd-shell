@@ -41,11 +41,10 @@ The name of the command line utility is #cicd#. The first mandatory position arg
 Here are some examples:
 
 ```
-→ cicd prod stack ping
-→ cicd prod stack ping --target saltmaster
-→ cicd prod stack facts
+→ cicd prod stack facts --target slave
 → cicd prod stack data --key docker::version
 → cicd prod stack runpuppet --target saltmaster
+→ cicd prod stack ping
 → cicd staging node data svappcavl703.sta.srv.cirb.lan
 → cicd staging node du svappcavl703.sta.srv.cirb.lan
 → cicd staging node runpuppet svappcavl703.sta.srv.cirb.lan
@@ -129,7 +128,7 @@ $ du-on svappcavl088.sta.srv.cirb.lan
 * `result` [i] : result of your last `i` command(s)
 * `result_for` jid: result of a specific job specified by its `jid`
 * `commands`:  list all possible salt execution commands (slow)
-* `stats`: status of all the nodes (privilege required)
+* `stats`: status of all the nodes
 
 
 ## Orchestration

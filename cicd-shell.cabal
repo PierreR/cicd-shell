@@ -18,7 +18,7 @@ executable cicd
   build-depends:       base
                        , optional-args >= 1.0
                        , process
-                       , protolude
+                       , protolude >= 0.1.10
                        , text
                        , turtle
   default-language:    Haskell2010

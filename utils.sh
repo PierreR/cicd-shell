@@ -35,15 +35,17 @@ stack_ping () {
     local hostgroup=${1:-"$STACK"}
     pepper -G "hostgroup:${hostgroup}" test.ping | jq "${jq0}"
 }
-stack_ping_on () {
-    local role=${1}
-    local hostgroup=${2:-"$STACK"}
-    pepper -C "G@role:${role} and G@hostgroup:${hostgroup}" test.ping | jq "${jq0}"
-}
 
 stack_facts () {
+    local role=${1}
     local hostgroup=${1:-"${STACK}"}
     pepper -G "hostgroup:${hostgroup}" grains.item os osrelease fqdn fqdn_ip4 subgroup role | jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", subgroup, role }'
+}
+
+stack_facts_on () {
+    local role=${1}
+    local hostgroup=${2:-"$STACK"}
+    pepper -C "G@role:${role} and G@hostgroup:${hostgroup}" grains.item os osrelease fqdn fqdn_ip4 subgroup role | jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", subgroup, role }'
 }
 
 stack_sync () {
@@ -52,7 +54,7 @@ stack_sync () {
 }
 
 # launch an orchestration command on your stack (async)
-stack-orchestrate () {
+stack_orchestrate () {
     local cmd=$1
     local hostgroup=${2:-"$STACK"}
     if [ -z "$cmd" ]; then echo "expect a orchestration command"; return; fi
