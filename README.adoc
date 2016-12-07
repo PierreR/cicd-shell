@@ -1,36 +1,11 @@
 # CICD shell
 
-## Quick first time setup
+## AD permissions
 
-### AD permissions
+The permissions to target machines and perform actions are realized through our Active directory.
+As an example to access the machines of the `middleware` hostgroup, you will need to be part of the `GP_APP_SALT_MIDDLEWARE` group.
 
-The permissions to target machines and perform actions are realized through our Active directory. As an example to access the machines of the `middleware` hostgroup, you will need to be part of the `GP_APP_SALT_MIDDLEWARE` group.
-
-
-### Softwares
-
-If you use the https://github.com/CIRB/devbox/blob/master/README.md#devbox[devbox], everything is already bundled, so you might just skip this section.
-
-Otherwise, the requirements are:
-
-* git
-* nix
-
-If you haven't installed `nix` already, here is the quick how to:
-
-```
-bash <(curl https://nixos.org/nix/install)
-```
-This will perform a single-user installation of Nix, meaning that /nix is owned by the invoking user. The script will only invoke `sudo` to create /nix if it doesn’t already exist. At that point, the script will prompt you for a password.
-
-To activate `nix` in your shell, add the following line in your `.bash_profile`:
-
-```
-source ~/.nix-profile/etc/profile.d/nix.sh'
-```
-
-You will also need to fetch the `nixpkgs` source for https://github.com/CIRB/devbox/blob/master/user/config.nix including the `pkgs` folder.
-
+Please fill in a `irisline` ticket to get the necessary permissions.
 
 ## Usage
 
@@ -145,6 +120,30 @@ Orchestrate commands can be started using:
 ```
 → cicd testing orch CMD
 ```
+
+## Install outside the devbox
+
+To install the shell outside the devbox, the requirements are:
+
+* OS: linux
+* git
+* nix
+
+If you haven't installed `nix` already, here is the quick how to:
+
+```
+bash <(curl https://nixos.org/nix/install)
+```
+This will perform a single-user installation of Nix, meaning that /nix is owned by the invoking user. The script will only invoke `sudo` to create /nix if it doesn’t already exist. At that point, the script will prompt you for a password.
+
+To activate `nix` in your shell, add the following line in your `.bash_profile`:
+
+```
+source ~/.nix-profile/etc/profile.d/nix.sh'
+```
+
+You will also need to fetch the `nixpkgs` source for https://github.com/CIRB/devbox/blob/master/user/config.nix including the `pkgs` folder.
+
 
 ## TODO
 
