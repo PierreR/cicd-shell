@@ -36,7 +36,10 @@ You will also need to fetch the `nixpkgs` source for https://github.com/CIRB/dev
 
 ### command line
 
-The name of the command line utility is #cicd#. The first mandatory position argument is the zone (dev, testing, staging or prod):
+The name of the command line utility is #cicd#. The first mandatory position argument is the zone (dev, testing, staging or prod).
+
+The #stack# command subgroup would hit nodes inside a specific stack (the https://github.com/CIRB/devbox/blob/master/user/params.sh[default stack of the devbox] if none is provided).
+The #node# command subgroup always target a specific node.
 
 Here are some examples:
 
@@ -145,8 +148,8 @@ Orchestrate commands can be started using:
 
 ## TODO
 
-- [] in devbox, update `language-puppet`
-- [] re-use cicd in the console (cicd prod stack ping -> stack ping)
-- [] in devbox, insert this README
-- [] use puppetdb instead of salt for stack_data_for
-- [] improve zsh completion
+- [ ] in devbox, update `language-puppet`
+- [ ] re-use cicd in the console (cicd prod stack ping -> stack ping)
+- [ ] in devbox, insert this README
+- [ ] use puppetdb instead of salt for stack_data_for
+- [ ] improve zsh completion
