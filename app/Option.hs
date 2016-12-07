@@ -21,7 +21,7 @@ data Command
   deriving (Show)
 
 data ResultArg
-  = ResultJob Int
+  = ResultJob Text
   | ResultNum Int
   deriving (Show)
 
@@ -46,7 +46,7 @@ stackParser =
       StackData <$> (subcommand "data" "Return configuration data for a specific property" stackArg) <*> (optText "key" 'k' "Property to look up for")
   <|> StackFacts <$> (subcommand "facts" "Return essential node static information" stackArg) <*> optional (optText "target" 't' "Target subgroup.role")
   <|> StackOrchestrate <$> (subcommand "orch" "Run an orchestration command on the infrastructure" stackArg) <*> (optText "cmd" 'c' "Command to run")
-  <|> StackPing <$> subcommand "ping" "Ping nodes" stackArg 
+  <|> StackPing <$> subcommand "ping" "Ping nodes" stackArg
   <|> StackRunPuppet <$> (subcommand "runpuppet" "Apply puppet configuration on a specific subgroup.role (async)" stackArg) <*> (optText "target" 't' "Target subgroup.role")
   <|> StackSync  <$> subcommand "sync" "Sync data from master to nodes" stackArg
   where
@@ -69,7 +69,7 @@ commandParser =
   <|> Node        <$> subcommand "node" "Target one specific node" nodeParser
   <|> Result <$> subcommand "result" ("Display the results of the most recent jobs executed by the user or for a specific id") result_parser
   where
-    result_parser = ResultNum <$> (optInt "Num" 'n' "Number of results to display") <|>  ResultJob <$> (optInt "job" 'j' "Job id")
+    result_parser = ResultNum <$> (optInt "Num" 'n' "Number of results to display") <|>  ResultJob <$> (optText "job" 'j' "Job id")
 
 parser :: Parser Options
 parser

@@ -48,7 +48,7 @@ run (Options zone (Node (NodeData node))) = sh (runCommand zone "node_data" [nod
 run (Options zone (Node (NodeDu node))) = sh (runCommand zone "node_du" [node])
 run (Options zone (Node (NodeRunPuppet node))) = sh (runCommand zone "node_runpuppet" [node])
 run (Options zone (Result (ResultNum n))) = sh (runCommand zone "result" [show n])
-run (Options zone (Result (ResultJob n ))) = sh (runCommand zone "result_for" [show n])
+run (Options zone (Result (ResultJob n ))) = sh (runCommand zone "result_for" [n])
 
 
 main :: IO ()

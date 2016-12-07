@@ -116,9 +116,9 @@ result () {
 }
 
 result_for () {
-    local jid=$1
+    local jid="$1"
     local cmd="${pgserver}/salt_result?select=ret&jid=eq.${jid}"
-    curl -f -s "$cmd" | jq -r '(.[].ret[] | if .return.retcode == 0 then "SUCCESS for " else "FAILURE for " end + .id + ":", if .return.stderr != "" then .return.stdout + "\n******\n" + .return.stderr + "\n" else .return.stdout + "\n" end)'
+    curl -f -s "$cmd" | jq -r '(.[].ret | if .return.retcode == 0 then "SUCCESS for " else "FAILURE for " end + .id + ":", if .return.stderr != "" then .return.stdout + "\n******\n" + .return.stderr + "\n" else .return.stdout + "\n" end)'
 }
 
 refresh_pillar () {
