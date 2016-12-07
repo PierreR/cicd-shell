@@ -6,7 +6,7 @@
 set -o pipefail
 set -e
 
-zone=$1
+zone="$ZONE"
 pgserver="$PGSERVER_URL"
 puppetdb="$PUPPETDB_URL"
 salt_user="$SALTAPI_USER"
@@ -70,13 +70,15 @@ stack_data_for () {
 }
 
 stack_runpuppet_on () {
-    local role=${1}
+    local target=$(_split_target "$1")
     local hostgroup=${2:-"${STACK}"}
-    read -p "Run puppet on all ${role} in ${hostgroup} ? (y/n)"
+    read -p "Run puppet on ${1}.${hostgroup}.${zone} ? (y/n)"
     echo    # (optional) move to a new line
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
-	      pepper -C "G@role:{role} and G@hostgroup:${hostgroup}" --client=local_async puppetutils.run_agent | jq '.return'
+	      pepper -C "${target} and G@hostgroup:${hostgroup}" --client=local_async puppetutils.run_agent | jq '.return'
+    else
+        echo "Abort by the user"
     fi
 }
 
