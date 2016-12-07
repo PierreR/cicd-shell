@@ -31,10 +31,6 @@ stats () {
     pepper --client=runner manage.status | jq '.return[0] | [.up , .up + .down | length] as $stats | {up, down, stats: "\($stats[0]) up of \($stats[1])"}'
 }
 
-all-facts () {
-    pep '*' grains.item os osrelease fqdn fqdn_ip4 subgroup role | jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", subgroup, role }'
-}
-
 stack_ping () {
     local hostgroup=${1:-"$STACK"}
     pepper -G "hostgroup:${hostgroup}" test.ping | jq "${jq0}"
@@ -63,16 +59,29 @@ stack-orchestrate () {
     pepper state.orchestrate --client=runner mods="orch.${cmd}" saltenv="${hostgroup}"
 }
 
+# dynamic info for all nodes given a specific key (ie: 'docker::version')
+stack_data_for () {
+    if [ -z "$1" ]; then echo "Expect a pillar key"; return; fi
+    local hostgroup=${2:-"$STACK"}
+    ( pepper -G "hostgroup:${hostgroup}" grains.item fqdn subgroup role \
+      ; pepper -G "hostgroup:${hostgroup}" pillar.item "$1" delimiter='/' ) | jq -s '.[0].return[0] * .[1].return[0]' | jq ".[] | { fqdn, subgroup, role, \"$1\"}"
+}
+
+stack_runpuppet_on () {
+    local role=${1}
+    local hostgroup=${2:-"${STACK}"}
+    read -p "Run puppet on all ${role} in ${hostgroup} ? (y/n)"
+    echo    # (optional) move to a new line
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+	      pepper -C "G@role:{role} and G@hostgroup:${hostgroup}" --client=local_async puppetutils.run_agent | jq '.return'
+    fi
+}
 
 node_facts () {
     if [ -z "$1" ]; then echo "expect a target"; return; fi
     pdbquery -t remote  -l "$puppetdb" facts "$1" | jq 'map({"key": .name, value}) | from_entries | {hostgroup, subgroup, role, "os": "\(.operatingsystem) \(.operatingsystemrelease)", "ip": .ipaddress_eth0, uptime}'
 }
-
-# _node_facts () {
-#     if [ -z "$1" ]; then echo "expect a target"; return; fi
-#     pepper "$1" grains.items | jq "${jq0}"
-# }
 
 node_du () {
     if [ -z "$1" ]; then echo "expect a target"; return; fi
@@ -85,38 +94,11 @@ node_data () {
     pepper  "$1" pillar.items delimiter='/' | jq "${jq0}"
 }
 
-# Accept one or several hosts (separated by ',') and wait for the result
 node_runpuppet () {
-    local target=$1
-    if [ -z "$target" ]; then echo "expect one or a list of hosts separated by ','"; return; fi
-	  pepper -L "$target" puppetutils.run_agent | jq -r '.return[] | to_entries | (.[] | if .value.retcode == 0 then "\nSUCCESS for " else "\nFAILURE for " end + .key + ":" , if .value.stderr != "" then .value.stdout + "\n******\n" + .value.stderr else .value.stdout end)'
-
-}
-
-node_runpuppet_init () {
     local target=$1
     if [ -z "$target" ]; then echo "expect a target"; return; fi
 	  pepper "$target" puppetutils.run_agent hostgroup="$hostgroup" zone="$zone" | jq -r '.return[] | to_entries | (.[] | if .value.retcode == 0 then "\nSUCCESS for " else "\nFAILURE for " end + .key + ":" , if .value.stderr != "" then .value.stdout + "\n******\n" + .value.stderr else .value.stdout end)'
 }
-
-# dynamic info for all nodes given a specific key (ie: 'docker::version')
-data_for () {
-    if [ -z "$1" ]; then echo "Expect a pillar key"; return; fi
-    local hostgroup=${2:-"$STACK"}
-    ( pepper -G "hostgroup:${hostgroup}" grains.item fqdn subgroup role \
-      ; pepper -G "hostgroup:${hostgroup}" pillar.item "$1" delimiter='/' ) | jq -s '.[0].return[0] * .[1].return[0]' | jq ".[] | { fqdn, subgroup, role, \"$1\"}"
-}
-
-run_puppet () {
-    local hostgroup=${1:-"${STACK}"}
-    read -p "Run puppet on all nodes in ${hostgroup}. Are you sure? " -n 1 -r
-    echo    # (optional) move to a new line
-    if [[ $REPLY =~ ^[Yy]$ ]]
-    then
-	      pepper -G "hostgroup:${hostgroup}" --client=local_async puppetutils.run_agent | jq '.return'
-    fi
-}
-
 
 result () {
     local nb_items=${1:-'1'}
@@ -141,6 +123,10 @@ refresh_pillar () {
     if [ -z "$role" ]; then echo "expect a role"; return; fi
     pepper -C "G@role:${role} and G@hostgroup:${hostgroup}" saltutil.refresh_pillar
 }
+
+# all-facts () {
+#     pep '*' grains.item os osrelease fqdn fqdn_ip4 subgroup role | jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", subgroup, role }'
+# }
 
 # For efficiency sake, cache the completion result in a dot file
 regenerate_completion () {

@@ -8,6 +8,7 @@ import           Turtle    hiding ((<>))
 type Target = Text
 type StackName = Text
 type Cmd = Text
+type Key = Text
 
 data Options = Options Text Command
 
@@ -25,25 +26,29 @@ data ResultArg
   deriving (Show)
 
 data StackCommand
-  = StackPing (Maybe StackName) (Maybe Target)
+  = StackData (Maybe StackName) Key
   | StackFacts (Maybe StackName)
-  | StackSync (Maybe StackName)
   | StackOrchestrate (Maybe StackName) Cmd
+  | StackPing (Maybe StackName) (Maybe Target)
+  | StackRunPuppet (Maybe StackName) Target
+  | StackSync (Maybe StackName)
   deriving (Show)
 
 data NodeCommand
-  = NodeFacts Text
-  | NodeData Text
+  = NodeData Text
   | NodeDu Text
-  | NodeRunPuppet (Bool, Text)
+  | NodeFacts Text
+  | NodeRunPuppet Text
   deriving (Show)
 
 stackParser :: Parser StackCommand
 stackParser =
-      StackPing  <$> (subcommand "ping" "Ping nodes" stackArg) <*> optional (optText "target" 't' "Target with subgroup:role pattern")
+      StackData <$> (subcommand "data" "Return configuration data for a specific property" stackArg) <*> (optText "key" 'k' "Property to look up for")
   <|> StackFacts <$> subcommand "facts" "Return essential node static information" stackArg
-  <|> StackSync  <$> subcommand "sync" "Sync data from master to nodes" stackArg
   <|> StackOrchestrate <$> (subcommand "orch" "Run an orchestration command on the infrastructure" stackArg) <*> (optText "cmd" 'c' "Command to run")
+  <|> StackPing <$> (subcommand "ping" "Ping nodes" stackArg) <*> optional (optText "target" 't' "Target subgroup.role")
+  <|> StackRunPuppet <$> (subcommand "runpuppet" "Apply puppet configuration on a specific subgroup.role (async)" stackArg) <*> (optText "target" 't' "Target subgroup.role")
+  <|> StackSync  <$> subcommand "sync" "Sync data from master to nodes" stackArg
   where
     stackArg = optional (argText "stack" "Name of stack")
 
@@ -52,10 +57,9 @@ nodeParser =
       NodeFacts <$> subcommand "facts" "Return static facts" node_parser
   <|> NodeData  <$> subcommand "data" "Return configuration data" node_parser
   <|> NodeDu <$> subcommand "du" "Return disk usage" node_parser
-  <|> NodeRunPuppet <$> subcommand "run-puppet" "Apply configuration by running puppet agent" runpuppet_parser
+  <|> NodeRunPuppet <$> subcommand "runpuppet" "Apply configuration by running puppet agent" node_parser
   where
     node_parser = argText "node" "Target node"
-    runpuppet_parser = (,) <$> switch "init" '0' "initial/first time run" <*> node_parser
 
 commandParser :: Parser Command
 commandParser =
