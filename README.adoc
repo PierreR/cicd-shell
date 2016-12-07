@@ -19,7 +19,7 @@ The #node# command subgroup always target a specific node.
 Here are some examples:
 
 ```
-→ cicd prod stack facts --target slave
+→ cicd prod stack facts --target jenkins.slave
 → cicd prod stack data --key docker::version
 → cicd prod stack runpuppet --target saltmaster
 → cicd prod stack ping
@@ -95,8 +95,9 @@ $ du-on svappcavl088.sta.srv.cirb.lan
 
 * `stack_ping`: ping all nodes within your stack
 * `stack_ping_on` t : ping nodes by target t
-* `stack_facts`: some facts on all machines within your stack
-* `stack_orchestrate` c: launch the orchestration `c` command
+* `stack_facts`: important facts on all machines within your stack
+* `stack_facts_on` t : important facts about target t
+* `stack_orch` c: launch the orchestration `c` command
 * `stack_data_for` k : dynamic info given a specific key `k` across all nodes
 * `stack_runpuppet_on` t : run puppet on target t
 * `node_facts` n : all static information available on a specific node `n`

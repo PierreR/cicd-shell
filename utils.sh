@@ -31,11 +31,6 @@ stats () {
     pepper --client=runner manage.status | jq '.return[0] | [.up , .up + .down | length] as $stats | {up, down, stats: "\($stats[0]) up of \($stats[1])"}'
 }
 
-stack_ping () {
-    local hostgroup=${1:-"$STACK"}
-    pepper -G "hostgroup:${hostgroup}" test.ping | jq "${jq0}"
-}
-
 stack_facts () {
     local role=${1}
     local hostgroup=${1:-"${STACK}"}
@@ -43,9 +38,14 @@ stack_facts () {
 }
 
 stack_facts_on () {
-    local role=${1}
+    local target=$(_split_target "$1")
     local hostgroup=${2:-"$STACK"}
-    pepper -C "G@role:${role} and G@hostgroup:${hostgroup}" grains.item os osrelease fqdn fqdn_ip4 subgroup role | jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", subgroup, role }'
+    pepper -C "${target} and G@hostgroup:${hostgroup}" grains.item os osrelease fqdn fqdn_ip4 subgroup role | jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", subgroup, role }'
+}
+
+stack_ping () {
+    local hostgroup=${1:-"$STACK"}
+    pepper -G "hostgroup:${hostgroup}" test.ping | jq "${jq0}"
 }
 
 stack_sync () {
@@ -54,7 +54,7 @@ stack_sync () {
 }
 
 # launch an orchestration command on your stack (async)
-stack_orchestrate () {
+stack_orch () {
     local cmd=$1
     local hostgroup=${2:-"$STACK"}
     if [ -z "$cmd" ]; then echo "expect a orchestration command"; return; fi
@@ -138,6 +138,25 @@ regenerate_completion () {
 if ! [[ -f ".nodes-${zone}" ]]; then
     regenerate_completion
 fi
+
+_split_target () {
+    local ret;
+    IFS='.' read -ra TARGET <<< "$1"
+    for i in "${!TARGET[@]}"; do
+        case $i in
+            0)
+                ret="G@subgroup:${TARGET[0]}"
+            ;;
+            1)
+                ret="G@subgroup:${TARGET[0]} and G@role:${TARGET[1]}"
+            ;;
+            *)
+                break;
+            ;;
+        esac
+    done
+    echo "$ret"
+}
 
 set +o pipefail
 set +e
