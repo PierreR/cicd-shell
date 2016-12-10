@@ -25,10 +25,11 @@ Here are some examples:
 → cicd prod stack ping
 → cicd prod node facts svappcavl771.prd.srv.cirb.lan
 → cicd prod node data svappcavl771.prd.srv.cirb.lan
-→ cicd staging node du svappcavl703.sta.srv.cirb.lan
+→ cicd staging node du svappcavl703.sta.srv.cirb.lan <1>
 → cicd staging node runpuppet svappcavl703.sta.srv.cirb.lan
 → cicd testing result -n 2
 ```
+<1> `du` stands for disk usage
 
 You can request the help at each level. For instance:
 ```
@@ -59,7 +60,7 @@ One great feature of this specialized shell is the *automatic completion* (while
 
 - Summary of all machines and a selection of interesting facts about them:
 ```
-$ facts
+$ stack_facts
 {
   "fqdn": "svappcavl703.sta.srv.cirb.lan",
   "ip": "192.168.22.250",
@@ -76,7 +77,7 @@ pep -L foreman.sandbox.srv.cirb.lan,puppetdb.sandbox.srv.cirb.lan --client=local
 
 - Disk usage on a node:
 ```
-$ du-on svappcavl088.sta.srv.cirb.lan
+$ node_du svappcavl088.sta.srv.cirb.lan
 {
   "svappcavl088.sta.srv.cirb.lan": {
     "/": "23%",
