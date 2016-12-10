@@ -2,7 +2,7 @@
 with import <nixpkgs> {};
 stdenv.mkDerivation {
   name = "pepper-env";
-  buildInputs = [ pepper jq haskellPackages.language-puppet];
+  buildInputs = [ pepper jq haskellPackages.language-puppet_1_3_3];
   shellHook = ''
   export SALTAPI_USER="${salt-user}"
   export SALTAPI_PASS="${salt-pass}"

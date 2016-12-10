@@ -23,7 +23,8 @@ Here are some examples:
 → cicd prod stack data --key docker::version
 → cicd prod stack runpuppet --target saltmaster
 → cicd prod stack ping
-→ cicd staging node data svappcavl703.sta.srv.cirb.lan
+→ cicd prod node facts svappcavl771.prd.srv.cirb.lan
+→ cicd prod node data svappcavl771.prd.srv.cirb.lan
 → cicd staging node du svappcavl703.sta.srv.cirb.lan
 → cicd staging node runpuppet svappcavl703.sta.srv.cirb.lan
 → cicd testing result -n 2

@@ -12,6 +12,8 @@ import           Turtle
 
 import           Option
 
+nixpkgs="12a057cbe07a0ee30b28b4edb39c0a453a4d0556"
+-- nixpkgs= "ca9ce9ace4405acfeb1ff3eb7edaa54827f9b340"
 projectDir = "/home/vagrant/projects/cicd/shell"
 defaultStack = "middleware"
 nixFile z = z <> ".nix"
@@ -20,8 +22,9 @@ nixCommand z = Text.unwords ["nix-shell", nixFile z]
 runCommand :: Text -> Optional Text -> [Text] -> Shell ExitCode
 runCommand zone cmd cargs  =  do
   let
-    pgr = nixCommand zone
+    pgr = nixCommand zone <>  " -I nixpkgs=https://github.com/NixOS/nixpkgs-channels/archive/" <> nixpkgs <> ".tar.gz"
     cmdStr = Optional.optional pgr (\c -> pgr <> " --command '" <> Text.unwords (c : cargs) <> "'" ) cmd
+
   pushd projectDir
   initEnv zone
   liftIO $ interactive cmdStr

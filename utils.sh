@@ -101,7 +101,8 @@ node_data () {
 node_runpuppet () {
     local target=$1
     if [ -z "$target" ]; then echo "expect a target"; return; fi
-	  pepper "$target" puppetutils.run_agent hostgroup="$hostgroup" zone="$zone" | jq -r '.return[] | to_entries | (.[] | if .value.retcode == 0 then "\nSUCCESS for " else "\nFAILURE for " end + .key + ":" , if .value.stderr != "" then .value.stdout + "\n******\n" + .value.stderr else .value.stdout end)'
+    echo "$target"
+	  # pepper "$target" puppetutils.run_agent hostgroup="$hostgroup" zone="$zone" | jq -r '.return[] | to_entries | (.[] | if .value.retcode == 0 then "\nSUCCESS for " else "\nFAILURE for " end + .key + ":" , if .value.stderr != "" then .value.stdout + "\n******\n" + .value.stderr else .value.stdout end)'
 }
 
 result () {
@@ -128,10 +129,6 @@ refresh_pillar () {
     pepper -C "G@role:${role} and G@hostgroup:${hostgroup}" saltutil.refresh_pillar
 }
 
-# all-facts () {
-#     pep '*' grains.item os osrelease fqdn fqdn_ip4 subgroup role | jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", subgroup, role }'
-# }
-
 # For efficiency sake, cache the completion result in a dot file
 regenerate_completion () {
     pepper '*' test.ping | jq '.return[0]' | jq keys | jq -r 'join (" ")' > ".nodes-${zone}"
@@ -140,6 +137,10 @@ regenerate_completion () {
 if ! [[ -f ".nodes-${zone}" ]]; then
     regenerate_completion
 fi
+
+_all-facts () {
+    pep '*' grains.item os osrelease fqdn fqdn_ip4 subgroup role | jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", subgroup, role }'
+}
 
 _split_target () {
     local ret;
