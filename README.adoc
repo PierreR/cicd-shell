@@ -13,16 +13,17 @@ Please fill in a `irisline` ticket to get the necessary permissions.
 
 The name of the command line utility is #cicd#. The first mandatory position argument is the zone (dev, testing, staging or prod).
 
-The #stack# command subgroup would hit nodes inside a specific stack (the https://github.com/CIRB/devbox/blob/master/user/params.sh[default stack of the devbox] if none is provided).
+The #stack# command subgroup would hit nodes inside a specific stack. You can specify the stack by using the `-s` option but by default when none is provided the https://github.com/CIRB/devbox/blob/master/user/params.sh[default stack of the devbox] is used.
+
 The #node# command subgroup always target a specific node.
 
 Here are some examples:
 
 ```
-→ cicd prod stack facts --target jenkins.slave
-→ cicd prod stack data --key docker::version
-→ cicd prod stack runpuppet --target saltmaster
-→ cicd prod stack ping
+→ cicd prod stack facts
+→ cicd prod stack facts jenkins.slave
+→ cicd prod stack data docker::version
+→ cicd prod stack runpuppet saltmaster
 → cicd prod node facts svappcavl771.prd.srv.cirb.lan
 → cicd prod node data svappcavl771.prd.srv.cirb.lan
 → cicd staging node du svappcavl703.sta.srv.cirb.lan <1>
@@ -31,11 +32,12 @@ Here are some examples:
 ```
 <1> `du` stands for disk usage
 
+NOTE: you can always specify another stack
 You can request the help at each level. For instance:
 ```
 → cicd -h <1>
 → cicd staging stack
-→ cicd staging stack orch
+→ cicd staging stack facts -h
 → cicd staging result
 ```
 <1> you can omit `-h` (when the command is invalid it automatically displays the help)

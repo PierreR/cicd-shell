@@ -32,25 +32,50 @@ stats () {
 }
 
 stack_facts () {
-    local role=${1}
     local hostgroup=${1:-"${STACK}"}
     pepper -G "hostgroup:${hostgroup}" grains.item os osrelease fqdn fqdn_ip4 subgroup role | jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", subgroup, role }'
 }
-
 stack_facts_on () {
     local target=$(_split_target "$1")
     local hostgroup=${2:-"$STACK"}
     pepper -C "${target} and G@hostgroup:${hostgroup}" grains.item os osrelease fqdn fqdn_ip4 subgroup role | jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", subgroup, role }'
 }
 
+# dynamic info for all nodes given a specific key (ie: 'docker::version')
+stack_data_for_on () {
+    if [ -z "$1" ]; then echo "Expect a pillar key"; return; fi
+    local target=$(_split_target "$2")
+    local hostgroup=${3:-"$STACK"}
+    echo "target is $target"
+    ( pepper -C "${target} and G@hostgroup:${hostgroup}" grains.item fqdn subgroup role \
+      ; pepper -C "${target} and G@hostgroup:${hostgroup}" pillar.item "$1" delimiter='/' ) | jq -s '.[0].return[0] * .[1].return[0]' | jq ".[] | { fqdn, subgroup, role, \"$1\"}"
+}
+# dynamic info for all nodes given a specific key (ie: 'docker::version')
+stack_data_for () {
+    if [ -z "$1" ]; then echo "Expect a pillar key"; return; fi
+    local hostgroup=${2:-"$STACK"}
+    ( pepper -G "hostgroup:${hostgroup}" grains.item fqdn subgroup role \
+      ; pepper -G "hostgroup:${hostgroup}" pillar.item "$1" delimiter='/' ) | jq -s '.[0].return[0] * .[1].return[0]' | jq ".[] | { fqdn, subgroup, role, \"$1\"}"
+}
+
 stack_ping () {
     local hostgroup=${1:-"$STACK"}
     pepper -G "hostgroup:${hostgroup}" test.ping | jq "${jq0}"
+}
+stack_ping_on () {
+    local target=$(_split_target "$1")
+    local hostgroup=${2:-"$STACK"}
+    pepper -C "${target} and G@hostgroup:${hostgroup}" test.ping | jq "${jq0}"
 }
 
 stack_sync () {
     local hostgroup=${1:-"$STACK"}
     pepper -G "hostgroup:${hostgroup}" saltutil.sync_all
+}
+stack_sync_on () {
+    local target=$(_split_target "$1")
+    local hostgroup=${2:-"$STACK"}
+    pepper -C "${target} and @Ghostgroup:${hostgroup}" saltutil.sync_all
 }
 
 # launch an orchestration command on your stack (async)
@@ -61,13 +86,6 @@ stack_orch () {
     pepper state.orchestrate --client=runner mods="orch.${cmd}" saltenv="${hostgroup}"
 }
 
-# dynamic info for all nodes given a specific key (ie: 'docker::version')
-stack_data_for () {
-    if [ -z "$1" ]; then echo "Expect a pillar key"; return; fi
-    local hostgroup=${2:-"$STACK"}
-    ( pepper -G "hostgroup:${hostgroup}" grains.item fqdn subgroup role \
-      ; pepper -G "hostgroup:${hostgroup}" pillar.item "$1" delimiter='/' ) | jq -s '.[0].return[0] * .[1].return[0]' | jq ".[] | { fqdn, subgroup, role, \"$1\"}"
-}
 
 stack_runpuppet_on () {
     local target=$(_split_target "$1")

@@ -15,7 +15,7 @@ data Options = Options Text Command
 data Command
   = Console
   | Stats
-  | Stack StackCommand
+  | Stack (Maybe StackName, StackCommand)
   | Node NodeCommand
   | Result ResultArg
   deriving (Show)
@@ -26,12 +26,12 @@ data ResultArg
   deriving (Show)
 
 data StackCommand
-  = StackData (Maybe StackName) Key
-  | StackFacts (Maybe StackName) (Maybe Target)
-  | StackOrchestrate (Maybe StackName) Cmd
-  | StackPing (Maybe StackName)
-  | StackRunPuppet (Maybe StackName) Target
-  | StackSync (Maybe StackName)
+  = StackData (Key, Maybe Target) 
+  | StackFacts (Maybe Target)
+  | StackOrchestrate Cmd
+  | StackPing (Maybe Target)
+  | StackRunPuppet Target
+  | StackSync (Maybe Target)
   deriving (Show)
 
 data NodeCommand
@@ -41,16 +41,18 @@ data NodeCommand
   | NodeRunPuppet Text
   deriving (Show)
 
-stackParser :: Parser StackCommand
+stackParser :: Parser (Maybe StackName, StackCommand)
 stackParser =
-      StackData <$> (subcommand "data" "Return configuration data for a specific property" stackArg) <*> (optText "key" 'k' "Property to look up for")
-  <|> StackFacts <$> (subcommand "facts" "Return essential node static information" stackArg) <*> optional (optText "target" 't' "Target subgroup.role")
-  <|> StackOrchestrate <$> (subcommand "orch" "Run an orchestration command on the infrastructure" stackArg) <*> (optText "cmd" 'c' "Command to run")
-  <|> StackPing <$> subcommand "ping" "Ping nodes" stackArg
-  <|> StackRunPuppet <$> (subcommand "runpuppet" "Apply puppet configuration on a specific subgroup.role (async)" stackArg) <*> (optText "target" 't' "Target subgroup.role")
-  <|> StackSync  <$> subcommand "sync" "Sync data from master to nodes" stackArg
-  where
-    stackArg = optional (argText "stack" "Name of stack")
+  let target_parser = argText "target" "Target subgroup.role"
+      stackGroupParser
+        = StackData <$> subcommand "data" "Return configuration data for a specific property" ((,) <$> argText "key" "Property to look up for" <*> optional target_parser)
+        <|> StackFacts <$> subcommand "facts" "Return essential node static information" (optional target_parser)
+        <|> StackOrchestrate <$> subcommand "orch" "Run an orchestration command on the infrastructure" (argText "cmd" "Command to run")
+        <|> StackPing <$> subcommand "ping" "Ping nodes" (optional target_parser)
+        <|> StackRunPuppet <$> subcommand "runpuppet" "Apply puppet configuration on a specific subgroup.role (async)" target_parser
+        <|> StackSync  <$> subcommand "sync" "Sync data from master to nodes" (optional target_parser)
+  in
+    (,) <$> (optional (optText "stack" 's' "Name of stack")) <*> stackGroupParser
 
 nodeParser :: Parser NodeCommand
 nodeParser =
@@ -75,6 +77,7 @@ parser :: Parser Options
 parser
   = Options <$> argText "zone" "ZONE such as dev, staging, testing or prod"
   <*> commandParser
+
 
 -- -- | One or none.
   -- let nix_file = format (s%"/"%s%".nix") projectDir zone
