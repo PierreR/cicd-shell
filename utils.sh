@@ -36,19 +36,19 @@ stack_facts () {
     pepper -G "hostgroup:${hostgroup}" grains.item os osrelease fqdn fqdn_ip4 subgroup role | jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", subgroup, role }'
 }
 stack_facts_on () {
-    local target=$(_split_target "$1")
+    local role=$(_split_role "$1")
     local hostgroup=${2:-"$STACK"}
-    pepper -C "${target} and G@hostgroup:${hostgroup}" grains.item os osrelease fqdn fqdn_ip4 subgroup role | jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", subgroup, role }'
+    pepper -C "${role} and G@hostgroup:${hostgroup}" grains.item os osrelease fqdn fqdn_ip4 subgroup role | jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", subgroup, role }'
 }
 
 # dynamic info for all nodes given a specific key (ie: 'docker::version')
 stack_data_for_on () {
     if [ -z "$1" ]; then echo "Expect a pillar key"; return; fi
-    local target=$(_split_target "$2")
+    local role=$(_split_role "$2")
     local hostgroup=${3:-"$STACK"}
-    echo "target is $target"
-    ( pepper -C "${target} and G@hostgroup:${hostgroup}" grains.item fqdn subgroup role \
-      ; pepper -C "${target} and G@hostgroup:${hostgroup}" pillar.item "$1" delimiter='/' ) | jq -s '.[0].return[0] * .[1].return[0]' | jq ".[] | { fqdn, subgroup, role, \"$1\"}"
+    echo "role is $role"
+    ( pepper -C "${role} and G@hostgroup:${hostgroup}" grains.item fqdn subgroup role \
+      ; pepper -C "${role} and G@hostgroup:${hostgroup}" pillar.item "$1" delimiter='/' ) | jq -s '.[0].return[0] * .[1].return[0]' | jq ".[] | { fqdn, subgroup, role, \"$1\"}"
 }
 # dynamic info for all nodes given a specific key (ie: 'docker::version')
 stack_data_for () {
@@ -63,9 +63,9 @@ stack_ping () {
     pepper -G "hostgroup:${hostgroup}" test.ping | jq "${jq0}"
 }
 stack_ping_on () {
-    local target=$(_split_target "$1")
+    local role=$(_split_role "$1")
     local hostgroup=${2:-"$STACK"}
-    pepper -C "${target} and G@hostgroup:${hostgroup}" test.ping | jq "${jq0}"
+    pepper -C "${role} and G@hostgroup:${hostgroup}" test.ping | jq "${jq0}"
 }
 
 stack_sync () {
@@ -73,9 +73,9 @@ stack_sync () {
     pepper -G "hostgroup:${hostgroup}" saltutil.sync_all
 }
 stack_sync_on () {
-    local target=$(_split_target "$1")
+    local role=$(_split_role "$1")
     local hostgroup=${2:-"$STACK"}
-    pepper -C "${target} and @Ghostgroup:${hostgroup}" saltutil.sync_all
+    pepper -C "${role} and @Ghostgroup:${hostgroup}" saltutil.sync_all
 }
 
 # launch an orchestration command on your stack (async)
@@ -88,39 +88,39 @@ stack_orch () {
 
 
 stack_runpuppet_on () {
-    local target=$(_split_target "$1")
+    local role=$(_split_role "$1")
     local hostgroup=${2:-"${STACK}"}
     read -p "Run puppet on ${1}.${hostgroup}.${zone} ? (y/n)"
     echo    # (optional) move to a new line
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
-	      pepper -C "${target} and G@hostgroup:${hostgroup}" --client=local_async puppetutils.run_agent | jq '.return'
+	      pepper -C "${role} and G@hostgroup:${hostgroup}" --client=local_async puppetutils.run_agent | jq '.return'
     else
         echo "Abort by the user"
     fi
 }
 
 node_facts () {
-    if [ -z "$1" ]; then echo "expect a target"; return; fi
+    if [ -z "$1" ]; then echo "expect a role"; return; fi
     pdbquery -t remote  -l "$puppetdb" facts "$1" | jq 'map({"key": .name, value}) | from_entries | {hostgroup, subgroup, role, "os": "\(.operatingsystem) \(.operatingsystemrelease)", "ip": .ipaddress_eth0, uptime}'
 }
 
 node_du () {
-    if [ -z "$1" ]; then echo "expect a target"; return; fi
+    if [ -z "$1" ]; then echo "expect a role"; return; fi
     pepper "$1" disk.percent | jq "${jq0}"
 }
 
 # dynamic info from configuration
 node_data () {
-    if [ -z "$1" ]; then echo "Expect a target"; return; fi
+    if [ -z "$1" ]; then echo "Expect a role"; return; fi
     pepper  "$1" pillar.items delimiter='/' | jq "${jq0}"
 }
 
 node_runpuppet () {
-    local target=$1
-    if [ -z "$target" ]; then echo "expect a target"; return; fi
-    echo "$target"
-	  # pepper "$target" puppetutils.run_agent hostgroup="$hostgroup" zone="$zone" | jq -r '.return[] | to_entries | (.[] | if .value.retcode == 0 then "\nSUCCESS for " else "\nFAILURE for " end + .key + ":" , if .value.stderr != "" then .value.stdout + "\n******\n" + .value.stderr else .value.stdout end)'
+    local role=$1
+    if [ -z "$role" ]; then echo "expect a role"; return; fi
+    echo "$role"
+	  # pepper "$role" puppetutils.run_agent hostgroup="$hostgroup" zone="$zone" | jq -r '.return[] | to_entries | (.[] | if .value.retcode == 0 then "\nSUCCESS for " else "\nFAILURE for " end + .key + ":" , if .value.stderr != "" then .value.stdout + "\n******\n" + .value.stderr else .value.stdout end)'
 }
 
 result () {
@@ -160,16 +160,16 @@ _all-facts () {
     pep '*' grains.item os osrelease fqdn fqdn_ip4 subgroup role | jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", subgroup, role }'
 }
 
-_split_target () {
+_split_role () {
     local ret;
-    IFS='.' read -ra TARGET <<< "$1"
-    for i in "${!TARGET[@]}"; do
+    IFS='.' read -ra ROLE <<< "$1"
+    for i in "${!ROLE[@]}"; do
         case $i in
             0)
-                ret="G@subgroup:${TARGET[0]}"
+                ret="G@role:${ROLE[0]}"
             ;;
             1)
-                ret="G@subgroup:${TARGET[0]} and G@role:${TARGET[1]}"
+                ret="G@subgroup:${ROLE[0]} and G@role:${ROLE[1]}"
             ;;
             *)
                 break;

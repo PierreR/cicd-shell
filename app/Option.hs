@@ -5,7 +5,7 @@ module Option where
 import           Protolude
 import           Turtle    hiding ((<>))
 
-type Target = Text
+type Role = Text
 type StackName = Text
 type Cmd = Text
 type Key = Text
@@ -26,12 +26,12 @@ data ResultArg
   deriving (Show)
 
 data StackCommand
-  = StackData (Key, Maybe Target) 
-  | StackFacts (Maybe Target)
+  = StackData (Key, Maybe Role)
+  | StackFacts (Maybe Role)
   | StackOrchestrate Cmd
-  | StackPing (Maybe Target)
-  | StackRunPuppet Target
-  | StackSync (Maybe Target)
+  | StackPing (Maybe Role)
+  | StackRunPuppet Role
+  | StackSync (Maybe Role)
   deriving (Show)
 
 data NodeCommand
@@ -43,14 +43,14 @@ data NodeCommand
 
 stackParser :: Parser (Maybe StackName, StackCommand)
 stackParser =
-  let target_parser = argText "target" "Target subgroup.role"
+  let role_parser = argText "role" "Role might be prefixed by a subgroup ('subgroup.role')"
       stackGroupParser
-        = StackData <$> subcommand "data" "Return configuration data for a specific property" ((,) <$> argText "key" "Property to look up for" <*> optional target_parser)
-        <|> StackFacts <$> subcommand "facts" "Return essential node static information" (optional target_parser)
+        = StackData <$> subcommand "data" "Return configuration data for a specific property" ((,) <$> argText "key" "Property to look up for" <*> optional role_parser)
+        <|> StackFacts <$> subcommand "facts" "Return essential facts about nodes" (optional role_parser)
         <|> StackOrchestrate <$> subcommand "orch" "Run an orchestration command on the infrastructure" (argText "cmd" "Command to run")
-        <|> StackPing <$> subcommand "ping" "Ping nodes" (optional target_parser)
-        <|> StackRunPuppet <$> subcommand "runpuppet" "Apply puppet configuration on a specific subgroup.role (async)" target_parser
-        <|> StackSync  <$> subcommand "sync" "Sync data from master to nodes" (optional target_parser)
+        <|> StackPing <$> subcommand "ping" "Ping nodes" (optional role_parser)
+        <|> StackRunPuppet <$> subcommand "runpuppet" "Apply puppet configuration (async)" role_parser
+        <|> StackSync  <$> subcommand "sync" "Sync data from master to nodes" (optional role_parser)
   in
     (,) <$> (optional (optText "stack" 's' "Name of stack")) <*> stackGroupParser
 
@@ -61,14 +61,14 @@ nodeParser =
   <|> NodeDu <$> subcommand "du" "Return disk usage" node_parser
   <|> NodeRunPuppet <$> subcommand "runpuppet" "Apply configuration by running puppet agent" node_parser
   where
-    node_parser = argText "node" "Target node"
+    node_parser = argText "node" "Role node"
 
 commandParser :: Parser Command
 commandParser =
       Console     <$  subcommand "console" "Open the specialized salt console" (pure ())
   <|> Stats       <$  subcommand "stats" "Stats (special permission required)" (pure ())
-  <|> Stack       <$> subcommand "stack" "Target all nodes in a stack" stackParser
-  <|> Node        <$> subcommand "node" "Target one specific node" nodeParser
+  <|> Stack       <$> subcommand "stack" "Role all nodes in a stack" stackParser
+  <|> Node        <$> subcommand "node" "Role one specific node" nodeParser
   <|> Result <$> subcommand "result" ("Display the results of the most recent jobs executed by the user or for a specific id") result_parser
   where
     result_parser = ResultNum <$> (optInt "Num" 'n' "Number of results to display") <|>  ResultJob <$> (optText "job" 'j' "Job id")
