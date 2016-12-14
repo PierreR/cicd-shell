@@ -11,13 +11,26 @@ Please fill in a `irisline` ticket to get the necessary permissions.
 
 ### the `cicd` command line
 
-The name of the command line utility is #cicd#. The first mandatory position argument is the zone (dev, testing, staging or prod):
+The name of the command line utility is #cicd#. The first mandatory position argument is the zone (dev, testing, staging or prod). The general scheme of the command line looks like so:
+
+```
+cicd ZONE orch CMD                                 [-s STACK]
+cicd ZONE runpuppet    [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE facts        [ROLE] [-n NODE] [-g GROUP] [-s STACK] [-a --all]
+cicd ZONE ping         [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE runpuppet    [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE data [-k KEY][ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE console
+```
+
+Here is the help as display on the command line:
 
 ```
 → cicd
 CICD command line utility
 
-Usage: cicd ZONE (console | stats | stack | node | result)
+Usage: cicd ZONE (console | stats | data | orch | facts | ping | du | runpuppet
+            | sync | result)
 
 Available options:
   -h,--help                Show this help text
@@ -26,56 +39,34 @@ Available options:
 Available commands:
   console                  Open the specialized salt console
   stats                    Stats (special permission required)
-  stack                    Target all nodes in a stack
-  node                     Target one specific node
+  data                     Return configuration data for a specific property
+  orch                     Run an orchestration command on the infrastructure
+  facts                    Return essential facts about nodes
+  ping                     Ping nodes
+  du                       Return disk usage
+  runpuppet                Apply puppet configuration
+  sync                     Sync data from master to nodes
   result                   Display the results of the most recent jobs executed by the user or for a specific id
 ```
 
-You can request the help at each level. For instance:
+You can request the help at other level too. For instance:
 ```
-→ cicd <1>
-→ cicd staging stack
-→ cicd staging stack facts -h
+→ cicd staging facts -h
 ```
-<1> you can omit `-h` (when the command is invalid it automatically displays the help)
 
 [NOTE]
 ====
 - These commands are executed remotely (if you have the right to execute them) through an API. Behind the scene they might call either the `puppetdb` or the `saltmaster`. For instance `cicd ZONE node facts NODE` would call the puppetdb and return a result even if the node is down.
 - All commands to the saltmaster together with their results are recorded in a centralize database included the date and name of the person that execute them.
+- By default, all commands target a specific default hostgroup/stack. You can look at the `devbox` README to know how to set the default value for your stack in the devbox.
 ====
 
-### the `stack` subcommand
+### `data`
 
-The #stack# command subgroup would hit nodes inside a specific stack. You can specify the stack by using the `-s` option but by default when none is provided the https://github.com/CIRB/devbox/blob/master/user/params.sh[default stack of the devbox] is used. The general pattern of the command line is:
-
-```
-cicd ZONE stack [-s STACK] ping [ROLE] <1>
-cicd ZONE stack [-s STACK] facts [ROLE]
-cicd ZONE stack [-s STACK] data KEY [ROLE]
-cicd ZONE stack [-s STACK] runpuppet ROLE <2>
-cicd ZONE stack [-s STACK] orch CMD
-```
-<1> You target a ROLE using the fact role alone or together with its subgroup separated by a dot (subgroup.role)
-<2> All calls to runpuppet that might hit several nodes are asynchronous
-
-Here are some example:
-
-- Summary of all machines and a selection of interesting facts about them:
-```
-→ cicd prod stack facts
-{
-  "fqdn": "svappcavl703.sta.srv.cirb.lan",
-  "ip": "192.168.22.250",
-  "os": "CentOS 7.2.1511",
-  "subgroup": "",
-  "role": "saltmaster"
-}
-...
 ```
 - docker version of your jenkins slave
 ```
-→ cicd prod stack data docker::version jenkins.slave
+→ cicd prod data jenkins.slave -k docker::version
 {
   "fqdn": "svappcavl736.cirb.lan",
   "subgroup": "jenkins",
@@ -83,31 +74,48 @@ Here are some example:
   "docker::version": "1.9.1-25.el7"
 }
 ```
-- `run puppet` on your jenkins slave
+→ cicd prod data -n svappcavl771.prd.srv.cirb.lan
+
+### `facts`
+
+You can toggle the `facts` query to target all hostgroups/stacks with the `-a/ --all` flag.
+
+- Selection of interesting facts about all the jenkins slave in production:
 ```
-→ cicd prod stack runpuppet jenkins.slave
+λ ~ → cicd prod facts jenkins.slave -a
+{
+  "fqdn": "SVAPPCAVL595.cirb.lan",
+  "ip": "192.168.34.153",
+  "os": "CentOS 6.6",
+  "subgroup": "jenkins",
+  "role": "slave"
+}
+{
+  "fqdn": "SVAPPCAVL649.prd.srv.cirb.lan",
+  "ip": "192.168.34.9",
+  "os": "RedHat 6.7",
+  "subgroup": "jenkins",
+  "role": "slave"
+}
+...
+
+
+→ cicd prod facts -n svappcavl771.prd.srv.cirb.lan
+
+### `run puppet`
+
+```
+→ cicd prod runpuppet jenkins.slave
+→ cicd staging runpuppet -n svappcavl703.sta.srv.cirb.lan
 ```
 
-### the `node` subcommand
-
-The #node# command subgroup always target a specific node. The general pattern is:
-```
-cicd ZONE node facts NODE
-cicd ZONE node data NODE
-cicd ZONE node runpuppet NODE
-```
-
-Here are some examples:
+### `du` (disk usage)
 
 ```
-→ cicd prod node facts svappcavl771.prd.srv.cirb.lan
-→ cicd prod node data svappcavl771.prd.srv.cirb.lan
-→ cicd staging node du svappcavl703.sta.srv.cirb.lan <1>
-→ cicd staging node runpuppet svappcavl703.sta.srv.cirb.lan
+→ cicd staging du -n svappcavl703.sta.srv.cirb.lan
 ```
-<1> `du` stands for disk usage
 
-### the `result` subcommand
+### `result`
 
 You can view the result of any command by `jid` or request a display of the last `n` commands :
 ```
@@ -115,7 +123,7 @@ You can view the result of any command by `jid` or request a display of the last
 → cicd testing result -n 2
 ```
 
-### the `console` subcommand
+### `console`
 
 .Open a #console in staging#
 ```
@@ -131,25 +139,7 @@ One great feature of this specialized shell is the *automatic completion* (while
 pep -L foreman.sandbox.srv.cirb.lan,puppetdb.sandbox.srv.cirb.lan --client=local_async puppetutils.run_agent
 ```
 
-#### available commands
-
-* `stack_ping`: ping all nodes within your stack
-* `stack_ping_on` r : ping nodes by role r
-* `stack_facts`: important facts on all machines within your stack
-* `stack_facts_on` r : important facts about target t
-* `stack_orch` c: launch the orchestration `c` command
-* `stack_data_for` k : dynamic info given a specific key `k` across all nodes
-* `stack_runpuppet_on` t : run puppet on target t
-* `node_facts` n : all static information available on a specific node `n`
-* `node_runpuppet` n: run puppet on a specific node `n`
-* `node_data` n: dynamic info from hiera for a specific node `n`
-* `node_du` n: disk usage on a node
-* `result` [i] : result of your last `i` command(s)
-* `result_for` jid: result of a specific job specified by its `jid`
-* `commands`:  list all possible salt execution commands (slow)
-
-
-### Orchestration
+### *Orchestration*
 
 Salt can run multiple commands as well using the orchestrate runner. The orchestration is executed on the salt master to allow inter minion requisites, like ordering the application of states on different minions that must not happen simultaneously, or for halting the state run on all minions if a minion fails one of its states (more about this topic can be found https://docs.saltstack.com/en/latest/topics/tutorials/states_pt5.html#orchestrate-runner[in the saltstack website]).
 
@@ -187,8 +177,9 @@ You will also need to fetch the `nixpkgs` source for https://github.com/CIRB/dev
 
 ## TODO
 
+- [ ] update zsh completion
 - [ ] in devbox, update `language-puppet`
+- [ ] fix result -j (that works for run-puppet only)
 - [ ] re-use cicd in the console (cicd prod stack ping -> stack ping)
 - [ ] in devbox, insert this README
 - [ ] use puppetdb instead of salt for stack_data_for
-- [ ] improve zsh completion

@@ -13,12 +13,15 @@ cabal-version:       >=1.10
 executable cicd
   hs-source-dirs:      app
   main-is:             Main.hs
-  other-modules:       Option
+  other-modules:       Type, Option, PepCmd
+  extensions:          OverloadedStrings
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
+                       , lens
                        , optional-args >= 1.0
                        , process
                        , protolude >= 0.1.10
+                       , raw-strings-qq
                        , text
                        , turtle
   default-language:    Haskell2010

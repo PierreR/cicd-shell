@@ -19,12 +19,6 @@ if [ -z "$SALT_PASS" ]; then
     echo ''
 fi
 
-STACK=$(cat $HOME/.user_stack)
-if [ -z "$STACK" ]; then
-    read -p "Enter your stack name: $STACK " STACK
-    STACK=${STACK}
-fi
-
 case $zone in
     "testing")
         SALT_URL="https://saltmaster.sandbox.srv.cirb.lan:8000"
@@ -51,7 +45,6 @@ esac
 cat <<EOF > ${zone}.nix
 (import ./.) {
   zone         = "$zone";
-  stack        = "$STACK";
   salt-user    = "$SALT_USER";
   salt-pass    = "$SALT_PASS";
   salt-url     = $SALT_URL;
