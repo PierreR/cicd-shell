@@ -12,13 +12,6 @@ if [ -z "$SALT_USER" ]; then
     SALT_USER=${SALT_USER}
 fi
 
-SALT_PASS=$(cat $HOME/.user_pwd)
-if [ -z "$SALT_PASS" ]; then
-    read -p "Enter salt password: " -s PWD
-    SALT_PASS=$PWD
-    echo ''
-fi
-
 case $zone in
     "testing")
         SALT_URL="https://saltmaster.sandbox.srv.cirb.lan:8000"
@@ -43,10 +36,11 @@ case $zone in
 esac
 
 cat <<EOF > ${zone}.nix
+{user_pwd}:
 (import ./.) {
   zone         = "$zone";
   salt-user    = "$SALT_USER";
-  salt-pass    = "$SALT_PASS";
+  salt-pass    = "${user_pwd}";
   salt-url     = $SALT_URL;
   pgserver-url = $PGSERVER_URL;
   puppetdb-url = $PUPPETDB_URL;

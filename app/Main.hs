@@ -5,7 +5,6 @@ import           Data.Maybe             (fromJust, fromMaybe)
 import           Data.Optional          (Optional (..))
 import qualified Data.Optional          as Optional
 import qualified Data.Text              as Text
--- import           Protolude              hiding (FilePath, die, (&))
 import qualified System.Process         as Process hiding (FilePath)
 import           Turtle
 
@@ -21,6 +20,7 @@ userhome = "/home/vagrant"
 projectDir = userhome </> "projects/cicd/shell"
 
 user = "${SALTAPI_USER}"
+user_pwd_file = userhome </> ".user_pwd"
 pgUrl  =  "${PGSERVER_URL}/salt_result"
 puppetdbUrl  = "\"${PUPPETDB_URL}\""
 
@@ -35,23 +35,23 @@ runCommand zone cmd =  do
     nixfile z = z <> ".nix"
     nixcommand z = Text.unwords ["nix-shell", nixfile z]
     msg = cmd ^. cmdmsg
-    pgr = nixcommand zone <>  " -I nixpkgs=https://github.com/NixOS/nixpkgs-channels/archive/" <> nixpkgs <> ".tar.gz"
-    pepcmd = if Text.null (cmd^.cmdpep) then pgr else pgr <> " --command '" <> cmd^.cmdpep <> "'"
+    pgr pwd = nixcommand zone <>  " --argstr user_pwd " <> pwd <> " -I nixpkgs=https://github.com/NixOS/nixpkgs-channels/archive/" <> nixpkgs <> ".tar.gz"
+    pepcmd pwd = if Text.null (cmd^.cmdpep) then pgr pwd else pgr pwd <> " --command '" <> cmd^.cmdpep <> "'"
 
     initEnv z = do
       found <- testfile $ fromText (nixfile z)
       unless found $ procs "./set_nix.sh" [z] empty
 
+  salt_pass <- lineToText <$> input user_pwd_file
   pushd projectDir
   initEnv zone
   unless (null msg) $ confirm (fromJust msg)
-  -- liftIO $ print pepcmd
-  -- Optional.optional (shell pepcmd empty) (\jq -> shell jq (inshell pepcmd empty)) (cmd^.cmdjq)
+  -- liftIO $ print (pepcmd salt_pass)
   case cmd^.cmdjq of
-    Default -> interactive pepcmd
+    Default -> interactive (pepcmd salt_pass)
     Specific jq -> do
       -- liftIO $ print jq
-      inshell pepcmd empty & shell jq
+      inshell (pepcmd salt_pass) empty & shell jq
 
 
 -- prohibited options

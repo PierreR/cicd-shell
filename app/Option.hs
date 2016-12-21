@@ -50,7 +50,7 @@ argParser
 
 commandParser :: Parser Command
 commandParser =
-      Console     <$  subcommand "console" "Open the specialized salt console" (pure ())
+      Console     <$  subcommand "console" "Open the cicd console" (pure ())
   <|> Stats       <$  subcommand "stats" "Stats (special permission required)" (pure ())
   <|> Data        <$> subcommand "data" "Return configuration data for a specific property" data_parser
   <|> Orchestrate <$> subcommand "orch" "Run an orchestration command on the infrastructure" orch_parser
