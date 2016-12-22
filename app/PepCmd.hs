@@ -131,12 +131,12 @@ dataCmd (Just key) role _ subgroup stack
     in
       PepCmd pep jq empty
 
-resultCmd :: User -> Text -> Maybe Jobid -> Maybe Int -> PepCmd
-resultCmd user pgUrl Nothing (Just num) = PepCmd
+resultCmd :: Text -> Maybe Jobid -> Maybe Int -> User -> PepCmd
+resultCmd pgUrl Nothing (Just num) user = PepCmd
   (format ("curl -f -s -H \"Range: 0-"%d%"\" \""%s%"?user=eq."%s%"&order=jid.desc\"") num pgUrl user)
   "jq -C '.'"
   empty
-resultCmd _ pgUrl (Just jobid) Nothing = PepCmd
+resultCmd pgUrl (Just jobid) Nothing _ = PepCmd
    ("curl -f -s \"" <> pgUrl <> "?select=ret&jid=eq." <> jobid <> "\"" )
   [r|
     jq -r '(.[].ret | if .return.retcode == 0 then "SUCCESS for " else "FAILURE for " end + .id + ":", if .return.stderr != "" then .return.stdout + "\n******\n" + .return.stderr + "\n" else .return.stdout + "\n" end)'
