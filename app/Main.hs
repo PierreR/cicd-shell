@@ -45,11 +45,18 @@ puppetdbUrl zone
   | zone == "testing" = "http://puppetdb.sandbox.srv.cirb.lan:8080"
   | otherwise         = "http://puppetdb.prd.srv.cirb.lan:8080"
 
+-- | configDir sits in user space
 configDir :: Shell Turtle.FilePath
-configDir = (</> ".config/cicd") <$> home
+configDir = (</> ".local/share/cicd") <$> home
 
 nixFileName :: Text -> Text
 nixFileName zone = zone <> ".nix"
+
+-- assuming the executable is installed with nix
+-- the default.nix file would be located within the nix store
+defaultNixFilePath = do
+  Just binpath <- which "cicd"
+  pure $ collapse $ (directory binpath) </> "../share/cicd"
 
 userPwd = do
   let pwd_file = (</> ".user_pwd") <$> home
@@ -61,18 +68,20 @@ getStack s = do
   ds <- input ( h </> ".user_stack")
   return $ fromMaybe (lineToText ds) s
 
+-- sensitive information such as a password won't be copy in the configfile 
 writeConfig :: Turtle.FilePath -> Text -> Text -> IO ()
 writeConfig file zone user = do
   let
-    lines = [ "{user_pwd}:"
-              , "(import ./.) {"
-              , "  zone = \"" <> zone <> "\";"
-              , "  salt-user = \"" <> user <> "\";"
-              , "  salt-pass = \"${user_pwd}\";"
-              , "  salt-url = \"" <> saltUrl  zone <> "\";"
-              , "}"
-              ]
-  writeTextFile file (Text.unlines lines)
+    lines dnfp = [ "{user_pwd}:"
+                , "(import "<> dnfp <> "/.) {"
+                , "  zone = \"" <> zone <> "\";"
+                , "  salt-user = \"" <> user <> "\";"
+                , "  salt-pass = \"${user_pwd}\";"
+                , "  salt-url = \"" <> saltUrl  zone <> "\";"
+                , "}"
+                ]
+  dnfp <- defaultNixFilePath
+  writeTextFile file (Text.unlines (lines (format fp dnfp)))
 
 runCommand :: Text -> PepCmd -> Shell ExitCode
 runCommand zone cmd =  do
@@ -88,7 +97,7 @@ runCommand zone cmd =  do
       found <- testfile configfile
       unless found $ do
         liftIO $ writeConfig configfile z u
-        echo $ fpToLine configfile <> " created"
+        printf (fp%" created\n") configfile
 
   salt_pass <- userPwd
   foundconfdir <- testdir =<< configDir
@@ -132,9 +141,6 @@ confirm msg = do
     Just "Y" -> return ()
     _        -> die "Abort by the user"
 
-
-fpToLine :: Turtle.FilePath -> Line
-fpToLine = unsafeTextToLine . format fp
 
 interactive :: MonadIO io => Text -> io ExitCode
 interactive c = do
