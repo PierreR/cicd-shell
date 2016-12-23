@@ -1,13 +1,15 @@
 module Main where
 
 import           Control.Lens.Operators hiding ((<.>))
-import           Data.Maybe             (fromJust, fromMaybe)
+import           Data.Foldable          (for_)
+import           Data.Maybe             (fromMaybe)
 import           Data.Optional          (Optional (..))
 import qualified Data.Optional          as Optional
 import qualified Data.Text              as Text
 import qualified System.Process         as Process hiding (FilePath)
 import           Turtle
-
+import qualified Data.Version (showVersion)
+import qualified Paths_cicd_shell
 import           Option
 import           PepCmd
 import           Type
@@ -68,7 +70,7 @@ getStack s = do
   ds <- input ( h </> ".user_stack")
   return $ fromMaybe (lineToText ds) s
 
--- sensitive information such as a password won't be copy in the configfile 
+-- sensitive information such as a password won't be copy in the configfile
 writeConfig :: Turtle.FilePath -> Text -> Text -> IO ()
 writeConfig file zone user = do
   let
@@ -104,7 +106,7 @@ runCommand zone cmd =  do
   unless foundconfdir $ mkdir =<< configDir
   pushd =<< configDir
   initEnv zone =<< user
-  unless (null msg) $ confirm (fromJust msg)
+  for_ msg confirm
   -- liftIO $ print (pepcmd salt_pass)
   case cmd^.cmdjq of
     Default -> interactive (pepcmd salt_pass)
@@ -128,6 +130,8 @@ run (Options zone (Orchestrate (cmd, s)))        = getStack s >>= runCommand zon
 run (Options zone (Du (Arg r n g s)))            = getStack s >>= runCommand zone . duCmd r n g
 run (Options zone (Result (ResultNum n)))        = user >>= runCommand zone . resultCmd (pgUrl zone) Nothing (Just n)
 run (Options zone (Result (ResultJob j )))       = user >>= runCommand zone . resultCmd (pgUrl zone) (Just j) Nothing
+run (Version True)                               = liftIO $ putStrLn ("cicd " ++ Data.Version.showVersion Paths_cicd_shell.version) >> pure ExitSuccess
+run (Version False)                              = shell "cicd -h"  empty
 
 
 main :: IO ()

@@ -1,13 +1,13 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 module Option where
 
+import           Control.Lens        (makeLenses)
+import qualified Options.Applicative as Opts
 import           Protolude
-import           Turtle    hiding ((<>))
-import           Control.Lens (makeLenses)
+import           Turtle              hiding ((<>))
 import           Type
-
 
 data ResultArg
   = ResultJob Text
@@ -28,14 +28,16 @@ data Command
   deriving (Show)
 
 
-data Options = Options Text Command
+data Options
+  = Options Text Command
+  | Version Bool
 
 data Arg
   = Arg
-  { _argRole :: Maybe Role
-  , _argNode :: Maybe Node
+  { _argRole     :: Maybe Role
+  , _argNode     :: Maybe Node
   , _argSubgroup :: Maybe Subgroup
-  , _argStack :: Maybe Stack
+  , _argStack    :: Maybe Stack
   } deriving Show
 
 makeLenses ''Arg
@@ -68,9 +70,9 @@ commandParser =
 
 
 parser :: Parser Options
-parser
-  = Options <$> argText "zone" "ZONE such as dev, staging, testing or prod"
-  <*> commandParser
+parser =
+      Options <$> argText "zone" "ZONE such as dev, staging, testing or prod" <*> commandParser
+  <|> Version <$> Opts.switch  (Opts.long "version" <> Opts.short 'v' <> Opts.help "Output version information and exit" <> Opts.hidden)
 
 
 -- -- | One or none.

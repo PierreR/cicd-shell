@@ -1,5 +1,5 @@
 name:                cicd-shell
-version:             0.1.0
+version:             0.9.0
 description:         Please see README.md
 homepage:            ssh://git@stash.cirb.lan:7999/cicd/salt-shell.git
 license:             BSD3
@@ -13,12 +13,13 @@ cabal-version:       >=1.10
 executable cicd
   hs-source-dirs:      app
   main-is:             Main.hs
-  other-modules:       Type, Option, PepCmd
+  other-modules:       Type, Option, PepCmd, Paths_cicd_shell
   extensions:          OverloadedStrings
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                        , lens
                        , optional-args >= 1.0
+                       , optparse-applicative >= 0.13
                        , process
                        , protolude >= 0.1.10
                        , raw-strings-qq
