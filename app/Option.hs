@@ -4,10 +4,10 @@
 module Option where
 
 import           Control.Lens        (makeLenses)
-import qualified Options.Applicative as Opts
 import           Protolude
 import           Turtle              hiding ((<>))
 import           Type
+import qualified Paths_cicd_shell
 
 data ResultArg
   = ResultJob Text
@@ -30,7 +30,6 @@ data Command
 
 data Options
   = Options Text Command
-  | Version Bool
 
 data Arg
   = Arg
@@ -72,7 +71,6 @@ commandParser =
 parser :: Parser Options
 parser =
       Options <$> argText "zone" "ZONE such as dev, staging, testing or prod" <*> commandParser
-  <|> Version <$> Opts.switch  (Opts.long "version" <> Opts.short 'v' <> Opts.help "Output version information and exit" <> Opts.hidden)
 
 
 -- -- | One or none.

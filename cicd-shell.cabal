@@ -19,7 +19,6 @@ executable cicd
   build-depends:       base
                        , lens
                        , optional-args >= 1.0
-                       , optparse-applicative >= 0.13
                        , process
                        , protolude >= 0.1.10
                        , raw-strings-qq

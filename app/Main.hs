@@ -10,6 +10,7 @@ import qualified System.Process         as Process hiding (FilePath)
 import           Turtle
 import qualified Data.Version (showVersion)
 import qualified Paths_cicd_shell
+
 import           Option
 import           PepCmd
 import           Type
@@ -130,13 +131,14 @@ run (Options zone (Orchestrate (cmd, s)))        = getStack s >>= runCommand zon
 run (Options zone (Du (Arg r n g s)))            = getStack s >>= runCommand zone . duCmd r n g
 run (Options zone (Result (ResultNum n)))        = user >>= runCommand zone . resultCmd (pgUrl zone) Nothing (Just n)
 run (Options zone (Result (ResultJob j )))       = user >>= runCommand zone . resultCmd (pgUrl zone) (Just j) Nothing
-run (Version True)                               = liftIO $ putStrLn ("cicd " ++ Data.Version.showVersion Paths_cicd_shell.version) >> pure ExitSuccess
-run (Version False)                              = shell "cicd -h"  empty
 
 
 main :: IO ()
 main = sh $
-  options "CICD command line utility" parser >>= run
+  let
+    version = Data.Version.showVersion Paths_cicd_shell.version
+  in
+  options (fromString ("CICD - command line utility (v" <> version <> ")")) parser >>= run
 
 confirm msg = do
   echo $ msg <> "? (Y/N)"
