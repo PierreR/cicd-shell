@@ -1,10 +1,8 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 module Option where
 
 import           Control.Lens        (makeLenses)
-import           Protolude
 import           Turtle              hiding ((<>))
 import           Type
 import qualified Paths_cicd_shell

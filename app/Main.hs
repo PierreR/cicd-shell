@@ -17,8 +17,8 @@ import           Type
 
 -- need to come from http://hydra.nixos.org/job/nixpkgs/trunk/haskellPackages.language-puppet.x86_64-linux
 -- 14 nov 2016
-nixpkgs = "12a057cbe07a0ee30b28b4edb39c0a453a4d0556"
--- nixpkgs = "b02e6cc70d3e458eccb99ea20c4746238ebf52c2"
+-- nixpkgs = "12a057cbe07a0ee30b28b4edb39c0a453a4d0556"
+nixpkgs = "b02e6cc70d3e458eccb99ea20c4746238ebf52c2"
 
 user :: Shell Text
 user = do
