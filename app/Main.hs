@@ -55,11 +55,11 @@ configDir = (</> ".local/share/cicd") <$> home
 nixFileName :: Text -> Text
 nixFileName zone = zone <> ".nix"
 
--- assuming the executable is installed with nix
--- the default.nix file would be located within the nix store
+-- we could locate the default.nix relatively to bin where the exec sits
+-- for now we simply find it in the nixpkgs custom user folder
 defaultNixFilePath = do
-  Just binpath <- which "cicd"
-  pure $ collapse $ (directory binpath) </> "../share/cicd"
+  h <- home
+  pure $ h </> ".nixpkgs/pkgs/cicd-shell/share"
 
 userPwd = do
   let pwd_file = (</> ".user_pwd") <$> home
