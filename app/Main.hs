@@ -15,6 +15,9 @@ import           Option
 import           PepCmd
 import           Type
 
+
+version = Data.Version.showVersion Paths_cicd_shell.version
+
 -- need to come from http://hydra.nixos.org/job/nixpkgs/trunk/haskellPackages.language-puppet.x86_64-linux
 -- 14 nov 2016
 -- nixpkgs = "12a057cbe07a0ee30b28b4edb39c0a453a4d0556"
@@ -53,8 +56,7 @@ configDir :: Shell Turtle.FilePath
 configDir = (</> ".local/share/cicd") <$> home
 
 nixFileName :: Text -> Text
-nixFileName zone = zone <> ".nix"
-
+nixFileName zone = zone <> "-" <> Text.pack version <> ".nix"
 -- we could locate the default.nix relatively to bin where the exec sits
 -- for now we simply find it in the nixpkgs custom user folder
 defaultNixFilePath = do
@@ -134,11 +136,7 @@ run (Options zone (Result (ResultJob j )))       = user >>= runCommand zone . re
 
 
 main :: IO ()
-main = sh $
-  let
-    version = Data.Version.showVersion Paths_cicd_shell.version
-  in
-  options (fromString ("CICD - command line utility (v" <> version <> ")")) parser >>= run
+main = sh $ options (fromString ("CICD - command line utility (v" <> version <> ")")) parser >>= run
 
 confirm msg = do
   echo $ msg <> "? (Y/N)"
