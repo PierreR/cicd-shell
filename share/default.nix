@@ -9,7 +9,7 @@ stdenv.mkDerivation {
   export SALTAPI_URL="${salt-url}"
   export SALTAPI_EAUTH=ldap
   export ZONE="${zone}"
-  export PS1="\n\[\033[1;32m\][salt ${zone}]$\[\033[0m\] "
+  export PS1="\n\[\033[1;32m\][cicd ${zone}]$\[\033[0m\] "
   alias cicd="cicd $ZONE"
   '';
 }
