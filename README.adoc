@@ -121,7 +121,7 @@ To display all known configuration of a specific node:
 
 ### run puppet command
 
-The command runs the puppet agent on one or multiple nodes. For instance you can run the agent on all the nodes of your stack with:
+The command runs the puppet agent on one or multiple nodes. For instance you can run the agent on all the dev nodes of your stack with:
 
 ```
 → cicd dev runpuppet
@@ -130,7 +130,7 @@ The command runs the puppet agent on one or multiple nodes. For instance you can
 Or you can select a subgroup with
 
 ```
-→ cicd testing runpuppet -g jenkins
+→ cicd dev runpuppet -g jenkins
 ```
 
 ### du command
@@ -142,7 +142,7 @@ The command displays disk usage. Try:
 
 ### result command
 
-You can view the result of any command by `jid` or request a display of the last `n` commands :
+You can view the result of any command by using the jobid (`jid`) or request a display of the last `n` commands :
 ```
 → cicd testing result -j 20160621104434055991
 → cicd testing result -n 2
@@ -150,7 +150,7 @@ You can view the result of any command by `jid` or request a display of the last
 
 ### console command
 
-For longer session within a specific zone, you can save some typing by opening a `console` for that zone. Inside the console, you would omit the zone tag from the command line (`cicd prod facts` -> `cicd facts`)
+For longer session within a specific zone, you can save some typing by opening a `console` for that zone. Inside the console, you would omit the zone from the command line. Here is an example:
 
 ```
 → cicd staging console
@@ -158,7 +158,7 @@ For longer session within a specific zone, you can save some typing by opening a
 [cicd prod]$ cicd facts
 ```
 
-Another usage of the console is to run specific `salt` commands (via the #pep# shortcut) that are not exposed by the `cicd` command line. For instance:
+Another usage of the console is to run specific `salt` commands that are not exposed by the `cicd` command line. This is done via the #pep# shortcut. For instance:
 
 ```
 [cicd prod] $ pep -L foreman.sandbox.srv.cirb.lan,puppetdb.sandbox.srv.cirb.lan --client=local_async puppetutils.run_agent

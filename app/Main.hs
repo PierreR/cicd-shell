@@ -18,10 +18,10 @@ import           Type
 
 version = Data.Version.showVersion Paths_cicd_shell.version
 
--- need to come from http://hydra.nixos.org/job/nixpkgs/trunk/haskellPackages.language-puppet.x86_64-linux
--- 14 nov 2016
--- nixpkgs = "12a057cbe07a0ee30b28b4edb39c0a453a4d0556"
-nixpkgs = "b02e6cc70d3e458eccb99ea20c4746238ebf52c2"
+nixpkgs :: Shell Text
+nixpkgs = do
+  h <- home
+  lineToText <$> input (h <> ".nixpkgs_ref")
 
 user :: Shell Text
 user = do
@@ -93,8 +93,8 @@ runCommand zone cmd =  do
   let
     nixcommand z = Text.unwords ["nix-shell", nixFileName z]
     msg = cmd ^. cmdmsg
-    pgr pwd = nixcommand zone <>  " --argstr user_pwd " <> pwd <> " -I nixpkgs=https://github.com/NixOS/nixpkgs-channels/archive/" <> nixpkgs <> ".tar.gz"
-    pepcmd pwd = if Text.null (cmd^.cmdpep) then pgr pwd else pgr pwd <> " --command '" <> cmd^.cmdpep <> "'"
+    pgr pwd nixref = nixcommand zone <>  " --argstr user_pwd " <> pwd <> " -I nixpkgs=https://github.com/NixOS/nixpkgs-channels/archive/" <> nixref <> ".tar.gz"
+    pepcmd pwd nixref = if Text.null (cmd^.cmdpep) then pgr pwd nixref else pgr pwd nixref <> " --command '" <> cmd^.cmdpep <> "'"
 
     initEnv z u = do
       configdir <- configDir
@@ -105,6 +105,7 @@ runCommand zone cmd =  do
         printf (fp%" created\n") configfile
 
   salt_pass <- userPwd
+  nixpkgsref <- nixpkgs
   foundconfdir <- testdir =<< configDir
   unless foundconfdir $ mkdir =<< configDir
   pushd =<< configDir
@@ -112,10 +113,10 @@ runCommand zone cmd =  do
   for_ msg confirm
   -- liftIO $ print (pepcmd salt_pass)
   case cmd^.cmdjq of
-    Default -> interactive (pepcmd salt_pass)
+    Default -> interactive (pepcmd salt_pass nixpkgsref)
     Specific jq -> do
       -- liftIO $ print jq
-      inshell (pepcmd salt_pass) empty & shell jq
+      inshell (pepcmd salt_pass nixpkgsref) empty & shell jq
 
 
 -- prohibited options
