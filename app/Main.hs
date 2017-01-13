@@ -111,7 +111,7 @@ runCommand zone cmd =  do
   pushd =<< configDir
   initEnv zone =<< user
   for_ msg confirm
-  -- liftIO $ print (pepcmd salt_pass)
+  -- liftIO $ print (pepcmd salt_pass nixpkgsref)
   case cmd^.cmdjq of
     Default -> interactive (pepcmd salt_pass nixpkgsref)
     Specific jq -> do

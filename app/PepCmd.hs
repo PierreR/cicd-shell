@@ -57,13 +57,19 @@ orchCmd cmd stack = PepCmd
   empty
 
 runpuppetCmd :: Maybe Role -> Maybe Node -> Maybe Subgroup -> Stack -> PepCmd
-runpuppetCmd role _ subgroup stack = PepCmd
+runpuppetCmd role Nothing subgroup stack = PepCmd
   ( pepperCompoundTarget (Just stack) subgroup role <> "--client=local_async puppetutils.run_agent")
   "jq '.return'"
   ( case role of
       Nothing -> textToLine $ "Run puppet on " <> stack
       Just r  -> textToLine $ "Run puppet on " <> stack <> "." <> r
   )
+runpuppetCmd _ (Just node) _ _ = PepCmd
+  ( "pepper " <> node <> " puppetutils.run_agent")
+  [r|
+    jq -r '.return[] | to_entries | (.[] | if .value.retcode == 0 then "\nSUCCESS for " else "\nFAILURE for " end + .key + ":" , if .value.stderr != "" then .value.stdout + "\n******\n" + .value.stderr else .value.stdout end)'
+  |]
+  empty
 
 syncCmd :: Maybe Role -> Maybe Node -> Maybe Subgroup -> Stack -> PepCmd
 syncCmd role Nothing subgroup stack = PepCmd
