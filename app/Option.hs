@@ -23,6 +23,7 @@ data Command
   | Runpuppet Arg
   | Sync Arg
   | Result ResultArg
+  | GenTags
   deriving (Show)
 
 
@@ -58,7 +59,8 @@ commandParser =
   <|> Du          <$> subcommand "du" "Return disk usage" argParser
   <|> Runpuppet   <$> subcommand "runpuppet" "Apply puppet configuration" argParser
   <|> Sync        <$> subcommand "sync" "Sync data from master to nodes" argParser
-  <|> Result      <$> subcommand "result" ("Display the results of the most recent jobs executed by the user or for a specific id") result_parser
+  <|> Result      <$> subcommand "result" "Display the results of the most recent jobs executed by the user or for a specific id" result_parser
+  <|> GenTags     <$ subcommand "gentags" "Generate node completion file" (pure ())
   where
     result_parser = ResultNum <$> (optInt "Num" 'n' "Number of results to display") <|>  ResultJob <$> (optText "job" 'j' "Job id")
     data_parser = (,) <$> optional (optText "key" 'k' "Property to look up for" ) <*> argParser

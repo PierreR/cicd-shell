@@ -42,6 +42,13 @@ makeLenses ''PepCmd
 consoleCmd :: PepCmd
 consoleCmd = PepCmd Text.empty empty empty
 
+genTagsCmd :: Text -> Turtle.FilePath -> PepCmd
+genTagsCmd zone cfdir =
+  PepCmd
+  "pepper \"*\" test.ping"
+  ("jq '.return[0]' | jq keys | jq -r 'join (\" \")' > " <> pure (format fp cfdir) <> "/.nodes-" <> pure zone)
+  empty
+
 statCmd :: PepCmd
 statCmd = PepCmd
   "pepper --client=runner manage.status"

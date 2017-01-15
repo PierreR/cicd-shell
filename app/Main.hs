@@ -103,6 +103,7 @@ runCommand zone cmd =  do
       unless found $ do
         liftIO $ writeConfig configfile z u
         printf (fp%" created\n") configfile
+        void $ shell ("cicd " <> zone <> " gentags") empty
 
   salt_pass <- userPwd
   nixpkgsref <- nixpkgs
@@ -125,6 +126,7 @@ run (Options zone (Data (Nothing, Arg Nothing Nothing Nothing s)))  = die "Runni
 -- valid options
 run (Options zone Console)                       = runCommand zone consoleCmd
 run (Options zone Stats)                         = runCommand zone statCmd
+run (Options zone GenTags)                       = configDir >>= runCommand zone . genTagsCmd zone
 run (Options zone (Facts (across, Arg r n g s))) = getStack s >>= runCommand zone . factCmd (puppetdbUrl zone) r n g across
 run (Options zone (Ping (Arg r n g s)))          = getStack s >>= runCommand zone . pingCmd r n g
 run (Options zone (Runpuppet (Arg r n g s )))    = getStack s >>= runCommand zone . runpuppetCmd r n g
