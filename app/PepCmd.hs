@@ -34,8 +34,11 @@ data PepCmd
   = PepCmd
   { _cmdpep :: Text
   , _cmdjq  :: Optional Text
-  , _cmdmsg :: Maybe Line
+  , _cmdmsg :: Maybe CmdMsg
   } deriving Show
+
+
+data CmdMsg = CmdMsg Bool Text deriving Show
 
 makeLenses ''PepCmd
 
@@ -44,10 +47,11 @@ consoleCmd = PepCmd Text.empty empty empty
 
 genTagsCmd :: Text -> Turtle.FilePath -> PepCmd
 genTagsCmd zone cfdir =
-  PepCmd
+  let nodefile = format fp cfdir <> "/.nodes-" <> zone
+  in PepCmd
   "pepper \"*\" test.ping"
-  ("jq '.return[0]' | jq keys | jq -r 'join (\" \")' > " <> pure (format fp cfdir) <> "/.nodes-" <> pure zone)
-  empty
+  ("jq '.return[0]' | jq keys | jq -r 'join (\" \")' > " <> pure nodefile)
+  (Just $ CmdMsg False ("Generating " <> nodefile))
 
 statCmd :: PepCmd
 statCmd = PepCmd
@@ -68,8 +72,8 @@ runpuppetCmd role Nothing subgroup stack = PepCmd
   ( pepperCompoundTarget (Just stack) subgroup role <> "--client=local_async puppetutils.run_agent")
   "jq '.return'"
   ( case role of
-      Nothing -> textToLine $ "Run puppet on " <> stack
-      Just r  -> textToLine $ "Run puppet on " <> stack <> "." <> r
+      Nothing -> Just $ CmdMsg True ("Run puppet on " <> stack)
+      Just r  -> Just $ CmdMsg True ("Run puppet on " <> stack <> "." <> r)
   )
 runpuppetCmd _ (Just node) _ _ = PepCmd
   ( "pepper " <> node <> " puppetutils.run_agent")

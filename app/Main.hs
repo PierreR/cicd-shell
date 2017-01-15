@@ -6,6 +6,7 @@ import           Data.Maybe             (fromMaybe)
 import           Data.Optional          (Optional (..))
 import qualified Data.Optional          as Optional
 import qualified Data.Text              as Text
+import qualified Data.Text.IO           as Text
 import qualified System.Process         as Process hiding (FilePath)
 import           Turtle
 import qualified Data.Version (showVersion)
@@ -102,8 +103,10 @@ runCommand zone cmd =  do
       found <- testfile configfile
       unless found $ do
         liftIO $ writeConfig configfile z u
-        printf (fp%" created\n") configfile
-        void $ shell ("cicd " <> zone <> " gentags") empty
+        printf (fp%" created.\n") configfile
+        shell ("cicd " <> zone <> " gentags") empty >>= \case
+          ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") z
+          ExitFailure _ -> printf ("WARNING: cannot generate node completion file.\n")
 
   salt_pass <- userPwd
   nixpkgsref <- nixpkgs
@@ -111,7 +114,7 @@ runCommand zone cmd =  do
   unless foundconfdir $ mkdir =<< configDir
   pushd =<< configDir
   initEnv zone =<< user
-  for_ msg confirm
+  maybe (pure ()) interactWith msg
   -- liftIO $ print (pepcmd salt_pass nixpkgsref)
   case cmd^.cmdjq of
     Default -> interactive (pepcmd salt_pass nixpkgsref)
@@ -141,8 +144,11 @@ run (Options zone (Result (ResultJob j )))       = user >>= runCommand zone . re
 main :: IO ()
 main = sh $ options (fromString ("CICD - command line utility (v" <> version <> ")")) parser >>= run
 
-confirm msg = do
-  echo $ msg <> "? (Y/N)"
+interactWith (CmdMsg False msg) =
+  liftIO $ Text.putStrLn msg
+
+interactWith (CmdMsg True msg) = do
+  printf (s%" ? (Y/N)") msg
   r <- readline
   case r of
     Just "Y" -> return ()
