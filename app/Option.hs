@@ -21,7 +21,7 @@ data Command
   | Du Arg
   | Ping Arg
   | Runpuppet Arg
-  | Sync Arg
+  | Sync (Bool, Arg)
   | Result ResultArg
   | GenTags
   deriving (Show)
@@ -54,17 +54,17 @@ commandParser =
   <|> Stats       <$  subcommand "stats" "Stats (special permission required)" (pure ())
   <|> Data        <$> subcommand "data" "Return configuration data for a specific property" data_parser
   <|> Orchestrate <$> subcommand "orch" "Run an orchestration command on the infrastructure" orch_parser
-  <|> Facts       <$> subcommand "facts" "Return essential facts about nodes" fact_parser
+  <|> Facts       <$> subcommand "facts" "Return essential facts about nodes" all_parser
   <|> Ping        <$> subcommand "ping" "Ping nodes" argParser
   <|> Du          <$> subcommand "du" "Return disk usage" argParser
   <|> Runpuppet   <$> subcommand "runpuppet" "Apply puppet configuration" argParser
-  <|> Sync        <$> subcommand "sync" "Sync data from master to nodes" argParser
+  <|> Sync        <$> subcommand "sync" "Sync data from master to nodes" all_parser
   <|> Result      <$> subcommand "result" "Display the results of the most recent jobs executed by the user or for a specific id" result_parser
   <|> GenTags     <$ subcommand "gentags" "Generate node completion file" (pure ())
   where
     result_parser = ResultNum <$> (optInt "Num" 'n' "Number of results to display") <|>  ResultJob <$> (optText "job" 'j' "Job id")
     data_parser = (,) <$> optional (optText "key" 'k' "Property to look up for" ) <*> argParser
-    fact_parser = (,) <$> switch "all" 'a' "Target whole the known stacks" <*> argParser
+    all_parser = (,) <$> switch "all" 'a' "Target whole the known stacks" <*> argParser
     orch_parser = (,) <$> (argText "cmd" "Command to run") <*> optional (optText "stack" 's' "Target stack/hostgroup" )
 
 

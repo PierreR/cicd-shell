@@ -82,12 +82,12 @@ runpuppetCmd _ (Just node) _ _ = PepCmd
   |]
   empty
 
-syncCmd :: Maybe Role -> Maybe Node -> Maybe Subgroup -> Stack -> PepCmd
-syncCmd role Nothing subgroup stack = PepCmd
-  (pepperCompoundTarget (Just stack) subgroup role <> "saltutil.sync_all")
+syncCmd :: Maybe Role -> Maybe Node -> Maybe Subgroup -> Bool -> Stack -> PepCmd
+syncCmd role Nothing subgroup across stack = PepCmd
+  (pepperCompoundTarget (if across then Nothing else Just stack) subgroup role <> "saltutil.sync_all")
   empty
   empty
-syncCmd _ (Just node) _ _ = PepCmd
+syncCmd _ (Just node) _ _ _ = PepCmd
   ("pepper '" <> node <> "' saltutil.sync_all")
   empty
   empty

@@ -133,7 +133,7 @@ run (Options zone GenTags)                       = configDir >>= runCommand zone
 run (Options zone (Facts (across, Arg r n g s))) = getStack s >>= runCommand zone . factCmd (puppetdbUrl zone) r n g across
 run (Options zone (Ping (Arg r n g s)))          = getStack s >>= runCommand zone . pingCmd r n g
 run (Options zone (Runpuppet (Arg r n g s )))    = getStack s >>= runCommand zone . runpuppetCmd r n g
-run (Options zone (Sync (Arg r n g s)))          = getStack s >>= runCommand zone . syncCmd r n g
+run (Options zone (Sync (across, Arg r n g s)))  = getStack s >>= runCommand zone . syncCmd r n g across
 run (Options zone (Data (key, Arg r n g s)))     = getStack s >>= runCommand zone . dataCmd key r n g
 run (Options zone (Orchestrate (cmd, s)))        = getStack s >>= runCommand zone . orchCmd cmd
 run (Options zone (Du (Arg r n g s)))            = getStack s >>= runCommand zone . duCmd r n g
