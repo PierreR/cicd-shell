@@ -32,8 +32,9 @@ user = do
 saltUrl zone =
   case zone of
     "dev"     -> "https://salt.dev.srv.cirb.lan:8000"
-    "testing" -> "https://saltmaster.sandbox.srv.cirb.lan:8000"
+    "sandbox" -> "https://saltmaster.sandbox.srv.cirb.lan:8000"
     "staging" -> "https://salt.sta.srv.cirb.lan:8000"
+    "testing" -> "https://salt.sta.srv.cirb.lan:8000"
     "prod"    -> "https://salt.prd.srv.cirb.lan:8000"
 
 pgUrl :: Text -> Text
@@ -44,12 +45,12 @@ pgUrl zone =
     result_suffix = "/salt_result"
   in
   case zone of
-    "testing" -> pgserver_sandbox <> result_suffix
+    "sandbox" -> pgserver_sandbox <> result_suffix
     "prod"    -> pgserver_prod <> result_suffix
     _         -> pgserver_prod <> "-" <> zone <> result_suffix
 
 puppetdbUrl zone
-  | zone == "testing" = "http://puppetdb.sandbox.srv.cirb.lan:8080"
+  | zone == "sandbox" = "http://puppetdb.sandbox.srv.cirb.lan:8080"
   | otherwise         = "http://puppetdb.prd.srv.cirb.lan:8080"
 
 -- | configDir sits in user space
@@ -130,13 +131,13 @@ run (Options zone (Data (Nothing, Arg Nothing Nothing Nothing s)))  = die "Runni
 run (Options zone Console)                       = runCommand zone consoleCmd
 run (Options zone Stats)                         = runCommand zone statCmd
 run (Options zone GenTags)                       = configDir >>= runCommand zone . genTagsCmd zone
-run (Options zone (Facts (across, Arg r n g s))) = getStack s >>= runCommand zone . factCmd (puppetdbUrl zone) r n g across
-run (Options zone (Ping (Arg r n g s)))          = getStack s >>= runCommand zone . pingCmd r n g
-run (Options zone (Runpuppet (Arg r n g s )))    = getStack s >>= runCommand zone . runpuppetCmd r n g
-run (Options zone (Sync (across, Arg r n g s)))  = getStack s >>= runCommand zone . syncCmd r n g across
-run (Options zone (Data (key, Arg r n g s)))     = getStack s >>= runCommand zone . dataCmd key r n g
+run (Options zone (Facts (across, Arg r n g s))) = getStack s >>= runCommand zone . factCmd (puppetdbUrl zone) zone r n g across
+run (Options zone (Ping (across, Arg r n g s)))  = getStack s >>= runCommand zone . pingCmd zone r n g across
+run (Options zone (Runpuppet (Arg r n g s )))    = getStack s >>= runCommand zone . runpuppetCmd zone r n g
+run (Options zone (Sync (across, Arg r n g s)))  = getStack s >>= runCommand zone . syncCmd zone r n g across
+run (Options zone (Data (key, Arg r n g s)))     = getStack s >>= runCommand zone . dataCmd key zone r n g
 run (Options zone (Orchestrate (cmd, s)))        = getStack s >>= runCommand zone . orchCmd cmd
-run (Options zone (Du (Arg r n g s)))            = getStack s >>= runCommand zone . duCmd r n g
+run (Options zone (Du (Arg r n g s)))            = getStack s >>= runCommand zone . duCmd zone r n g
 run (Options zone (Result (ResultNum n)))        = user >>= runCommand zone . resultCmd (pgUrl zone) Nothing (Just n)
 run (Options zone (Result (ResultJob j )))       = user >>= runCommand zone . resultCmd (pgUrl zone) (Just j) Nothing
 

@@ -19,7 +19,7 @@ data Command
   | Orchestrate (Cmd, (Maybe Stack))
   | Stats
   | Du Arg
-  | Ping Arg
+  | Ping (Bool, Arg)
   | Runpuppet Arg
   | Sync (Bool, Arg)
   | Result ResultArg
@@ -55,7 +55,7 @@ commandParser =
   <|> Data        <$> subcommand "data" "Return configuration data for a specific property" data_parser
   <|> Orchestrate <$> subcommand "orch" "Run an orchestration command on the infrastructure" orch_parser
   <|> Facts       <$> subcommand "facts" "Return essential facts about nodes" all_parser
-  <|> Ping        <$> subcommand "ping" "Ping nodes" argParser
+  <|> Ping        <$> subcommand "ping" "Ping nodes" all_parser
   <|> Du          <$> subcommand "du" "Return disk usage" argParser
   <|> Runpuppet   <$> subcommand "runpuppet" "Apply puppet configuration" argParser
   <|> Sync        <$> subcommand "sync" "Sync data from master to nodes" all_parser

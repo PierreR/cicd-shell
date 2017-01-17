@@ -12,17 +12,16 @@ import           Text.RawString.QQ
 import           Turtle
 import           Type
 
-pepperCompoundTarget Nothing Nothing Nothing = "pepper  \"*\" "
-pepperCompoundTarget s r g = "pepper -C \"" <> target s r g <>"\" "
+pepperCompoundTarget z s r g = "pepper -C \"" <> target z s r g <>"\" "
 
-target :: Maybe Stack -> Maybe Subgroup -> Maybe Role -> Text
-target stack subgroup role =
+target :: Text -> Maybe Stack -> Maybe Subgroup -> Maybe Role -> Text
+target zone stack subgroup role =
   let
     join_ = Text.intercalate " and " . catMaybes
     stack_target = fmap ("G@hostgroup:" <>)
     subgroup_target = fmap ("G@subgroup:" <>)
   in
-  join_ [stack_target stack, subgroup_target subgroup, split_role <$> role]
+  join_ [Just ("G@zone:" <> zone), stack_target stack, subgroup_target subgroup, split_role <$> role]
   where
     split_role :: Text -> Text
     split_role r =
@@ -68,83 +67,83 @@ orchCmd cmd stack = PepCmd
   empty
   empty
 
-runpuppetCmd :: Maybe Role -> Maybe Node -> Maybe Subgroup -> Stack -> PepCmd
-runpuppetCmd role Nothing subgroup stack = PepCmd
-  ( pepperCompoundTarget (Just stack) subgroup role <> "--client=local_async puppetutils.run_agent")
+runpuppetCmd :: Text -> Maybe Role -> Maybe Node -> Maybe Subgroup -> Stack -> PepCmd
+runpuppetCmd zone role Nothing subgroup stack = PepCmd
+  ( pepperCompoundTarget zone (Just stack) subgroup role <> "--client=local_async puppetutils.run_agent")
   "jq '.return'"
   ( case role of
       Nothing -> Just $ CmdMsg True ("Run puppet on " <> stack)
       Just r  -> Just $ CmdMsg True ("Run puppet on " <> stack <> "." <> r)
   )
-runpuppetCmd _ (Just node) _ _ = PepCmd
+runpuppetCmd _ _ (Just node) _ _ = PepCmd
   ( "pepper " <> node <> " puppetutils.run_agent")
   [r|
     jq -r '.return[] | to_entries | (.[] | if .value.retcode == 0 then "\nSUCCESS for " else "\nFAILURE for " end + .key + ":" , if .value.stderr != "" then .value.stdout + "\n******\n" + .value.stderr else .value.stdout end)'
   |]
   empty
 
-syncCmd :: Maybe Role -> Maybe Node -> Maybe Subgroup -> Bool -> Stack -> PepCmd
-syncCmd role Nothing subgroup across stack = PepCmd
-  (pepperCompoundTarget (if across then Nothing else Just stack) subgroup role <> "saltutil.sync_all")
+syncCmd :: Text -> Maybe Role -> Maybe Node -> Maybe Subgroup -> Bool -> Stack -> PepCmd
+syncCmd zone role Nothing subgroup across stack = PepCmd
+  (pepperCompoundTarget zone (if across then Nothing else Just stack) subgroup role <> "saltutil.sync_all")
   empty
   empty
-syncCmd _ (Just node) _ _ _ = PepCmd
+syncCmd _ _ (Just node) _ _ _ = PepCmd
   ("pepper '" <> node <> "' saltutil.sync_all")
   empty
   empty
 
-duCmd :: Maybe Role -> Maybe Node -> Maybe Subgroup -> Stack -> PepCmd
-duCmd  _ (Just n) _ _ = PepCmd
+duCmd :: Text ->  Maybe Role -> Maybe Node -> Maybe Subgroup -> Stack -> PepCmd
+duCmd  _ _ (Just n) _ _ = PepCmd
   ("pepper " <> n <> " disk.percent")
   "jq '.return[0]'"
   empty
-duCmd  role Nothing subgroup stack = PepCmd
-  (pepperCompoundTarget (Just stack) subgroup role <> " disk.percent")
+duCmd  zone role Nothing subgroup stack = PepCmd
+  (pepperCompoundTarget zone (Just stack) subgroup role <> " disk.percent")
   "jq '.return[0]'"
   empty
 
-factCmd :: Text -> Maybe Role -> Maybe Node -> Maybe Subgroup -> Bool -> Stack -> PepCmd
-factCmd _ role Nothing subgroup across stack = PepCmd
-  (pepperCompoundTarget (if across then Nothing else Just stack) subgroup role <> "grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role puppetmaster_timestamp puppetmaster_jenkins_job")
+factCmd :: Text -> Text -> Maybe Role -> Maybe Node -> Maybe Subgroup -> Bool -> Stack -> PepCmd
+factCmd _ zone role Nothing subgroup across stack = PepCmd
+  (pepperCompoundTarget zone (if across then Nothing else Just stack) subgroup role <> "grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role puppetmaster_timestamp puppetmaster_jenkins_job")
   [r|
      jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}'
   |]
   empty
 
-factCmd pdbUrl _ (Just node) _ _ _ = PepCmd
+factCmd pdbUrl _ _ (Just node) _ _ _ = PepCmd
   ("pdbquery -t remote  -l " <> pdbUrl <> " facts " <> node)
   [r|
     jq 'map({"key": .name, value}) | from_entries | {hostgroup, subgroup, role, "os": "\(.operatingsystem) \(.operatingsystemrelease)", "ip": .ipaddress_eth0, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}'
   |]
   empty
 
-pingCmd :: Maybe Role -> Maybe Node -> Maybe Subgroup -> Stack -> PepCmd
-pingCmd role Nothing subgroup stack = PepCmd
-  ( pepperCompoundTarget (Just stack) subgroup role <> "test.ping")
+pingCmd :: Text -> Maybe Role -> Maybe Node -> Maybe Subgroup -> Bool -> Stack -> PepCmd
+pingCmd zone role Nothing subgroup across stack = PepCmd
+  ( pepperCompoundTarget zone (if across then Nothing else Just stack) subgroup role <> "test.ping")
   "jq '.return[0]'"
   empty
-pingCmd _ (Just node) _ _  = PepCmd
+pingCmd _ _ (Just node) _ _ _ = PepCmd
   ( "pepper '" <> node <> "' test.ping")
   "jq '.return[0]'"
   empty
 
-dataCmd :: Maybe Key -> Maybe Role -> Maybe Node -> Maybe Subgroup -> Stack -> PepCmd
-dataCmd Nothing _ (Just node) _ _ = PepCmd
+dataCmd :: Maybe Key -> Text -> Maybe Role -> Maybe Node -> Maybe Subgroup -> Stack -> PepCmd
+dataCmd Nothing _ _ (Just node) _ _ = PepCmd
   ("pepper " <> node <> " pillar.items delimiter='/'")
   "jq '.return[0]'"
   empty
-dataCmd Nothing role Nothing subgroup stack = PepCmd
-  (pepperCompoundTarget (Just stack) subgroup role  <> " pillar.items delimiter='/'")
+dataCmd Nothing zone role Nothing subgroup stack = PepCmd
+  (pepperCompoundTarget zone (Just stack) subgroup role  <> " pillar.items delimiter='/'")
   "jq '.return[0]'"
   empty
 -- TODO: use pdbquery instead
-dataCmd (Just key) _ (Just node) _ _ = PepCmd
+dataCmd (Just key) _ _ (Just node) _ _ = PepCmd
   ("pepper " <> node <> " pillar.item "<> key <> " delimiter='/'")
   "jq '.return[0]'"
   empty
 
-dataCmd (Just key) role _ subgroup stack
-  = let pep = "( " <> pepperCompoundTarget (Just stack) subgroup role <> "grains.item fqdn subgroup role ; " <> pepperCompoundTarget (Just stack) subgroup role <> "pillar.item " <> key <> " delimiter='/' )"
+dataCmd (Just key) zone role _ subgroup stack
+  = let pep = "( " <> pepperCompoundTarget zone (Just stack) subgroup role <> "grains.item fqdn subgroup role ; " <> pepperCompoundTarget zone (Just stack) subgroup role <> "pillar.item " <> key <> " delimiter='/' )"
         jq = "jq -s '.[0].return[0] * .[1].return[0]' | jq '.[] | { fqdn, subgroup, role, "<> pure key <> "}'"
     in
       PepCmd pep jq empty
