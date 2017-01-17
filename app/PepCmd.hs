@@ -12,6 +12,7 @@ import           Text.RawString.QQ
 import           Turtle
 import           Type
 
+pepperCompoundTarget Nothing Nothing Nothing = "pepper  \"*\" "
 pepperCompoundTarget s r g = "pepper -C \"" <> target s r g <>"\" "
 
 target :: Maybe Stack -> Maybe Subgroup -> Maybe Role -> Text
