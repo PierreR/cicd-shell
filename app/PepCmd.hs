@@ -104,9 +104,9 @@ duCmd  role Nothing subgroup stack = PepCmd
 
 factCmd :: Text -> Maybe Role -> Maybe Node -> Maybe Subgroup -> Bool -> Stack -> PepCmd
 factCmd _ role Nothing subgroup across stack = PepCmd
-  (pepperCompoundTarget (if across then Nothing else Just stack) subgroup role <> "grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role")
+  (pepperCompoundTarget (if across then Nothing else Just stack) subgroup role <> "grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role puppetmaster_timestamp puppetmaster_jenkins_job")
   [r|
-     jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role}'
+     jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}'
   |]
   empty
 
