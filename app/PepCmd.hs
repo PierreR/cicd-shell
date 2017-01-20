@@ -4,7 +4,7 @@
 module PepCmd where
 
 import           Control.Lens
-import           Data.Maybe        (maybe, catMaybes)
+import           Data.Maybe        (maybe, catMaybes, fromMaybe)
 import           Data.Optional     (Optional)
 import           Data.Text         (Text)
 import qualified Data.Text         as Text
@@ -12,33 +12,33 @@ import           Text.RawString.QQ
 import           Turtle
 import           Type
 
-pepperCompoundTarget z s r g = "pepper -C \"" <> target z s r g <>"\" "
-
-target :: Text -> Maybe Stack -> Maybe Subgroup -> Maybe Role -> Text
-target zone stack subgroup role =
-  let
-    join_ = Text.intercalate " and " . catMaybes
-    stack_target = fmap ("G@hostgroup:" <>)
-    subgroup_target = fmap ("G@subgroup:" <>)
-  in
-  join_ [Just ("G@zone:" <> zone), stack_target stack, subgroup_target subgroup, split_role <$> role]
+pepperCompoundTarget :: Bool -> Text -> Stack -> Maybe Subgroup -> Maybe Role -> Text
+pepperCompoundTarget across zone stack role subgroup = "pepper -C \"" <> target zone (if across then Nothing else Just stack) role subgroup <>"\" "
   where
-    split_role :: Text -> Text
-    split_role r =
-      let rx = Text.splitOn "." r
-      in case rx of
-        ([pre, post]) -> "G@subgroup:" <> pre <> " and G@role:" <> post
-        ([pre])       -> "G@role:" <> pre
+    target :: Text -> Maybe Stack -> Maybe Subgroup -> Maybe Role -> Text
+    target z s g r =
+      let join_target = Text.intercalate " and " . catMaybes
+          role_target [subgroup, role] = "G@subgroup:" <> subgroup <> " and G@role:" <> role
+          role_target [role] = "G@role:" <> role
+          role_target _ = error "Role should follow the pattern 'subgroup.role' where subgroup is optional" -- TODO replace this with an exceptT
+      in join_target
+           [ Just ("G@zone:" <> z)
+           , ("G@hostgroup:" <>) <$> s
+           , ("G@subgroup:" <>) <$> g
+           , (role_target . Text.splitOn ".") <$> r
+           ]
 
 data PepCmd
   = PepCmd
   { _cmdpep :: Text
   , _cmdjq  :: Optional Text
-  , _cmdmsg :: Maybe CmdMsg
+  , _cmdmsg :: Maybe CmdMsg -- ^ A message to be displayed before launching the command
   } deriving Show
 
 
-data CmdMsg = CmdMsg Bool Text deriving Show
+data CmdMsg =
+  CmdMsg Bool Text -- True for interactive message
+  deriving Show
 
 makeLenses ''PepCmd
 
@@ -69,7 +69,7 @@ orchCmd cmd stack = PepCmd
 
 runpuppetCmd :: Text -> Maybe Role -> Maybe Node -> Maybe Subgroup -> Stack -> PepCmd
 runpuppetCmd zone role Nothing subgroup stack = PepCmd
-  ( pepperCompoundTarget zone (Just stack) subgroup role <> "--client=local_async puppetutils.run_agent")
+  ( pepperCompoundTarget False zone stack subgroup role <> "--client=local_async puppetutils.run_agent")
   "jq '.return'"
   ( case role of
       Nothing -> Just $ CmdMsg True ("Run puppet on " <> stack)
@@ -84,7 +84,7 @@ runpuppetCmd _ _ (Just node) _ _ = PepCmd
 
 syncCmd :: Text -> Maybe Role -> Maybe Node -> Maybe Subgroup -> Bool -> Stack -> PepCmd
 syncCmd zone role Nothing subgroup across stack = PepCmd
-  (pepperCompoundTarget zone (if across then Nothing else Just stack) subgroup role <> "saltutil.sync_all")
+  (pepperCompoundTarget across zone stack subgroup role <> "saltutil.sync_all")
   empty
   empty
 syncCmd _ _ (Just node) _ _ _ = PepCmd
@@ -98,13 +98,13 @@ duCmd  _ _ (Just n) _ _ = PepCmd
   "jq '.return[0]'"
   empty
 duCmd  zone role Nothing subgroup stack = PepCmd
-  (pepperCompoundTarget zone (Just stack) subgroup role <> " disk.percent")
+  (pepperCompoundTarget False zone stack subgroup role <> " disk.percent")
   "jq '.return[0]'"
   empty
 
 factCmd :: Text -> Text -> Maybe Role -> Maybe Node -> Maybe Subgroup -> Bool -> Stack -> PepCmd
 factCmd _ zone role Nothing subgroup across stack = PepCmd
-  (pepperCompoundTarget zone (if across then Nothing else Just stack) subgroup role <> "grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role puppetmaster_timestamp puppetmaster_jenkins_job")
+  (pepperCompoundTarget across zone stack subgroup role <> "grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role puppetmaster_timestamp puppetmaster_jenkins_job")
   [r|
      jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}'
   |]
@@ -119,7 +119,7 @@ factCmd pdbUrl _ _ (Just node) _ _ _ = PepCmd
 
 pingCmd :: Text -> Maybe Role -> Maybe Node -> Maybe Subgroup -> Bool -> Stack -> PepCmd
 pingCmd zone role Nothing subgroup across stack = PepCmd
-  ( pepperCompoundTarget zone (if across then Nothing else Just stack) subgroup role <> "test.ping")
+  ( pepperCompoundTarget across zone stack subgroup role <> "test.ping")
   "jq '.return[0]'"
   empty
 pingCmd _ _ (Just node) _ _ _ = PepCmd
@@ -133,7 +133,7 @@ dataCmd Nothing _ _ (Just node) _ _ = PepCmd
   "jq '.return[0]'"
   empty
 dataCmd Nothing zone role Nothing subgroup stack = PepCmd
-  (pepperCompoundTarget zone (Just stack) subgroup role  <> " pillar.items delimiter='/'")
+  (pepperCompoundTarget False zone stack subgroup role  <> " pillar.items delimiter='/'")
   "jq '.return[0]'"
   empty
 -- TODO: use pdbquery instead
@@ -143,7 +143,7 @@ dataCmd (Just key) _ _ (Just node) _ _ = PepCmd
   empty
 
 dataCmd (Just key) zone role _ subgroup stack
-  = let pep = "( " <> pepperCompoundTarget zone (Just stack) subgroup role <> "grains.item fqdn subgroup role ; " <> pepperCompoundTarget zone (Just stack) subgroup role <> "pillar.item " <> key <> " delimiter='/' )"
+  = let pep = "( " <> pepperCompoundTarget False zone stack subgroup role <> "grains.item fqdn subgroup role ; " <> pepperCompoundTarget False zone stack subgroup role <> "pillar.item " <> key <> " delimiter='/' )"
         jq = "jq -s '.[0].return[0] * .[1].return[0]' | jq '.[] | { fqdn, subgroup, role, "<> pure key <> "}'"
     in
       PepCmd pep jq empty

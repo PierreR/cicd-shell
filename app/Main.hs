@@ -107,7 +107,7 @@ runCommand zone cmd =  do
         printf (fp%" created.\n") configfile
         shell ("cicd " <> zone <> " gentags") empty >>= \case
           ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") z
-          ExitFailure _ -> printf ("WARNING: cannot generate node completion file.\n")
+          ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
 
   salt_pass <- userPwd
   nixpkgsref <- nixpkgs
