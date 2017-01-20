@@ -16,13 +16,7 @@ import           Option
 import           PepCmd
 import           Type
 
-
 version = Data.Version.showVersion Paths_cicd_shell.version
-
-nixpkgs :: Shell Text
-nixpkgs = do
-  h <- home
-  lineToText <$> input (h <> ".nixpkgs_ref")
 
 user :: Shell Text
 user = do
@@ -59,8 +53,11 @@ configDir = (</> ".local/share/cicd") <$> home
 
 nixFileName :: Text -> Text
 nixFileName zone = zone <> "-" <> Text.pack version <> ".nix"
--- we could locate the default.nix relatively to bin where the exec sits
--- for now we simply find it in the nixpkgs custom user folder
+
+-- | Where the default.nix sits.
+-- This file sits in the SCM as a template (it is not generated).
+-- It might be better to put the file relatively to the `bin` directory inside the nix store
+-- for now we simply put and find it in the nixpkgs custom user folder
 defaultNixFilePath = do
   h <- home
   pure $ h </> ".nixpkgs/pkgs/cicd-shell/share"
@@ -95,11 +92,11 @@ runCommand zone cmd =  do
   let
     nixcommand z = Text.unwords ["nix-shell", nixFileName z]
     msg = cmd ^. cmdmsg
-    pgr pwd nixref = nixcommand zone <>  " --argstr user_pwd " <> pwd
-    pepcmd pwd nixref =
+    pgr pwd = nixcommand zone <>  " --argstr user_pwd " <> pwd
+    pepcmd pwd =
       if Text.null (cmd^.cmdpep)
-        then pgr pwd nixref
-        else pgr pwd nixref <> " --command '" <> cmd^.cmdpep <> "'"
+        then pgr pwd
+        else pgr pwd <> " --command '" <> cmd^.cmdpep <> "'"
 
     initEnv z u = do
       configdir <- configDir
@@ -113,7 +110,6 @@ runCommand zone cmd =  do
           ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
 
   salt_pass <- userPwd
-  nixpkgsref <- nixpkgs
   foundconfdir <- testdir =<< configDir
   unless foundconfdir $ mkdir =<< configDir
   pushd =<< configDir
@@ -121,10 +117,10 @@ runCommand zone cmd =  do
   maybe (pure ()) interactWith msg
   -- liftIO $ print (pepcmd salt_pass nixpkgsref)
   case cmd^.cmdjq of
-    Default -> interactive (pepcmd salt_pass nixpkgsref)
+    Default -> interactive (pepcmd salt_pass)
     Specific jq -> do
       -- liftIO $ print jq
-      inshell (pepcmd salt_pass nixpkgsref) empty & shell jq
+      inshell (pepcmd salt_pass) empty & shell jq
 
 
 -- prohibited options
