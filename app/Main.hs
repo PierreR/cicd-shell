@@ -95,8 +95,11 @@ runCommand zone cmd =  do
   let
     nixcommand z = Text.unwords ["nix-shell", nixFileName z]
     msg = cmd ^. cmdmsg
-    pgr pwd nixref = nixcommand zone <>  " --argstr user_pwd " <> pwd <> " -I nixpkgs=https://github.com/NixOS/nixpkgs-channels/archive/" <> nixref <> ".tar.gz"
-    pepcmd pwd nixref = if Text.null (cmd^.cmdpep) then pgr pwd nixref else pgr pwd nixref <> " --command '" <> cmd^.cmdpep <> "'"
+    pgr pwd nixref = nixcommand zone <>  " --argstr user_pwd " <> pwd
+    pepcmd pwd nixref =
+      if Text.null (cmd^.cmdpep)
+        then pgr pwd nixref
+        else pgr pwd nixref <> " --command '" <> cmd^.cmdpep <> "'"
 
     initEnv z u = do
       configdir <- configDir
