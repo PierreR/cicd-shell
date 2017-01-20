@@ -4,3 +4,4 @@ dev.nix
 testing.nix
 .stack-work
 .nodes-*
+result
