@@ -15,7 +15,7 @@ data ResultArg
 data Command
   = Console
   | Data (Maybe Key, Arg)
-  | Facts (Bool, Arg)
+  | Facts FactArg
   | Orchestrate (Cmd, Maybe Stack)
   | Stats
   | Du Arg
@@ -26,6 +26,9 @@ data Command
   | GenTags
   deriving (Show)
 
+data FactArg
+  = FactArg Bool Bool Arg
+  deriving Show
 
 data Options
   = Options Text Command
@@ -54,7 +57,7 @@ commandParser =
   <|> Stats       <$  subcommand "stats" "Stats (special permission required)" (pure ())
   <|> Data        <$> subcommand "data" "Return configuration data for a specific property" data_parser
   <|> Orchestrate <$> subcommand "orch" "Run an orchestration command on the infrastructure" orch_parser
-  <|> Facts       <$> subcommand "facts" "Return essential facts about nodes" all_parser
+  <|> Facts       <$> subcommand "facts" "Return essential facts about nodes" fact_parser
   <|> Ping        <$> subcommand "ping" "Ping nodes" all_parser
   <|> Du          <$> subcommand "du" "Return disk usage" argParser
   <|> Runpuppet   <$> subcommand "runpuppet" "Apply puppet configuration" argParser
@@ -64,6 +67,7 @@ commandParser =
   where
     result_parser = ResultNum <$> optInt "Num" 'n' "Number of results to display" <|>  ResultJob <$> optText "job" 'j' "Job id"
     data_parser = (,) <$> optional (optText "key" 'k' "Property to look up for" ) <*> argParser
+    fact_parser = FactArg <$> switch "all" 'a' "Target whole the known stacks" <*> switch "down" 'd' "Query down node" <*> argParser
     all_parser = (,) <$> switch "all" 'a' "Target whole the known stacks" <*> argParser
     orch_parser = (,) <$> argText "cmd" "Command to run" <*> optional (optText "stack" 's' "Target stack/hostgroup" )
 

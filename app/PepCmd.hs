@@ -102,18 +102,23 @@ duCmd  zone role Nothing subgroup stack = PepCmd
   "jq '.return[0]'"
   empty
 
-factCmd :: Text -> Text -> Maybe Role -> Maybe Node -> Maybe Subgroup -> Bool -> Stack -> PepCmd
-factCmd _ zone role Nothing subgroup across stack = PepCmd
+factCmd :: Text -> Text -> Maybe Role -> Maybe Node -> Maybe Subgroup -> Bool -> Bool -> Stack -> PepCmd
+factCmd _ zone role Nothing subgroup across _ stack = PepCmd
   (pepperCompoundTarget across zone stack subgroup role <> "grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role puppetmaster_timestamp puppetmaster_jenkins_job")
   [r|
      jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}'
   |]
   empty
-
-factCmd pdbUrl _ _ (Just node) _ _ _ = PepCmd
+factCmd pdbUrl _ _ (Just node) _ _ True _ = PepCmd
   ("pdbquery -t remote  -l " <> pdbUrl <> " facts " <> node)
   [r|
     jq 'map({"key": .name, value}) | from_entries | {hostgroup, subgroup, role, "os": "\(.operatingsystem) \(.operatingsystemrelease)", "ip": .ipaddress_eth0, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}'
+  |]
+  empty
+factCmd pdbUrl _ _ (Just node) _ _ False _ = PepCmd
+  ("pepper " <> node <> " grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role puppetmaster_timestamp puppetmaster_jenkins_job puppetmaster_revision num_cpus mem_total saltversion")
+  [r|
+     jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job, puppetmaster_revision, num_cpus, mem_total, saltversion}'
   |]
   empty
 

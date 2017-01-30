@@ -130,7 +130,7 @@ run (Options zone (Data (Nothing, Arg Nothing Nothing Nothing s)))  = die "Runni
 run (Options zone Console)                       = runCommand zone consoleCmd
 run (Options zone Stats)                         = runCommand zone statCmd
 run (Options zone GenTags)                       = configDir >>= runCommand zone . genTagsCmd zone
-run (Options zone (Facts (across, Arg r n g s))) = getStack s >>= runCommand zone . factCmd (puppetdbUrl zone) zone r n g across
+run (Options zone (Facts (FactArg across down (Arg r n g s)))) = getStack s >>= runCommand zone . factCmd (puppetdbUrl zone) zone r n g across down
 run (Options zone (Ping (across, Arg r n g s)))  = getStack s >>= runCommand zone . pingCmd zone r n g across
 run (Options zone (Runpuppet (Arg r n g s )))    = getStack s >>= runCommand zone . runpuppetCmd zone r n g
 run (Options zone (Sync (across, Arg r n g s)))  = getStack s >>= runCommand zone . syncCmd zone r n g across
