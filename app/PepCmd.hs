@@ -106,7 +106,7 @@ factCmd :: Text -> Text -> Maybe Role -> Maybe Node -> Maybe Subgroup -> Bool ->
 factCmd _ zone role Nothing subgroup across _ stack = PepCmd
   (pepperCompoundTarget across zone stack subgroup role <> "grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role puppetmaster_timestamp puppetmaster_jenkins_job")
   [r|
-     jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}'
+     jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[0], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}'
   |]
   empty
 factCmd pdbUrl _ _ (Just node) _ _ True _ = PepCmd
@@ -116,9 +116,9 @@ factCmd pdbUrl _ _ (Just node) _ _ True _ = PepCmd
   |]
   empty
 factCmd pdbUrl _ _ (Just node) _ _ False _ = PepCmd
-  ("pepper " <> node <> " grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role puppetmaster_timestamp puppetmaster_jenkins_job puppetmaster_revision num_cpus mem_total saltversion")
+  ("pepper " <> node <> " grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role puppetmaster_timestamp puppetmaster_jenkins_job")
   [r|
-     jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job, puppetmaster_revision, num_cpus, mem_total, saltversion}'
+     jq '.return[0] | .[] | { fqdn, ip: .fqdn_ip4[0], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job }'
   |]
   empty
 

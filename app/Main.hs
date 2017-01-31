@@ -115,7 +115,7 @@ runCommand zone cmd =  do
   pushd =<< configDir
   initEnv zone =<< user
   maybe (pure ()) interactWith msg
-  -- liftIO $ print (pepcmd salt_pass nixpkgsref)
+  -- liftIO $ print (pepcmd salt_pass)
   case cmd^.cmdjq of
     Default -> interactive (pepcmd salt_pass)
     Specific jq -> do
@@ -127,18 +127,18 @@ runCommand zone cmd =  do
 run (Options zone (Data (Nothing, Arg Nothing Nothing Nothing s)))  = die "Running data on the whole stack is currently prohibited"
 
 -- valid options
-run (Options zone Console)                       = runCommand zone consoleCmd
-run (Options zone Stats)                         = runCommand zone statCmd
-run (Options zone GenTags)                       = configDir >>= runCommand zone . genTagsCmd zone
+run (Options zone Console)                                     = runCommand zone consoleCmd
+run (Options zone Stats)                                       = runCommand zone statCmd
+run (Options zone GenTags)                                     = configDir >>= runCommand zone . genTagsCmd zone
 run (Options zone (Facts (FactArg across down (Arg r n g s)))) = getStack s >>= runCommand zone . factCmd (puppetdbUrl zone) zone r n g across down
-run (Options zone (Ping (across, Arg r n g s)))  = getStack s >>= runCommand zone . pingCmd zone r n g across
-run (Options zone (Runpuppet (Arg r n g s )))    = getStack s >>= runCommand zone . runpuppetCmd zone r n g
-run (Options zone (Sync (across, Arg r n g s)))  = getStack s >>= runCommand zone . syncCmd zone r n g across
-run (Options zone (Data (key, Arg r n g s)))     = getStack s >>= runCommand zone . dataCmd key zone r n g
-run (Options zone (Orchestrate (cmd, s)))        = getStack s >>= runCommand zone . orchCmd cmd
-run (Options zone (Du (Arg r n g s)))            = getStack s >>= runCommand zone . duCmd zone r n g
-run (Options zone (Result (ResultNum n)))        = user >>= runCommand zone . resultCmd (pgUrl zone) Nothing (Just n)
-run (Options zone (Result (ResultJob j )))       = user >>= runCommand zone . resultCmd (pgUrl zone) (Just j) Nothing
+run (Options zone (Ping (across, Arg r n g s)))                = getStack s >>= runCommand zone . pingCmd zone r n g across
+run (Options zone (Runpuppet (Arg r n g s )))                  = getStack s >>= runCommand zone . runpuppetCmd zone r n g
+run (Options zone (Sync (across, Arg r n g s)))                = getStack s >>= runCommand zone . syncCmd zone r n g across
+run (Options zone (Data (key, Arg r n g s)))                   = getStack s >>= runCommand zone . dataCmd key zone r n g
+run (Options zone (Orchestrate (cmd, s)))                      = getStack s >>= runCommand zone . orchCmd cmd
+run (Options zone (Du (Arg r n g s)))                          = getStack s >>= runCommand zone . duCmd zone r n g
+run (Options zone (Result (ResultNum n)))                      = user >>= runCommand zone . resultCmd (pgUrl zone) Nothing (Just n)
+run (Options zone (Result (ResultJob j )))                     = user >>= runCommand zone . resultCmd (pgUrl zone) (Just j) Nothing
 
 
 main :: IO ()
