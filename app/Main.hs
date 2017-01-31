@@ -148,7 +148,7 @@ interactWith (CmdMsg False msg) =
   liftIO $ Text.putStrLn msg
 
 interactWith (CmdMsg True msg) = do
-  printf (s%" ? (Y/N)") msg
+  liftIO $ Text.putStrLn (msg <> " ? (Y/N)")
   r <- readline
   case r of
     Just "Y" -> return ()
