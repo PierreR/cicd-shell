@@ -73,7 +73,7 @@ runpuppetCmd zone role Nothing subgroup stack = PepCmd
   "jq '.return'"
   ( case role of
       Nothing -> Just $ CmdMsg True ("Run puppet on " <> stack)
-      Just r  -> Just $ CmdMsg True ("Run puppet on " <> stack <> "." <> r)
+      Just r  -> Just $ CmdMsg True ("Run puppet on " <> (Text.intercalate "." [r, stack, zone]))
   )
 runpuppetCmd _ _ (Just node) _ _ = PepCmd
   ( "pepper " <> node <> " puppetutils.run_agent")
