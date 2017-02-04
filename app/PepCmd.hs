@@ -102,13 +102,17 @@ duCmd  zone role Nothing subgroup stack = PepCmd
   "jq '.return[0]'"
   empty
 
-serviceCmd :: ServiceAction -> Node -> Text -> PepCmd
-serviceCmd ServiceStatus n name = PepCmd
+serviceCmd :: ServiceAction -> Text -> Zone -> Maybe Role -> Maybe Node -> Maybe Subgroup -> Stack -> PepCmd
+serviceCmd ServiceStatus name zone role Nothing subgroup stack = PepCmd
+  (pepperCompoundTarget False zone stack subgroup role <> " service.status " <> name)
+  "jq '.return[0]'"
+  empty
+serviceCmd ServiceStatus name _ _ (Just n) _ _ = PepCmd
   ("pepper " <> n <> " service.status " <> name)
   "jq '.return[0]'"
   empty
 
-serviceCmd ServiceReload n name = PepCmd
+serviceCmd ServiceReload name _ _ (Just n) _ _ = PepCmd
   ("pepper " <> n <> " service.status " <> name)
   "jq '.return[0]'"
   empty
