@@ -3,7 +3,7 @@
 }:
 mkDerivation {
   pname = "cicd-shell";
-  version = "0.9.7";
+  version = "0.9.9";
   src = ./.;
   isLibrary = false;
   isExecutable = true;

@@ -24,7 +24,9 @@ data Command
   | Sync (Bool, Arg)
   | Result ResultArg
   | GenTags
+  | Service (ServiceAction, Text, Node)
   deriving (Show)
+
 
 data FactArg
   = FactArg Bool Bool Arg
@@ -60,6 +62,7 @@ commandParser =
   <|> Facts       <$> subcommand "facts" "Return essential facts about nodes" fact_parser
   <|> Ping        <$> subcommand "ping" "Ping nodes" all_parser
   <|> Du          <$> subcommand "du" "Return disk usage" argParser
+  <|> Service     <$> subcommand "service" "Service management for a specific node" status_parser
   <|> Runpuppet   <$> subcommand "runpuppet" "Apply puppet configuration" argParser
   <|> Sync        <$> subcommand "sync" "Sync data from master to nodes" all_parser
   <|> Result      <$> subcommand "result" "Display the results of the most recent jobs executed by the user or for a specific id" result_parser
@@ -70,6 +73,7 @@ commandParser =
     fact_parser = FactArg <$> switch "all" 'a' "Target whole the known stacks" <*> switch "down" 'd' "Query down node" <*> argParser
     all_parser = (,) <$> switch "all" 'a' "Target whole the known stacks" <*> argParser
     orch_parser = (,) <$> argText "cmd" "Command to run" <*> optional (optText "stack" 's' "Target stack/hostgroup" )
+    status_parser = (,,) <$> argRead "action" "Use 'status' or 'reload'" <*> argText "service" "Service name" <*> (optText "node" 'n' "Target node" )
 
 
 parser :: Parser Options

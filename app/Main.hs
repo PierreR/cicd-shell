@@ -137,6 +137,7 @@ run (Options zone (Sync (across, Arg r n g s)))                = getStack s >>= 
 run (Options zone (Data (key, Arg r n g s)))                   = getStack s >>= runCommand zone . dataCmd key zone r n g
 run (Options zone (Orchestrate (cmd, s)))                      = getStack s >>= runCommand zone . orchCmd cmd
 run (Options zone (Du (Arg r n g s)))                          = getStack s >>= runCommand zone . duCmd zone r n g
+run (Options zone (Service (action, name, n)))                 = runCommand zone (serviceCmd action n name)
 run (Options zone (Result (ResultNum n)))                      = user >>= runCommand zone . resultCmd (pgUrl zone) Nothing (Just n)
 run (Options zone (Result (ResultJob j )))                     = user >>= runCommand zone . resultCmd (pgUrl zone) (Just j) Nothing
 
