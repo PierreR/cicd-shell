@@ -16,7 +16,7 @@ data Command
   = Console
   | Data (Maybe Key, Arg)
   | Facts FactArg
-  | Orchestrate (Cmd, Maybe Stack)
+  | Orchestrate (Cmd, Maybe Text)
   | Stats
   | Du Arg
   | Ping (Bool, Arg)
@@ -37,10 +37,10 @@ data Options
 
 data Arg
   = Arg
-  { _argRole     :: Maybe Role
-  , _argNode     :: Maybe Node
-  , _argSubgroup :: Maybe Subgroup
-  , _argStack    :: Maybe Stack
+  { _argRole     :: Maybe Text
+  , _argNode     :: Maybe Text
+  , _argSubgroup :: Maybe Text
+  , _argStack    :: Maybe Text
   } deriving Show
 
 makeLenses ''Arg

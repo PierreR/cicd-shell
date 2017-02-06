@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 module Main where
 
 import           Control.Lens.Operators hiding ((<.>))
@@ -17,6 +18,12 @@ import           PepCmd
 import           Type
 
 version = Data.Version.showVersion Paths_cicd_shell.version
+
+getTarget :: Text -> Arg -> Shell Target
+getTarget zone Arg {..} = do
+  stack' <- getStack _argStack
+  pure $ Target _argNode _argSubgroup _argRole stack' zone
+
 
 user :: Shell Text
 user = do
@@ -66,15 +73,15 @@ userPwd = do
   let pwd_file = (</> ".user_pwd") <$> home
   lineToText <$> (input =<< pwd_file)
 
-getStack :: Maybe Stack -> Shell Stack
+getStack :: Maybe Text -> Shell Text
 getStack s = do
   h <- home
   ds <- input ( h </> ".user_stack")
   return $ fromMaybe (lineToText ds) s
 
 -- sensitive information such as a password won't be copy in the configfile
-writeConfig :: Turtle.FilePath -> Text -> Text -> IO ()
-writeConfig file zone user = do
+writeTarget :: Turtle.FilePath -> Text -> Text -> IO ()
+writeTarget file zone user = do
   let
     lines dnfp = [ "{user_pwd}:"
                 , "(import "<> dnfp <> "/.) {"
@@ -103,7 +110,7 @@ runCommand zone cmd =  do
       let configfile = configdir </> fromText (nixFileName z)
       found <- testfile configfile
       unless found $ do
-        liftIO $ writeConfig configfile z u
+        liftIO $ writeTarget configfile z u
         printf (fp%" created.\n") configfile
         shell ("cicd " <> zone <> " gentags") empty >>= \case
           ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") z
@@ -127,19 +134,19 @@ runCommand zone cmd =  do
 run (Options zone (Data (Nothing, Arg Nothing Nothing Nothing s)))  = die "Running data on the whole stack is currently prohibited"
 
 -- valid options
-run (Options zone Console)                                     = runCommand zone consoleCmd
-run (Options zone Stats)                                       = runCommand zone statCmd
-run (Options zone GenTags)                                     = configDir >>= runCommand zone . genTagsCmd zone
-run (Options zone (Facts (FactArg across down (Arg r n g s)))) = getStack s >>= runCommand zone . factCmd (puppetdbUrl zone) zone r n g across down
-run (Options zone (Ping (across, Arg r n g s)))                = getStack s >>= runCommand zone . pingCmd zone r n g across
-run (Options zone (Runpuppet (Arg r n g s )))                  = getStack s >>= runCommand zone . runpuppetCmd zone r n g
-run (Options zone (Sync (across, Arg r n g s)))                = getStack s >>= runCommand zone . syncCmd zone r n g across
-run (Options zone (Data (key, Arg r n g s)))                   = getStack s >>= runCommand zone . dataCmd key zone r n g
-run (Options zone (Orchestrate (cmd, s)))                      = getStack s >>= runCommand zone . orchCmd cmd
-run (Options zone (Du (Arg r n g s)))                          = getStack s >>= runCommand zone . duCmd zone r n g
-run (Options zone (Service (action, name, (Arg r n g s))))     = getStack s >>= runCommand zone . serviceCmd action name zone r n g
-run (Options zone (Result (ResultNum n)))                      = user >>= runCommand zone . resultCmd (pgUrl zone) Nothing (Just n)
-run (Options zone (Result (ResultJob j )))                     = user >>= runCommand zone . resultCmd (pgUrl zone) (Just j) Nothing
+run (Options zone Console)                           = runCommand zone consoleCmd
+run (Options zone Stats)                             = runCommand zone statCmd
+run (Options zone GenTags)                           = configDir >>= runCommand zone . genTagsCmd zone
+run (Options zone (Runpuppet arg))                   = getTarget zone arg >>= runCommand zone . runpuppetCmd
+run (Options zone (Ping (across, arg)))              = getTarget zone arg >>= runCommand zone . pingCmd across
+run (Options zone (Facts (FactArg across down arg))) = getTarget zone arg >>= runCommand zone . factCmd (puppetdbUrl zone) across down
+run (Options zone (Sync (across, arg)))              = getTarget zone arg >>= runCommand zone . syncCmd across
+run (Options zone (Data (key, arg)))                 = getTarget zone arg >>= runCommand zone . dataCmd key
+run (Options zone (Orchestrate (cmd, s)))            = getStack s >>= runCommand zone . orchCmd cmd
+run (Options zone (Du arg))                          = getTarget zone arg >>= runCommand zone . duCmd
+run (Options zone (Service (action, name, arg)))     = getTarget zone arg >>= runCommand zone . serviceCmd action name
+run (Options zone (Result (ResultNum n)))            = user >>= runCommand zone . resultCmd (pgUrl zone) Nothing (Just n)
+run (Options zone (Result (ResultJob j )))           = user >>= runCommand zone . resultCmd (pgUrl zone) (Just j) Nothing
 
 
 main :: IO ()
