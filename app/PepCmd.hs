@@ -1,6 +1,6 @@
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE QuasiQuotes     #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module PepCmd where
 
@@ -14,12 +14,17 @@ import           Turtle
 import           Type
 
 pepperCompoundTarget :: Bool -> Target -> Text
-pepperCompoundTarget across Target {..} = "pepper -C \"" <> target zone (if across then Nothing else Just stack) subgroup role <>"\" "
+pepperCompoundTarget across Target{..}
+  = "pepper -C \"" <> compound_target _zone
+                                      (if across then Nothing else Just _stack)
+                                      _subgroup
+                                      _role
+                   <> "\" "
   where
-    target z s g r =
+    compound_target z s g r =
       let join_target = Text.intercalate " and " . catMaybes
-          role_target [subgroup, role] = "G@subgroup:" <> subgroup <> " and G@role:" <> role
-          role_target [role] = "G@role:" <> role
+          role_target [g', r'] = "G@subgroup:" <> g' <> " and G@role:" <> r'
+          role_target [r'] = "G@role:" <> r'
           role_target _ = error "Role should follow the pattern 'subgroup.role' where subgroup is optional" -- TODO replace this with an exceptT
       in join_target
            [ Just ("G@zone:" <> z)
@@ -67,14 +72,14 @@ orchCmd cmd stack = PepCmd
   empty
 
 runpuppetCmd :: Target -> PepCmd
-runpuppetCmd target@Target {node = Nothing, ..} = PepCmd
+runpuppetCmd target@Target {_node = Nothing} = PepCmd
   ( pepperCompoundTarget False target <> "--client=local_async puppetutils.run_agent")
   "jq '.return'"
-  ( case role of
-      Nothing -> Just $ CmdMsg True ("Run puppet on " <> stack)
-      Just r  -> Just $ CmdMsg True ("Run puppet on " <> (Text.intercalate "." [r, stack, zone]))
+  ( case target^.role of
+      Nothing -> Just $ CmdMsg True ("Run puppet on " <> target^.stack)
+      Just r  -> Just $ CmdMsg True ("Run puppet on " <> (Text.intercalate "." [r, target^.stack, target^.zone]))
   )
-runpuppetCmd Target {node = Just n, ..} = PepCmd
+runpuppetCmd Target {_node = Just n} = PepCmd
   ( "pepper " <> n <> " puppetutils.run_agent")
   [r|
     jq -r '.return[] | to_entries | (.[] | if .value.retcode == 0 then "\nSUCCESS for " else "\nFAILURE for " end + .key + ":" , if .value.stderr != "" then .value.stdout + "\n******\n" + .value.stderr else .value.stdout end)'
@@ -82,53 +87,53 @@ runpuppetCmd Target {node = Just n, ..} = PepCmd
   empty
 
 syncCmd :: Bool -> Target -> PepCmd
-syncCmd across target@Target { node = Nothing, ..} = PepCmd
+syncCmd across target@Target { _node = Nothing} = PepCmd
   (pepperCompoundTarget across target <> "saltutil.sync_all")
   empty
   empty
-syncCmd _ Target {node = Just n, ..} = PepCmd
+syncCmd _ Target {_node = Just n} = PepCmd
   ("pepper '" <> n <> "' saltutil.sync_all")
   empty
   empty
 
 duCmd :: Target -> PepCmd
-duCmd  Target {node = Just n, ..} = PepCmd
+duCmd  Target {_node = Just n} = PepCmd
   ("pepper " <> n <> " disk.percent")
   "jq '.return[0]'"
   empty
-duCmd target@Target {node = Nothing, ..} = PepCmd
+duCmd target@Target {_node = Nothing} = PepCmd
   (pepperCompoundTarget False target <> " disk.percent")
   "jq '.return[0]'"
   empty
 
 serviceCmd :: ServiceAction -> Text -> Target -> PepCmd
-serviceCmd ServiceStatus name target@Target {node = Nothing, ..} = PepCmd
+serviceCmd ServiceStatus name target@Target {_node = Nothing} = PepCmd
   (pepperCompoundTarget False target <> " service.status " <> name)
   "jq '.return[0]'"
   empty
-serviceCmd ServiceStatus name Target {node = Just n, ..} = PepCmd
+serviceCmd ServiceStatus name Target {_node = Just n} = PepCmd
   ("pepper " <> n <> " service.status " <> name)
   "jq '.return[0]'"
   empty
-serviceCmd ServiceReload name Target {node = Just n, ..} = PepCmd
+serviceCmd ServiceReload name Target {_node = Just n} = PepCmd
   ("pepper " <> n <> " service.status " <> name)
   "jq '.return[0]'"
   empty
 
 factCmd :: Text -> Bool -> Bool -> Target -> PepCmd
-factCmd _ across _ target@Target {node = Nothing, ..} = PepCmd
+factCmd _ across _ target@Target {_node = Nothing} = PepCmd
   (pepperCompoundTarget across target <> "grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role puppetmaster_timestamp puppetmaster_jenkins_job")
   [r|
      jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[0], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}'
   |]
   empty
-factCmd pdbUrl _ True Target {node = Just n, ..} = PepCmd
+factCmd pdbUrl _ True Target {_node = Just n} = PepCmd
   ("pdbquery -t remote  -l " <> pdbUrl <> " facts " <> n)
   [r|
     jq 'map({"key": .name, value}) | from_entries | {hostgroup, subgroup, role, "os": "\(.operatingsystem) \(.operatingsystemrelease)", "ip": .ipaddress_eth0, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}'
   |]
   empty
-factCmd _ _ False Target {node = Just n, ..} = PepCmd
+factCmd _ _ False Target {_node = Just n} = PepCmd
   ("pepper " <> n <> " grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role puppetmaster_timestamp puppetmaster_jenkins_job")
   [r|
      jq '.return[0] | .[] | { fqdn, ip: .fqdn_ip4[0], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job }'
@@ -136,30 +141,30 @@ factCmd _ _ False Target {node = Just n, ..} = PepCmd
   empty
 
 pingCmd :: Bool -> Target -> PepCmd
-pingCmd across target@Target {node = Nothing, ..} = PepCmd
+pingCmd across target@Target {_node = Nothing} = PepCmd
   ( pepperCompoundTarget across target <> "test.ping")
   "jq '.return[0]'"
   empty
-pingCmd _ Target {node = Just n, ..} = PepCmd
+pingCmd _ Target {_node = Just n} = PepCmd
   ( "pepper '" <> n <> "' test.ping")
   "jq '.return[0]'"
   empty
 
 dataCmd :: Maybe Key -> Target -> PepCmd
-dataCmd Nothing Target {node= Just n, ..} = PepCmd
+dataCmd Nothing Target {_node= Just n} = PepCmd
   ("pepper " <> n <> " pillar.items delimiter='/'")
   "jq '.return[0]'"
   empty
 -- TODO: use pdbquery instead
-dataCmd (Just key) Target{node= Just n, ..} = PepCmd
+dataCmd (Just key) Target{_node= Just n} = PepCmd
   ("pepper " <> n <> " pillar.item " <> key <> " delimiter='/'")
   "jq '.return[0]'"
   empty
-dataCmd Nothing target@Target {node= Nothing, ..} = PepCmd
+dataCmd Nothing target@Target {_node= Nothing} = PepCmd
   (pepperCompoundTarget False target  <> " pillar.items delimiter='/'")
   "jq '.return[0]'"
   empty
-dataCmd (Just key) target@Target {node= Nothing, ..}
+dataCmd (Just key) target@Target {_node= Nothing}
   = let pep = "( " <> pepperCompoundTarget False target <> "grains.item fqdn subgroup role ; " <> pepperCompoundTarget False target <> "pillar.item " <> key <> " delimiter='/' )"
         jq = "jq -s '.[0].return[0] * .[1].return[0]' | jq '.[] | { fqdn, subgroup, role, "<> pure key <> "}'"
     in

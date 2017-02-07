@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
 module Option where
 
 import           Control.Lens        (makeLenses)
@@ -42,8 +41,6 @@ data Arg
   , _argSubgroup :: Maybe Text
   , _argStack    :: Maybe Text
   } deriving Show
-
-makeLenses ''Arg
 
 argParser :: Parser Arg
 argParser

@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Type where
 
+import           Control.Lens
 import           Data.Text    (Text)
 
 type Node = Text
@@ -17,9 +18,11 @@ instance Read ServiceAction where
   readsPrec _ _        = []
 
 data Target = Target
-  { node     :: Maybe Text
-  , subgroup :: Maybe Text
-  , role     :: Maybe Text
-  , stack    :: Text
-  , zone     :: Text
+  { _node     :: Maybe Text
+  , _subgroup :: Maybe Text
+  , _role     :: Maybe Text
+  , _stack    :: Text
+  , _zone     :: Text
   } deriving Show
+
+makeLenses ''Target
