@@ -5,3 +5,4 @@ testing.nix
 .stack-work
 .nodes-*
 result
+stack.yaml
