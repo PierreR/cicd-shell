@@ -14,7 +14,7 @@ executable cicd
   hs-source-dirs:      app
   main-is:             Main.hs
   other-modules:       Type, Option, PepCmd, Paths_cicd_shell
-  default-extensions:  OverloadedStrings, LambdaCase
+  default-extensions:  OverloadedStrings, LambdaCase, StrictData
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                        , lens
