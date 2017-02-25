@@ -1,6 +1,11 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveGeneric    #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase       #-}
+{-# LANGUAGE RecordWildCards  #-}
+{-# LANGUAGE TemplateHaskell  #-}
 module Main where
 
+import           Control.Lens           (makeLenses, strict, view)
 import           Control.Lens.Operators hiding ((<.>))
 import           Data.Foldable          (for_)
 import           Data.Maybe             (fromMaybe)
@@ -8,10 +13,14 @@ import           Data.Optional          (Optional (..))
 import qualified Data.Optional          as Optional
 import qualified Data.Text              as Text
 import qualified Data.Text.IO           as Text
-import qualified System.Process         as Process hiding (FilePath)
-import           Turtle
-import qualified Data.Version (showVersion)
+import qualified Data.Text.Lazy         as Text.Lazy
+import qualified Data.Version           (showVersion)
+import           Dhall                  hiding (Text, auto, input, maybe, text)
+import qualified Dhall
+import           GHC.Generics
 import qualified Paths_cicd_shell
+import qualified System.Process         as Process hiding (FilePath)
+import           Turtle                 hiding (strict, view)
 
 import           Option
 import           PepCmd
@@ -19,16 +28,53 @@ import           Type
 
 version = Data.Version.showVersion Paths_cicd_shell.version
 
+configFilePath = "/vagrant/config/shell"
+
+type LText = Text.Lazy.Text
+
+auto :: (GenericInterpret (Rep a), Generic a) => Type a
+auto = deriveAuto
+  ( defaultInterpretOptions { fieldModifier = Text.Lazy.dropWhile (== '_') })
+
+data ShellConfig
+  = ShellConfig
+  { _loginId      :: LText
+  , _password     :: LText
+  , _defaultStack :: LText
+  } deriving (Generic, Show)
+
+makeLenses ''ShellConfig
+
+instance Interpret ShellConfig
+
+shellConfig :: MonadIO m => m ShellConfig
+shellConfig = liftIO $ (Dhall.input auto (Text.Lazy.fromStrict configFilePath))
+
+userId :: MonadIO io => io Text
+userId = do
+  user_id <- view (loginId.strict) <$> shellConfig
+  if Text.null user_id
+    then die  ("Your loginId is empty. Have you filled in " <> configFilePath <> " ?")
+    else pure $ user_id
+
+userPwd :: MonadIO io => io Text
+userPwd = do
+  password <- view (password.strict) <$> shellConfig
+  if Text.null password
+    then die  ("Your password is empty. Have you filled in " <> configFilePath <> " ?")
+    else pure $ password
+
+getStack :: MonadIO io => Maybe Text -> io Text
+getStack s = do
+  def <- view (defaultStack.strict) <$> shellConfig
+  if Text.null def
+    then die  ("The default stack is empty. Have you filled in " <> configFilePath <> " ?")
+    else pure $ fromMaybe def s
+
 getTarget :: Text -> Arg -> Shell Target
 getTarget zone Arg {..} = do
   stack' <- getStack _argStack
   pure $ Target _argNode _argSubgroup _argRole stack' zone
-
-
-user :: Shell Text
-user = do
-  h <- home
-  lineToText <$> input (h <> ".user_id")
 
 saltUrl zone =
   case zone of
@@ -69,15 +115,7 @@ defaultNixFilePath = do
   h <- home
   pure $ h </> ".nixpkgs/pkgs/cicd-shell/share"
 
-userPwd = do
-  let pwd_file = (</> ".user_pwd") <$> home
-  lineToText <$> (input =<< pwd_file)
 
-getStack :: Maybe Text -> Shell Text
-getStack s = do
-  h <- home
-  ds <- input ( h </> ".user_stack")
-  return $ fromMaybe (lineToText ds) s
 
 -- sensitive information such as a password won't be copy in the configfile
 writeTarget :: Turtle.FilePath -> Text -> Text -> IO ()
@@ -120,7 +158,7 @@ runCommand zone cmd =  do
   foundconfdir <- testdir =<< configDir
   unless foundconfdir $ mkdir =<< configDir
   pushd =<< configDir
-  initEnv zone =<< user
+  initEnv zone =<< userId
   maybe (pure ()) interactWith msg
   -- liftIO $ print (pepcmd salt_pass)
   case cmd^.cmdjq of
@@ -145,8 +183,8 @@ run (Options zone (Data (DataArg key arg)))          = getTarget zone arg >>= ru
 run (Options zone (Orchestrate (OrchArg cmd s)))     = getStack s >>= runCommand zone . orchCmd cmd
 run (Options zone (Du arg))                          = getTarget zone arg >>= runCommand zone . duCmd
 run (Options zone (Service (action, name, arg)))     = getTarget zone arg >>= runCommand zone . serviceCmd action name
-run (Options zone (Result (ResultNum n)))            = user >>= runCommand zone . resultCmd (pgUrl zone) Nothing (Just n)
-run (Options zone (Result (ResultJob j )))           = user >>= runCommand zone . resultCmd (pgUrl zone) (Just j) Nothing
+run (Options zone (Result (ResultNum n)))            = userId >>= runCommand zone . resultCmd (pgUrl zone) Nothing (Just n)
+run (Options zone (Result (ResultJob j )))           = userId >>= runCommand zone . resultCmd (pgUrl zone) (Just j) Nothing
 
 
 main :: IO ()

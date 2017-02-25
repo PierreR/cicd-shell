@@ -1,15 +1,15 @@
 { mkDerivation, base, lens, optional-args, process
-, raw-strings-qq, stdenv, text, turtle
+, raw-strings-qq, stdenv, text, turtle, dhall
 }:
 mkDerivation {
   pname = "cicd-shell";
-  version = "0.9.10";
+  version = "1.0.1";
   src = ./.;
   isLibrary = false;
   isExecutable = true;
   executableHaskellDepends = [
-    base lens optional-args process raw-strings-qq text turtle
+    base lens optional-args process raw-strings-qq text turtle dhall
   ];
-  homepage = "ssh://git@stash.cirb.lan:7999/cicd/salt-shell.git";
+  homepage = "ssh://git@stash.cirb.lan:7999/cicd/cicd-shell.git";
   license = stdenv.lib.licenses.bsd3;
 }
