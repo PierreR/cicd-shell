@@ -65,7 +65,7 @@ statCmd = PepCmd
   |]
   empty
 
-orchCmd :: Cmd -> Text -> PepCmd
+orchCmd :: Text -> Text -> PepCmd
 orchCmd cmd stack = PepCmd
   ("pepper state.orchestrate --client=runner mods=orch." <> cmd <> " saltenv=" <> stack)
   empty
@@ -150,14 +150,9 @@ pingCmd _ Target {_node = Just n} = PepCmd
   "jq '.return[0]'"
   empty
 
-dataCmd :: Maybe Key -> Target -> PepCmd
+dataCmd :: Maybe Text -> Target -> PepCmd
 dataCmd Nothing Target {_node= Just n} = PepCmd
   ("pepper " <> n <> " pillar.items delimiter='/'")
-  "jq '.return[0]'"
-  empty
--- TODO: use pdbquery instead
-dataCmd (Just key) Target{_node= Just n} = PepCmd
-  ("pepper " <> n <> " pillar.item " <> key <> " delimiter='/'")
   "jq '.return[0]'"
   empty
 dataCmd Nothing target@Target {_node= Nothing} = PepCmd
@@ -170,7 +165,7 @@ dataCmd (Just key) target@Target {_node= Nothing}
     in
       PepCmd pep jq empty
 
-resultCmd :: Text -> Maybe Jobid -> Maybe Int -> User -> PepCmd
+resultCmd :: Text -> Maybe Text -> Maybe Int -> Text -> PepCmd
 resultCmd pgUrl Nothing (Just num) user = PepCmd
   (format ("curl -f -s -H \"Range: 0-"%d%"\" \""%s%"?user=eq."%s%"&order=jid.desc\"") num pgUrl user)
   "jq -C '.'"

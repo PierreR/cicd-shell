@@ -131,18 +131,18 @@ runCommand zone cmd =  do
 
 
 -- prohibited options
-run (Options zone (Data (Nothing, Arg Nothing Nothing Nothing s)))  = die "Running data on the whole stack is currently prohibited"
+run (Options zone (Data (DataArg Nothing (Arg Nothing Nothing Nothing s))))  = die "Running data on the whole stack is currently prohibited"
 
 -- valid options
 run (Options zone Console)                           = runCommand zone consoleCmd
 run (Options zone Stats)                             = runCommand zone statCmd
 run (Options zone GenTags)                           = configDir >>= runCommand zone . genTagsCmd zone
 run (Options zone (Runpuppet arg))                   = getTarget zone arg >>= runCommand zone . runpuppetCmd
-run (Options zone (Ping (across, arg)))              = getTarget zone arg >>= runCommand zone . pingCmd across
+run (Options zone (Ping (AcrossArg across arg)))     = getTarget zone arg >>= runCommand zone . pingCmd across
 run (Options zone (Facts (FactArg across down arg))) = getTarget zone arg >>= runCommand zone . factCmd (puppetdbUrl zone) across down
-run (Options zone (Sync (across, arg)))              = getTarget zone arg >>= runCommand zone . syncCmd across
-run (Options zone (Data (key, arg)))                 = getTarget zone arg >>= runCommand zone . dataCmd key
-run (Options zone (Orchestrate (cmd, s)))            = getStack s >>= runCommand zone . orchCmd cmd
+run (Options zone (Sync (AcrossArg across arg)))     = getTarget zone arg >>= runCommand zone . syncCmd across
+run (Options zone (Data (DataArg key arg)))          = getTarget zone arg >>= runCommand zone . dataCmd key
+run (Options zone (Orchestrate (OrchArg cmd s)))     = getStack s >>= runCommand zone . orchCmd cmd
 run (Options zone (Du arg))                          = getTarget zone arg >>= runCommand zone . duCmd
 run (Options zone (Service (action, name, arg)))     = getTarget zone arg >>= runCommand zone . serviceCmd action name
 run (Options zone (Result (ResultNum n)))            = user >>= runCommand zone . resultCmd (pgUrl zone) Nothing (Just n)

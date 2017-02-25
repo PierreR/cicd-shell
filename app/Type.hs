@@ -4,12 +4,6 @@ module Type where
 import           Control.Lens
 import           Data.Text    (Text)
 
-type Node = Text
-type Cmd = Text
-type Key = Text
-type Jobid = Text
-type User = Text
-
 data ServiceAction = ServiceStatus | ServiceReload deriving (Show)
 
 instance Read ServiceAction where
@@ -25,4 +19,4 @@ data Target = Target
   , _zone     :: Text
   } deriving Show
 
-makeLenses ''Target
+makeClassy ''Target
