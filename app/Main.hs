@@ -21,6 +21,7 @@ import           GHC.Generics
 import qualified Paths_cicd_shell
 import qualified System.Process         as Process hiding (FilePath)
 import           Turtle                 hiding (strict, view)
+import Control.Exception
 
 import           Option
 import           PepCmd
@@ -48,7 +49,11 @@ makeLenses ''ShellConfig
 instance Interpret ShellConfig
 
 shellConfig :: MonadIO m => m ShellConfig
-shellConfig = liftIO $ (Dhall.input auto (Text.Lazy.fromStrict configFilePath))
+shellConfig = do
+  r <- liftIO $ (try $ Dhall.input auto (Text.Lazy.fromStrict configFilePath) :: IO (Either SomeException ShellConfig))
+  case r of
+    Left ex  -> liftIO (printf "Fail to read configuration file\n" >> throwIO ex) 
+    Right cf -> pure cf
 
 userId :: MonadIO io => io Text
 userId = do
