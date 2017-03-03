@@ -52,7 +52,7 @@ shellConfig :: MonadIO m => m ShellConfig
 shellConfig = do
   r <- liftIO $ (try $ Dhall.input auto (Text.Lazy.fromStrict configFilePath) :: IO (Either SomeException ShellConfig))
   case r of
-    Left ex  -> liftIO (printf "Fail to read configuration file\n" >> throwIO ex) 
+    Left ex  -> liftIO (printf "Fail to read configuration file\n" >> throwIO ex)
     Right cf -> pure cf
 
 userId :: MonadIO io => io Text
@@ -99,7 +99,7 @@ pgUrl zone =
   case zone of
     "sandbox" -> pgserver_sandbox <> result_suffix
     "prod"    -> pgserver_prod <> result_suffix
-    _         -> pgserver_prod <> "-" <> zone <> result_suffix
+    _         -> pgserver_prod <> "_" <> zone <> result_suffix
 
 puppetdbUrl zone
   | zone == "sandbox" = "http://puppetdb.sandbox.srv.cirb.lan:8080"
