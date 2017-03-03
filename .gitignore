@@ -6,3 +6,4 @@ testing.nix
 .nodes-*
 result
 stack.yaml
+dist/
