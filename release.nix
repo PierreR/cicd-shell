@@ -1,7 +1,21 @@
 let
   bootstrap = import <nixpkgs> { };
-
   nixpkgs = builtins.fromJSON (builtins.readFile ./share/.nixpkgs.json);
+  config = {
+    packageOverrides = pkgs: rec {
+      haskellPackages = pkgs.haskellPackages.override {
+        overrides = self: super: rec {
+          dhall = self.callCabal2nix "dhall" (pkgs.fetchFromGitHub {
+            owner  = "Gabriel439";
+            repo   = "Haskell-Dhall-Library";
+            rev    = "11ceab1dfeb9ed9a25dab717b4fe24ffaf7d320e";
+            sha256 = "00iz2albmj3iw8sdj2idf1y4vgfjfliv7xcxbqgmb3ggp7n7wf6a";
+          }) {};
+          cicd-shell = self.callPackage ./. {inherit dhall;};
+        };
+      };
+    };
+  };
 
   src = bootstrap.fetchFromGitHub {
     owner = "NixOS";
@@ -9,15 +23,14 @@ let
     inherit (nixpkgs) rev sha256;
   };
 
-  pkgs = import src { };
-  hghc = pkgs.haskellPackages;
-  dhall = hghc.callCabal2nix "dhall" (pkgs.fetchFromGitHub {
-    owner  = "Gabriel439";
-    repo   = "Haskell-Dhall-Library";
-    rev    = "505a786c6dd7dcc37e43f3cc96031d30028625be";
-    sha256 = "1dsjy4czxcwh4gy7yjffzfrbb6bmnxbixf1sy8aqrbkavgmh8s29";
-  }) {};
+  pkgs = import src { inherit config; };
 in
-  {
-    project0 = pkgs.haskellPackages.callPackage ./default.nix { inherit dhall; };
-  }
+rec {
+  project = pkgs.haskellPackages.cicd-shell;
+  cicd-shell = pkgs.buildEnv rec {
+    name = "cicd-shell-${project.version}";
+    paths = [
+      project
+    ];
+  };
+}

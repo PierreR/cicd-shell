@@ -29,6 +29,8 @@ import           Type
 
 version = Data.Version.showVersion Paths_cicd_shell.version
 
+-- | ROOT_DIR on the host
+-- TODO: remove devbox/vagrant deps
 configFilePath = "/vagrant/config/shell"
 
 type LText = Text.Lazy.Text
@@ -105,25 +107,20 @@ puppetdbUrl zone
   | zone == "sandbox" = "http://puppetdb.sandbox.srv.cirb.lan:8080"
   | otherwise         = "http://puppetdb.prd.srv.cirb.lan:8080"
 
--- | configDir sits in user space
-configDir :: Shell Turtle.FilePath
-configDir = (</> ".local/share/cicd") <$> home
+-- | localDir sits in user space
+localDir :: Shell Turtle.FilePath
+localDir = (</> ".local/share/cicd") <$> home
 
 nixFileName :: Text -> Text
 nixFileName zone = zone <> "-" <> Text.pack version <> ".nix"
 
--- | Where the default.nix sits.
--- This file sits in the SCM as a template (it is not generated).
--- It might be better to put the file relatively to the `bin` directory inside the nix store
--- for now we simply put and find it in the nixpkgs custom user folder
+-- | The file path of 'share/default.nix' (used by 'nix-shell' to run commands)
+-- It is located in the share folder of the cicd derivation inside the nix store
 defaultNixFilePath = do
-  h <- home
-  pure $ h </> ".nixpkgs/pkgs/cicd-shell/share"
+  (</> "../share") . parent. fromText . lineToText <$> (inshell "readlink -f $(which cicd)" empty)
 
-
-
--- sensitive information such as a password won't be copy in the configfile
-writeTarget :: Turtle.FilePath -> Text -> Text -> IO ()
+-- sensitive information such as a password won't be copy in the nixfile
+writeTarget :: Turtle.FilePath -> Text -> Text -> Shell ()
 writeTarget file zone user = do
   let
     lines dnfp = [ "{user_pwd}:"
@@ -135,7 +132,7 @@ writeTarget file zone user = do
                 , "}"
                 ]
   dnfp <- defaultNixFilePath
-  writeTextFile file (Text.unlines (lines (format fp dnfp)))
+  liftIO $ writeTextFile file (Text.unlines (lines (format fp dnfp)))
 
 runCommand :: Text -> PepCmd -> Shell ExitCode
 runCommand zone cmd =  do
@@ -149,20 +146,20 @@ runCommand zone cmd =  do
         else pgr pwd <> " --command '" <> cmd^.cmdpep <> "'"
 
     initEnv z u = do
-      configdir <- configDir
-      let configfile = configdir </> fromText (nixFileName z)
-      found <- testfile configfile
+      localdir <- localDir
+      let nixfile = localdir </> fromText (nixFileName z)
+      found <- testfile nixfile
       unless found $ do
-        liftIO $ writeTarget configfile z u
-        printf (fp%" created.\n") configfile
+        writeTarget nixfile z u
+        printf (fp%" created.\n") nixfile
         shell ("cicd " <> zone <> " gentags") empty >>= \case
           ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") z
           ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
 
   salt_pass <- userPwd
-  foundconfdir <- testdir =<< configDir
-  unless foundconfdir $ mkdir =<< configDir
-  pushd =<< configDir
+  foundconfdir <- testdir =<< localDir
+  unless foundconfdir $ mkdir =<< localDir
+  pushd =<< localDir
   initEnv zone =<< userId
   maybe (pure ()) interactWith msg
   -- liftIO $ print (pepcmd salt_pass)
@@ -179,7 +176,7 @@ run (Options zone (Data (DataArg Nothing (Arg Nothing Nothing Nothing s))))  = d
 -- valid options
 run (Options zone Console)                           = runCommand zone consoleCmd
 run (Options zone Stats)                             = runCommand zone statCmd
-run (Options zone GenTags)                           = configDir >>= runCommand zone . genTagsCmd zone
+run (Options zone GenTags)                           = localDir >>= runCommand zone . genTagsCmd zone
 run (Options zone (Runpuppet arg))                   = getTarget zone arg >>= runCommand zone . runpuppetCmd
 run (Options zone (Ping (AcrossArg across arg)))     = getTarget zone arg >>= runCommand zone . pingCmd across
 run (Options zone (Facts (FactArg across down arg))) = getTarget zone arg >>= runCommand zone . factCmd (puppetdbUrl zone) across down

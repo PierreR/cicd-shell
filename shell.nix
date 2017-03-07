@@ -1,1 +1,1 @@
-(import ./release.nix).project0.env
+(import ./release.nix).project.env

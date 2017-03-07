@@ -1,11 +1,19 @@
 # CICD shell
 
-## AD permissions
+## Quick start
 
+====
 The permissions to target machines and perform actions are realized through our Active directory.
 As an example to access the machines of the `middleware` hostgroup, you will need to be part of the `GP_APP_SALT_MIDDLEWARE` group.
 
-Please fill in a `irisline` ticket to get the necessary permissions.
+These permissions should have been set for you already. If they don't, please contact the `cicd` team.
+====
+
+The cicd shell is bundled with the `devbox` but it is also possible to install it on any linux distributionfootnote:[`macos` might also work] by running:
+
+```
+nix-env -f release.nix -iA cicd-shell
+```
 
 ## Usage
 
