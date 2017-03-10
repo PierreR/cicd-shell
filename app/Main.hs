@@ -174,7 +174,7 @@ runCommand zone cmd =  do
 run (Options zone (Data (DataArg Nothing (Arg Nothing Nothing Nothing s))))  = die "Running data on the whole stack is currently prohibited"
 
 -- valid options
-run (Options zone Console)                           = runCommand zone consoleCmd
+run (Options zone Console)                           = defaultNixFilePath >>= runCommand zone . consoleCmd zone
 run (Options zone Stats)                             = runCommand zone statCmd
 run (Options zone GenTags)                           = localDir >>= runCommand zone . genTagsCmd zone
 run (Options zone (Runpuppet arg))                   = getTarget zone arg >>= runCommand zone . runpuppetCmd

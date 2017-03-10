@@ -46,8 +46,11 @@ data CmdMsg =
 
 makeLenses ''PepCmd
 
-consoleCmd :: PepCmd
-consoleCmd = PepCmd Text.empty empty empty
+consoleCmd :: Text -> Turtle.FilePath -> PepCmd
+consoleCmd zone dnfp  =
+  let completionCmd = format ("source "%fp% " "%s%"; return") (dnfp </> "completion.sh") zone
+  in
+  PepCmd completionCmd empty empty
 
 genTagsCmd :: Text -> Turtle.FilePath -> PepCmd
 genTagsCmd zone cfdir =

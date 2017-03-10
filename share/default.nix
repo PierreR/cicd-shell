@@ -1,4 +1,4 @@
-{ salt-user, salt-pass, salt-url, zone  }:
+{ salt-user, salt-pass, salt-url, zone }:
 let
   stable = import <nixpkgs> { };
   src = stable.fetchFromGitHub {
@@ -18,9 +18,7 @@ let
     };
     doCheck = false;
   };
-
 in
-
 stable.stdenv.mkDerivation {
   name = "pepper-env";
   buildInputs = [ pepper stable.jq hghc.language-puppet ];
