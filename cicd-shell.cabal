@@ -1,11 +1,7 @@
 name:                cicd-shell
 version:             1.0.4
-description:         Please see README.md
 homepage:            ssh://git@stash.cirb.lan:7999/cicd/salt-shell.git
 license:             BSD3
-author:              Pierre Radermecker
-maintainer:          pradermecker@cirb.brussels
-category:            Command
 build-type:          Simple
 extra-source-files:  README.adoc
 cabal-version:       >=1.10
