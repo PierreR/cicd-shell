@@ -7,3 +7,4 @@ testing.nix
 result
 stack.yaml
 dist/
+default.nix
