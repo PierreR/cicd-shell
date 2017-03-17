@@ -1,19 +1,5 @@
 # CICD shell
 
-## Quick start
-
-====
-The permissions to target machines and perform actions are realized through our Active directory.
-As an example to access the machines of the `middleware` hostgroup, you will need to be part of the `GP_APP_SALT_MIDDLEWARE` group.
-
-These permissions should have been set for you already. If they don't, please contact the `cicd` team.
-====
-
-The cicd shell is bundled with the `devbox` but it is also possible to install it on any linux distributionfootnote:[`macos` might also work] by running:
-
-```
-nix-env -f release.nix -iA cicd-shell
-```
 
 ## Usage
 
@@ -184,16 +170,30 @@ Orchestrate commands can be started using:
 → cicd testing orch CMD
 ```
 
+## Identification & authorization
+====
+The permissions to target machines and perform actions are realized through our Active directory.
+As an example to access the machines of the `middleware` hostgroup, you will need to be part of the `GP_APP_SALT_MIDDLEWARE` group.
+
+These permissions should have been set for you already. If they don't, please contact the `cicd` team.
+====
+
 ifndef::env-devbox[]
 
 ## Install outside the devbox
 
-To install the shell outside the devbox, the requirements are:
+Before installing the `cicd-shell` on any linux systemfootnote:[`macos` might also work], you will need:
 
-* OS: linux
-* git
-* nix
+. the https://nixos.org/nix/[nix package manager] installed and active for your user.
+. the https://github.com/CIRB/nixpkgs-overlays[cirb nixpkgs overlays]
 
+You can then install for your user with:
+
+```
+nix-env -i cicd-shell
+```
+
+====
 If you haven't installed `nix` already, here is the quick how to:
 
 ```
@@ -206,7 +206,6 @@ To activate `nix` in your shell, add the following line in your `.bash_profile`:
 ```
 source ~/.nix-profile/etc/profile.d/nix.sh'
 ```
-
-You will also need to fetch the `nixpkgs` source for https://github.com/CIRB/devbox/blob/master/user/config.nix including the `pkgs` folder. You can easily do this by cloning the repository and then copy the files in the `~/.nixpkgs` folder.
+====
 
 endif::env-devbox[]
