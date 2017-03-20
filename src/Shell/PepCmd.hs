@@ -2,7 +2,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module PepCmd where
+module Shell.PepCmd where
 
 import           Control.Lens
 import           Data.Maybe        (maybe, catMaybes, fromMaybe)
@@ -11,7 +11,9 @@ import           Data.Text         (Text)
 import qualified Data.Text         as Text
 import           Text.RawString.QQ
 import           Turtle
-import           Type
+import qualified Paths_cicd_shell
+
+import           Shell.Type
 
 pepperCompoundTarget :: Bool -> Target -> Text
 pepperCompoundTarget across Target{..}
@@ -46,11 +48,12 @@ data CmdMsg =
 
 makeLenses ''PepCmd
 
-consoleCmd :: Text -> Turtle.FilePath -> PepCmd
-consoleCmd zone dnfp  =
-  let completionCmd = format ("source "%fp% " "%s%"; return") (dnfp </> "completion.sh") zone
+consoleCmd :: Text -> String -> PepCmd
+consoleCmd zone datadir =
+  let
+    completion_cmd = format ("source "%w% " "%s%"; return") (datadir <> "/share/completion.sh") zone
   in
-  PepCmd completionCmd empty empty
+  PepCmd completion_cmd empty empty
 
 genTagsCmd :: Text -> Turtle.FilePath -> PepCmd
 genTagsCmd zone cfdir =

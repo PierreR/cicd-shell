@@ -1,7 +1,3 @@
-prod.nix
-staging.nix
-dev.nix
-testing.nix
 .stack-work
 .nodes-*
 result

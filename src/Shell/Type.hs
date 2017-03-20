@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Type where
+module Shell.Type where
 
 import           Control.Lens
 import           Data.Text    (Text)

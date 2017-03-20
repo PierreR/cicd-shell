@@ -24,8 +24,8 @@ import           Turtle                 hiding (strict, view)
 import Control.Exception
 
 import           Option
-import           PepCmd
-import           Type
+import           Shell.PepCmd
+import           Shell.Type
 
 version = Data.Version.showVersion Paths_cicd_shell.version
 
@@ -52,7 +52,7 @@ instance Interpret ShellConfig
 
 shellConfig :: MonadIO m => m ShellConfig
 shellConfig = do
-  r <- liftIO $ (try $ Dhall.input auto (Text.Lazy.fromStrict configFilePath) :: IO (Either SomeException ShellConfig))
+  r <- liftIO (try $ Dhall.input auto (Text.Lazy.fromStrict configFilePath) :: IO (Either SomeException ShellConfig))
   case r of
     Left ex  -> liftIO (printf "Fail to read configuration file\n" >> throwIO ex)
     Right cf -> pure cf
@@ -62,14 +62,14 @@ userId = do
   user_id <- view (loginId.strict) <$> shellConfig
   if Text.null user_id
     then die  ("Your loginId is empty. Have you filled in " <> configFilePath <> " ?")
-    else pure $ user_id
+    else pure user_id
 
 userPwd :: MonadIO io => io Text
 userPwd = do
   password <- view (password.strict) <$> shellConfig
   if Text.null password
     then die  ("Your password is empty. Have you filled in " <> configFilePath <> " ?")
-    else pure $ password
+    else pure password
 
 getStack :: MonadIO io => Maybe Text -> io Text
 getStack s = do
@@ -82,14 +82,6 @@ getTarget :: Text -> Arg -> Shell Target
 getTarget zone Arg {..} = do
   stack' <- getStack _argStack
   pure $ Target _argNode _argSubgroup _argRole stack' zone
-
-saltUrl zone =
-  case zone of
-    "dev"     -> "https://salt.dev.srv.cirb.lan:8000"
-    "sandbox" -> "https://saltmaster.sandbox.srv.cirb.lan:8000"
-    "staging" -> "https://salt.sta.srv.cirb.lan:8000"
-    "testing" -> "https://salt.sta.srv.cirb.lan:8000"
-    "prod"    -> "https://salt.prd.srv.cirb.lan:8000"
 
 pgUrl :: Text -> Text
 pgUrl zone =
@@ -108,73 +100,55 @@ puppetdbUrl zone
   | otherwise         = "http://puppetdb.prd.srv.cirb.lan:8080"
 
 -- | localDir sits in user space
+-- It is the location for the gentags generated files
 localDir :: Shell Turtle.FilePath
 localDir = (</> ".local/share/cicd") <$> home
 
-nixFileName :: Text -> Text
-nixFileName zone = zone <> "-" <> Text.pack version <> ".nix"
 
--- | The file path of 'share/default.nix' (used by 'nix-shell' to run commands)
--- It is located in the share folder of the cicd derivation inside the nix store
-defaultNixFilePath = do
-  (</> "../share") . parent. fromText . lineToText <$> (inshell "readlink -f $(which cicd)" empty)
+dataDir:: Shell String
+dataDir =
+  liftIO Paths_cicd_shell.getDataDir
 
--- sensitive information such as a password won't be copy in the nixfile
-writeTarget :: Turtle.FilePath -> Text -> Text -> Shell ()
-writeTarget file zone user = do
-  let
-    lines dnfp = [ "{user_pwd}:"
-                , "(import "<> dnfp <> "/.) {"
-                , "  zone = \"" <> zone <> "\";"
-                , "  salt-user = \"" <> user <> "\";"
-                , "  salt-pass = \"${user_pwd}\";"
-                , "  salt-url = \"" <> saltUrl  zone <> "\";"
-                , "}"
-                ]
-  dnfp <- defaultNixFilePath
-  liftIO $ writeTextFile file (Text.unlines (lines (format fp dnfp)))
+nixShellCmd :: Text -> Text -> Shell Text
+nixShellCmd zone pep = do
+  userid <- userId
+  userpwd <- userPwd
+  datadir <- dataDir
+  let pgr = format ("nix-shell "%w%"/share/"%s%".nix --argstr user_id "%s%" --argstr user_pwd "%s) datadir zone userid userpwd
+  if Text.null pep
+    then pure pgr
+    else pure $ pgr <> " --command '" <> pep <> "'"
+
+genTags :: Text -> Shell ()
+genTags zone = do
+  foundconfdir <- testdir =<< localDir
+  unless foundconfdir $ mkdir =<< localDir
+  localdir <- localDir
+  let tagfile = localdir </> fromText (".nodes-" <> zone)
+  found <- testfile tagfile
+  unless found $ do
+    shell ("cicd " <> zone <> " gentags") empty >>= \case
+      ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") zone
+      ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
 
 runCommand :: Text -> PepCmd -> Shell ExitCode
 runCommand zone cmd =  do
-  let
-    nixcommand z = Text.unwords ["nix-shell", nixFileName z]
-    msg = cmd ^. cmdmsg
-    pgr pwd = nixcommand zone <>  " --argstr user_pwd " <> pwd
-    pepcmd pwd =
-      if Text.null (cmd^.cmdpep)
-        then pgr pwd
-        else pgr pwd <> " --command '" <> cmd^.cmdpep <> "'"
-
-    initEnv z u = do
-      localdir <- localDir
-      let nixfile = localdir </> fromText (nixFileName z)
-      found <- testfile nixfile
-      unless found $ do
-        writeTarget nixfile z u
-        printf (fp%" created.\n") nixfile
-        shell ("cicd " <> zone <> " gentags") empty >>= \case
-          ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") z
-          ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
-
-  salt_pass <- userPwd
-  foundconfdir <- testdir =<< localDir
-  unless foundconfdir $ mkdir =<< localDir
-  pushd =<< localDir
-  initEnv zone =<< userId
-  maybe (pure ()) interactWith msg
-  -- liftIO $ print (pepcmd salt_pass)
+  genTags zone
+  maybe (pure ()) interactWith (cmd ^. cmdmsg)
+  nixshell <- nixShellCmd zone (cmd^.cmdpep)
+  -- liftIO $ print nixshell
   case cmd^.cmdjq of
-    Default -> interactive (pepcmd salt_pass)
+    Default -> interactive nixshell
     Specific jq -> do
       -- liftIO $ print jq
-      inshell (pepcmd salt_pass) empty & shell jq
+      inshell nixshell empty & shell jq
 
 
 -- prohibited options
 run (Options zone (Data (DataArg Nothing (Arg Nothing Nothing Nothing s))))  = die "Running data on the whole stack is currently prohibited"
 
 -- valid options
-run (Options zone Console)                           = defaultNixFilePath >>= runCommand zone . consoleCmd zone
+run (Options zone Console)                           = dataDir>>= runCommand zone . consoleCmd zone
 run (Options zone Stats)                             = runCommand zone statCmd
 run (Options zone GenTags)                           = localDir >>= runCommand zone . genTagsCmd zone
 run (Options zone (Runpuppet arg))                   = getTarget zone arg >>= runCommand zone . runpuppetCmd

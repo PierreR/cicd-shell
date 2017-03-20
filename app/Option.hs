@@ -3,7 +3,8 @@ module Option where
 
 import           Control.Lens        (makeLenses)
 import           Turtle              hiding ((<>))
-import           Type
+
+import           Shell.Type
 
 data ResultArg
   = ResultJob Text
