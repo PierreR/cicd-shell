@@ -7,37 +7,30 @@ module Main where
 
 import           Control.Lens           (makeLenses, strict, view)
 import           Control.Lens.Operators hiding ((<.>))
-import           Data.Foldable          (for_)
 import           Data.Maybe             (fromMaybe)
 import           Data.Optional          (Optional (..))
-import qualified Data.Optional          as Optional
 import qualified Data.Text              as Text
-import qualified Data.Text.IO           as Text
 import qualified Data.Text.Lazy         as Text.Lazy
+import qualified Data.Text.IO           as Text
 import qualified Data.Version           (showVersion)
-import           Dhall                  hiding (Text, auto, input, maybe, text)
 import qualified Dhall
 import           GHC.Generics
 import qualified Paths_cicd_shell
 import qualified System.Process         as Process hiding (FilePath)
-import           Turtle                 hiding (strict, view)
-import Control.Exception
+import           Turtle                 hiding (FilePath, strict, view)
+import qualified Turtle
 
 import           Option
 import           Shell.PepCmd
 import           Shell.Type
+
+import           Protolude hiding (die, (%))
 
 version = Data.Version.showVersion Paths_cicd_shell.version
 
 -- | ROOT_DIR on the host
 -- TODO: remove devbox/vagrant deps
 configFilePath = "/vagrant/config/shell"
-
-type LText = Text.Lazy.Text
-
-auto :: (GenericInterpret (Rep a), Generic a) => Type a
-auto = deriveAuto
-  ( defaultInterpretOptions { fieldModifier = Text.Lazy.dropWhile (== '_') })
 
 data ShellConfig
   = ShellConfig
@@ -48,14 +41,15 @@ data ShellConfig
 
 makeLenses ''ShellConfig
 
-instance Interpret ShellConfig
+instance Dhall.Interpret ShellConfig
 
 shellConfig :: MonadIO m => m ShellConfig
 shellConfig = do
-  r <- liftIO (try $ Dhall.input auto (Text.Lazy.fromStrict configFilePath) :: IO (Either SomeException ShellConfig))
-  case r of
-    Left ex  -> liftIO (printf "Fail to read configuration file\n" >> throwIO ex)
-    Right cf -> pure cf
+  liftIO $ Dhall.input auto (fromStrict configFilePath)
+  where
+    auto :: (Dhall.GenericInterpret (Rep a), Generic a) => Dhall.Type a
+    auto = Dhall.deriveAuto
+      ( Dhall.defaultInterpretOptions { Dhall.fieldModifier = Text.Lazy.dropWhile (== '_') })
 
 userId :: MonadIO io => io Text
 userId = do
@@ -100,12 +94,12 @@ puppetdbUrl zone
   | otherwise         = "http://puppetdb.prd.srv.cirb.lan:8080"
 
 -- | localDir sits in user space
--- It is the location for the gentags generated files
+-- It is the location for the gentags generated files that help with completion
 localDir :: Shell Turtle.FilePath
 localDir = (</> ".local/share/cicd") <$> home
 
 
-dataDir:: Shell String
+dataDir:: Shell FilePath
 dataDir =
   liftIO Paths_cicd_shell.getDataDir
 
@@ -126,7 +120,7 @@ genTags zone = do
   localdir <- localDir
   let tagfile = localdir </> fromText (".nodes-" <> zone)
   found <- testfile tagfile
-  unless found $ do
+  unless found $
     shell ("cicd " <> zone <> " gentags") empty >>= \case
       ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") zone
       ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
@@ -170,7 +164,7 @@ interactWith (CmdMsg False msg) =
   liftIO $ Text.putStrLn msg
 
 interactWith (CmdMsg True msg) = do
-  liftIO $ Text.putStrLn (msg <> " ? (Y/N)")
+  liftIO $ putStrLn (msg <> " ? (Y/N)")
   r <- readline
   case r of
     Just "Y" -> return ()
@@ -180,7 +174,7 @@ interactWith (CmdMsg True msg) = do
 interactive :: MonadIO io => Text -> io ExitCode
 interactive c = do
     let
-      cp = (Process.shell (Text.unpack c))
+      cp = (Process.shell (toS c))
             { Process.std_in  = Process.Inherit
             , Process.std_out = Process.Inherit
             , Process.std_err = Process.Inherit

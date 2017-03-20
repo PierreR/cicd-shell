@@ -14,7 +14,10 @@ let
   haskellPackages = if compiler == "default"
                        then pkgs.haskellPackages
                        else pkgs.haskell.packages.${compiler};
-  drv = hlib.dontHaddock(haskellPackages.callPackage ./. {dhall = haskellPackages.dhall_git;});
+  drv = hlib.dontHaddock(haskellPackages.callPackage ./. {
+    dhall = haskellPackages.dhall_git;
+    protolude = haskellPackages.protolude_git;
+  });
 
 in
 

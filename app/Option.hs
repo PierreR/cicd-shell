@@ -1,8 +1,8 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Option where
 
-import           Control.Lens        (makeLenses)
-import           Turtle              hiding ((<>))
+import           Control.Lens   (makeLenses)
+import           Protolude
+import           Turtle.Options
 
 import           Shell.Type
 
@@ -83,7 +83,6 @@ commandParser =
     across_parser = AcrossArg <$> switch "all" 'a' "Target whole the known stacks" <*> argParser
     orch_parser   = OrchArg <$> argText "cmd" "Command to run" <*> optional (optText "stack" 's' "Target stack/hostgroup" )
     status_parser = (,,) <$> argRead "action" "Use 'status' or 'reload'" <*> argText "service" "Service name" <*> argParser
-
 
 parser :: Parser Options
 parser =

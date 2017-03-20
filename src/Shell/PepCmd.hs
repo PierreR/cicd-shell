@@ -1,17 +1,19 @@
-{-# LANGUAGE QuasiQuotes     #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE QuasiQuotes       #-}
+{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Shell.PepCmd where
 
 import           Control.Lens
-import           Data.Maybe        (maybe, catMaybes, fromMaybe)
+import           Data.Maybe        (catMaybes, fromMaybe, maybe)
 import           Data.Optional     (Optional)
 import           Data.Text         (Text)
 import qualified Data.Text         as Text
+import           Protolude         hiding ((%))
 import           Text.RawString.QQ
-import           Turtle
-import qualified Paths_cicd_shell
+import qualified Turtle
+import           Turtle.Format
 
 import           Shell.Type
 
@@ -27,7 +29,7 @@ pepperCompoundTarget across Target{..}
       let join_target = Text.intercalate " and " . catMaybes
           role_target [g', r'] = "G@subgroup:" <> g' <> " and G@role:" <> r'
           role_target [r'] = "G@role:" <> r'
-          role_target _ = error "Role should follow the pattern 'subgroup.role' where subgroup is optional" -- TODO replace this with an exceptT
+          role_target _ = panic "Role should follow the pattern 'subgroup.role' where subgroup is optional" -- TODO replace this with an exceptT
       in join_target
            [ Just ("G@zone:" <> z)
            , ("G@hostgroup:" <>) <$> s
@@ -48,7 +50,7 @@ data CmdMsg =
 
 makeLenses ''PepCmd
 
-consoleCmd :: Text -> String -> PepCmd
+consoleCmd :: Text -> FilePath -> PepCmd
 consoleCmd zone datadir =
   let
     completion_cmd = format ("source "%w% " "%s%"; return") (datadir <> "/share/completion.sh") zone
@@ -83,7 +85,7 @@ runpuppetCmd target@Target {_node = Nothing} = PepCmd
   "jq '.return'"
   ( case target^.role of
       Nothing -> Just $ CmdMsg True ("Run puppet on " <> target^.stack)
-      Just r  -> Just $ CmdMsg True ("Run puppet on " <> (Text.intercalate "." [r, target^.stack, target^.zone]))
+      Just r  -> Just $ CmdMsg True ("Run puppet on " <> Text.intercalate "." [r, target^.stack, target^.zone])
   )
 runpuppetCmd Target {_node = Just n} = PepCmd
   ( "pepper " <> n <> " puppetutils.run_agent")
