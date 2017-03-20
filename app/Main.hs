@@ -16,8 +16,8 @@ import qualified Data.Version           (showVersion)
 import qualified Dhall
 import           GHC.Generics
 import qualified Paths_cicd_shell
-import qualified System.Process         as Process hiding (FilePath)
-import           Turtle                 hiding (FilePath, strict, view)
+import qualified System.Process         as Process
+import           Turtle                 hiding (strict, view, FilePath)
 import qualified Turtle
 
 import           Option
@@ -98,7 +98,6 @@ puppetdbUrl zone
 localDir :: Shell Turtle.FilePath
 localDir = (</> ".local/share/cicd") <$> home
 
-
 dataDir:: Shell FilePath
 dataDir =
   liftIO Paths_cicd_shell.getDataDir
@@ -113,21 +112,21 @@ nixShellCmd zone pep = do
     then pure pgr
     else pure $ pgr <> " --command '" <> pep <> "'"
 
-genTags :: Text -> Shell ()
-genTags zone = do
-  foundconfdir <- testdir =<< localDir
-  unless foundconfdir $ mkdir =<< localDir
+initTags :: Text -> Shell ()
+initTags zone = do
   localdir <- localDir
   let tagfile = localdir </> fromText (".nodes-" <> zone)
   found <- testfile tagfile
-  unless found $
-    shell ("cicd " <> zone <> " gentags") empty >>= \case
+  unless found $ do
+    mktree localdir
+    touch tagfile
+    runCommand zone (genTagsCmd zone localdir) >>= \case
       ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") zone
       ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
 
 runCommand :: Text -> PepCmd -> Shell ExitCode
 runCommand zone cmd =  do
-  genTags zone
+  initTags zone
   maybe (pure ()) interactWith (cmd ^. cmdmsg)
   nixshell <- nixShellCmd zone (cmd^.cmdpep)
   -- liftIO $ print nixshell

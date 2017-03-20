@@ -53,7 +53,7 @@ makeLenses ''PepCmd
 consoleCmd :: Text -> FilePath -> PepCmd
 consoleCmd zone datadir =
   let
-    completion_cmd = format ("source "%w% " "%s%"; return") (datadir <> "/share/completion.sh") zone
+    completion_cmd = format ("source "%w%"/share/completion.sh "%s%"; return") datadir zone
   in
   PepCmd completion_cmd empty empty
 
