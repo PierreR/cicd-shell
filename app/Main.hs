@@ -126,6 +126,7 @@ initTags zone = do
 
 runCommand :: Text -> PepCmd -> Shell ExitCode
 runCommand zone cmd =  do
+  shell "ping -c1 stash.cirb.lan > /dev/null 2>&1" empty .||. die "cannot connect to stash.cirb.lan, check your connection"
   initTags zone
   maybe (pure ()) interactWith (cmd ^. cmdmsg)
   nixshell <- nixShellCmd zone (cmd^.cmdpep)
