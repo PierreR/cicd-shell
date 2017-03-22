@@ -1,7 +1,7 @@
 { salt-user, salt-pass, salt-url, zone }:
 let
-  stable = import <nixpkgs> { };
-  src = stable.fetchFromGitHub {
+  _pkgs = import <nixpkgs> { };
+  src = _pkgs.fetchFromGitHub {
     owner = "NixOS";
     repo  = "nixpkgs";
     inherit (builtins.fromJSON (builtins.readFile ./.nixpkgs.json)) rev sha256;
@@ -9,19 +9,10 @@ let
 
   pkgs = import src { };
   hghc = pkgs.haskellPackages;
-  pepper = pkgs.pythonPackages.buildPythonApplication rec {
-    name = "salt-pepper-${version}";
-    version = "0.5.0";
-    src = pkgs.fetchurl {
-        url = "https://github.com/saltstack/pepper/releases/download/${version}/${name}.tar.gz";
-        sha256 = "0gf4v5y1kp16i1na4c9qw7cgrpsh21p8ldv9r6b8gdwcxzadxbck";
-    };
-    doCheck = false;
-  };
 in
-stable.stdenv.mkDerivation {
+pkgs.stdenv.mkDerivation {
   name = "pepper-env";
-  buildInputs = [ pepper stable.jq hghc.language-puppet ];
+  buildInputs = [ pkgs.pepper _pkgs.jq hghc.language-puppet ];
   shellHook = ''
   export SALTAPI_USER="${salt-user}"
   export SALTAPI_PASS="${salt-pass}"
