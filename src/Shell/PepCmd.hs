@@ -181,6 +181,6 @@ resultCmd pgUrl Nothing (Just num) user = PepCmd
 resultCmd pgUrl (Just jobid) Nothing _ = PepCmd
    ("curl -f -s \"" <> pgUrl <> "?select=ret&jid=eq." <> jobid <> "\"" )
   [r|
-    jq -r '(.[].ret | if .return.retcode == 0 then "SUCCESS for " else "FAILURE for " end + .id + ":", if .return.stderr != "" then .return.stdout + "\n******\n" + .return.stderr + "\n" else .return.stdout + "\n" end)'
+    jq -r '(.[].ret | .[] | if .return.retcode == 0 then "SUCCESS for " else "FAILURE for " end + .id + ":", if .return.stderr != "" then .return.stdout + "\n******\n" + .return.stderr + "\n" else .return.stdout + "\n" end)'
   |]
   empty
