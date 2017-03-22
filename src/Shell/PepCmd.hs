@@ -83,10 +83,7 @@ runpuppetCmd :: Target -> PepCmd
 runpuppetCmd target@Target {_node = Nothing} = PepCmd
   ( pepperCompoundTarget False target <> "--client=local_async puppetutils.run_agent")
   "jq '.return'"
-  ( case target^.role of
-      Nothing -> Just $ CmdMsg True ("Run puppet on " <> target^.stack)
-      Just r  -> Just $ CmdMsg True ("Run puppet on " <> Text.intercalate "." [r, target^.stack, target^.zone])
-  )
+  (Just $ CmdMsg True ("Run puppet on " <> Text.intercalate "." (catMaybes [target^.role, target^.subgroup] <> [target^.stack, target^.zone])))
 runpuppetCmd Target {_node = Just n} = PepCmd
   ( "pepper " <> n <> " puppetutils.run_agent")
   [r|
