@@ -1,7 +1,9 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 module Shell.Option where
 
-import           Control.Lens   (makeLenses)
+import           Control.Lens    (makeLenses)
+import           Data.Optional   (Optional)
+import           Numeric.Natural
 import           Protolude
 import           Turtle.Options
 
@@ -9,7 +11,7 @@ import           Shell.Type
 
 data ResultArg
   = ResultJob Text
-  | ResultNum Int
+  | ResultNum Natural
   deriving (Show)
 
 data Command
@@ -63,6 +65,9 @@ argParser
   <*> optional (optText "subgroup" 'g' "Target subgroup")
   <*> optional (optText "stack" 's' "Target stack/hostgroup")
 
+optNatural :: ArgName -> ShortName -> Optional HelpMessage -> Parser Natural
+optNatural = optRead
+
 serviceParse :: Text -> Maybe ServiceAction
 serviceParse "status" = Just ServiceStatus
 serviceParse "reload" = Just ServiceReload
@@ -83,7 +88,7 @@ commandParser =
   <|> Result      <$> subcommand "result" "Display the results of the most recent jobs executed by the user or for a specific id" result_parser
   <|> GenTags     <$ subcommand "gentags" "Generate node completion file" (pure ())
   where
-    result_parser = ResultNum <$> optInt "Num" 'n' "Number of results to display" <|>  ResultJob <$> optText "job" 'j' "Job id"
+    result_parser = ResultNum <$> optNatural "Num" 'n' "Number of results to display" <|>  ResultJob <$> optText "job" 'j' "Job id"
     data_parser   = DataArg <$> optional (optText "key" 'k' "Property to look up for" ) <*> argParser
     fact_parser   = FactArg <$> switch "all" 'a' "Target whole the known stacks" <*> switch "down" 'd' "Query down node" <*> argParser
     across_parser = AcrossArg <$> switch "all" 'a' "Target whole the known stacks" <*> argParser

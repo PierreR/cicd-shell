@@ -10,6 +10,7 @@ import           Data.Maybe        (catMaybes, fromMaybe, maybe)
 import           Data.Optional     (Optional)
 import           Data.Text         (Text)
 import qualified Data.Text         as Text
+import           Numeric.Natural
 import           Protolude         hiding ((%))
 import           Text.RawString.QQ
 import qualified Turtle
@@ -170,9 +171,10 @@ dataCmd (Just key) target@Target {_node= Nothing}
     in
       PepCmd pep jq empty
 
-resultCmd :: Text -> Maybe Text -> Maybe Int -> Text -> PepCmd
+resultCmd :: Text -> Maybe Text -> Maybe Natural -> Text -> PepCmd
+resultCmd _ Nothing (Just 0) _ = panic "NUM should be > 0"
 resultCmd pgUrl Nothing (Just num) user = PepCmd
-  (format ("curl -f -s -H \"Range: 0-"%d%"\" \""%s%"?user=eq."%s%"&order=jid.desc\"") num pgUrl user)
+  (format ("curl -f -s -H \"Range: 0-"%d%"\" \""%s%"?user=eq."%s%"&order=jid.desc\"") (num - 1) pgUrl user)
   "jq -C '.'"
   empty
 resultCmd pgUrl (Just jobid) Nothing _ = PepCmd
