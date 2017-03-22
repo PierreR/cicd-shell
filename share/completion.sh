@@ -24,7 +24,7 @@ _pep () {
             COMPREPLY=( $(compgen -W "-s -n -g -h" -- "$cur" ) )
             return 0
             ;;
-        results)
+        result)
             COMPREPLY=( $(compgen -W "-j -n -h" -- "$cur" ) )
             return 0
             ;;
@@ -45,6 +45,6 @@ _pep () {
 
     ret=0;
 } &&
-complete -F _pep pep data runpuppet du facts
+complete -F _pep pep data runpuppet du facts result service sync ping
 
 # end
