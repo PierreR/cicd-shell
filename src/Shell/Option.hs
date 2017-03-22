@@ -1,4 +1,5 @@
-module Option where
+{-# LANGUAGE NoImplicitPrelude #-}
+module Shell.Option where
 
 import           Control.Lens   (makeLenses)
 import           Protolude
@@ -62,6 +63,11 @@ argParser
   <*> optional (optText "subgroup" 'g' "Target subgroup")
   <*> optional (optText "stack" 's' "Target stack/hostgroup")
 
+serviceParse :: Text -> Maybe ServiceAction
+serviceParse "status" = Just ServiceStatus
+serviceParse "reload" = Just ServiceReload
+serviceParse _        = Nothing
+
 commandParser :: Parser Command
 commandParser =
       Console     <$  subcommand "console" "Open the cicd console" (pure ())
@@ -82,12 +88,11 @@ commandParser =
     fact_parser   = FactArg <$> switch "all" 'a' "Target whole the known stacks" <*> switch "down" 'd' "Query down node" <*> argParser
     across_parser = AcrossArg <$> switch "all" 'a' "Target whole the known stacks" <*> argParser
     orch_parser   = OrchArg <$> argText "cmd" "Command to run" <*> optional (optText "stack" 's' "Target stack/hostgroup" )
-    status_parser = (,,) <$> argRead "action" "Use 'status' or 'reload'" <*> argText "service" "Service name" <*> argParser
+    status_parser = (,,) <$> arg serviceParse "action" "Use 'status' or 'reload'" <*> argText "service" "Service name" <*> argParser
 
 parser :: Parser Options
 parser =
       Options <$> argText "zone" "ZONE such as dev, staging, testing or prod" <*> commandParser
-
 
 -- -- | One or none.
   -- let nix_file = format (s%"/"%s%".nix") projectDir zone

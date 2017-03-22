@@ -1,5 +1,5 @@
 name:                cicd-shell
-version:             1.0.9
+version:             1.0.10
 homepage:            ssh://git@stash.cirb.lan:7999/cicd/salt-shell.git
 license:             BSD3
 build-type:          Simple
@@ -15,6 +15,7 @@ Data-Files:
 library
   hs-source-dirs:      src
   exposed-modules:     Shell.Type
+                       , Shell.Option
                        , Shell.PepCmd
   other-modules:       Paths_cicd_shell
   default-extensions:  OverloadedStrings, StrictData
@@ -29,8 +30,8 @@ library
 executable cicd
   hs-source-dirs:      app
   main-is:             Main.hs
-  other-modules:       Option, Paths_cicd_shell
-  default-extensions:  OverloadedStrings, StrictData, NoImplicitPrelude
+  other-modules:       Paths_cicd_shell
+  default-extensions:  OverloadedStrings, StrictData
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                        , cicd-shell

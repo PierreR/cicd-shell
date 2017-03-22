@@ -1,8 +1,9 @@
-{-# LANGUAGE DeriveGeneric    #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE LambdaCase       #-}
-{-# LANGUAGE RecordWildCards  #-}
-{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE TemplateHaskell   #-}
 module Main where
 
 import           Control.Lens           (makeLenses, strict, view)
@@ -10,25 +11,25 @@ import           Control.Lens.Operators hiding ((<.>))
 import           Data.Maybe             (fromMaybe)
 import           Data.Optional          (Optional (..))
 import qualified Data.Text              as Text
-import qualified Data.Text.Lazy         as Text.Lazy
 import qualified Data.Text.IO           as Text
+import qualified Data.Text.Lazy         as Text.Lazy
 import qualified Data.Version           (showVersion)
 import qualified Dhall
 import           GHC.Generics
 import qualified Paths_cicd_shell
 import qualified System.Process         as Process
-import           Turtle                 hiding (strict, view, FilePath)
+import           Turtle                 hiding (FilePath, strict, view)
 import qualified Turtle
 
-import           Option
+import           Shell.Option
 import           Shell.PepCmd
 import           Shell.Type
 
-import           Protolude hiding (die, (%))
+import           Protolude              hiding (die, (%))
 
 version = Data.Version.showVersion Paths_cicd_shell.version
 
--- | ROOT_DIR on the host
+-- ROOT_DIR on the host
 -- TODO: remove devbox/vagrant deps
 configFilePath = "/vagrant/config/shell"
 

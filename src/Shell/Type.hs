@@ -6,11 +6,6 @@ import           Data.Text    (Text)
 
 data ServiceAction = ServiceStatus | ServiceReload deriving (Show)
 
-instance Read ServiceAction where
-  readsPrec _ "status" = [(ServiceStatus, "")]
-  readsPrec _ "reload" = [(ServiceReload, "")]
-  readsPrec _ _        = []
-
 data Target = Target
   { _node     :: Maybe Text
   , _subgroup :: Maybe Text
