@@ -88,7 +88,7 @@ runpuppetCmd target@Target {_node = Nothing} = PepCmd
 runpuppetCmd Target {_node = Just n} = PepCmd
   ( "pepper " <> n <> " puppetutils.run_agent")
   [r|
-    jq -r '.return[] | to_entries | (.[] | if .value.retcode == 0 then "\nSUCCESS for " else "\nFAILURE for " end + .key + ":" , if .value.stderr != "" then .value.stdout + "\n******\n" + .value.stderr else .value.stdout end)'
+    jq -r '.return[] | to_entries | (.[] | if .value.retcode == 0 then "\n\u001B[1;32mSUCCESS\u001B[0m for " else "\n\u001B[1;31mFAILURE\u001B[0m for " end + .key + ":" , if .value.stderr != "" then .value.stdout + "\n******\n" + .value.stderr else .value.stdout end)'
   |]
   empty
 
@@ -180,6 +180,6 @@ resultCmd pgUrl Nothing (Just num) user = PepCmd
 resultCmd pgUrl (Just jobid) Nothing _ = PepCmd
    ("curl -f -s \"" <> pgUrl <> "?select=ret&jid=eq." <> jobid <> "\"" )
   [r|
-    jq -r '(.[].ret | .[] | if .return.retcode == 0 then "SUCCESS for " else "FAILURE for " end + .id + ":", if .return.stderr != "" then .return.stdout + "\n******\n" + .return.stderr + "\n" else .return.stdout + "\n" end)'
+    jq -r '(.[].ret | .[] | if .return.retcode == 0 then "\u001B[1;32mSUCCESS\u001B[0m for " else "\u001B[1;31mFAILURE\u001B[0m for " end + .id + ":", if .return.stderr != "" then .return.stdout + "\n******\n" + .return.stderr + "\n" else .return.stdout + "\n" end)'
   |]
   empty
