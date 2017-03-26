@@ -48,8 +48,8 @@ shellConfig :: MonadIO m => m ShellConfig
 shellConfig = do
   liftIO $ Dhall.input auto (fromStrict configFilePath)
   where
-    auto :: (Dhall.GenericInterpret (Rep a), Generic a) => Dhall.Type a
-    auto = Dhall.deriveAuto
+    auto ::  Dhall.Interpret a => Dhall.Type a
+    auto = Dhall.autoWith
       ( Dhall.defaultInterpretOptions { Dhall.fieldModifier = Text.Lazy.dropWhile (== '_') })
 
 userId :: MonadIO io => io Text
