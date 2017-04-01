@@ -1,13 +1,7 @@
 { salt-user, salt-pass, salt-url, zone }:
 let
-  _pkgs = import <nixpkgs> { };
-  src = _pkgs.fetchFromGitHub {
-    owner = "NixOS";
-    repo  = "nixpkgs";
-    inherit (builtins.fromJSON (builtins.readFile ./.nixpkgs.json)) rev sha256;
-  };
-
-  pkgs = import src { };
+  _pkgs = import <nixpkgs> {};
+  pkgs = import (fetchTarball https://github.com/NixOS/nixpkgs/archive/08c87eed00c7478a03d965570feb50c8f317ce5f.tar.gz) {}; # at 2017-03-29
   hghc = pkgs.haskellPackages;
 in
 pkgs.stdenv.mkDerivation {
