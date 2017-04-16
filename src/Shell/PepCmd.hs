@@ -51,15 +51,15 @@ data CmdMsg =
 
 makeLenses ''PepCmd
 
-consoleCmd :: Text -> FilePath -> PepCmd
-consoleCmd zone datadir =
+consoleCmd :: Zone -> FilePath -> PepCmd
+consoleCmd (Zone zone) datadir =
   let
     completion_cmd = format ("source "%w%"/share/completion.sh "%s%"; return") datadir zone
   in
   PepCmd completion_cmd empty empty
 
-genTagsCmd :: Text -> Turtle.FilePath -> PepCmd
-genTagsCmd zone cfdir =
+genTagsCmd :: Zone -> Turtle.FilePath -> PepCmd
+genTagsCmd (Zone zone) cfdir =
   let nodefile = format fp cfdir <> "/.nodes-" <> zone
   in PepCmd
   "pepper \"*\" test.ping"
@@ -178,8 +178,8 @@ resultCmd pgUrl Nothing (Just num) user = PepCmd
   "jq -C '.'"
   empty
 resultCmd pgUrl (Just jobid) Nothing _ = PepCmd
-   ("curl -f -s \"" <> pgUrl <> "?select=ret&jid=eq." <> jobid <> "\"" )
+   ("curl -f -s -H \"Accept: application/vnd.pgrst.object+json\" \"" <> pgUrl <> "?select=ret&jid=eq." <> jobid <> "\"" )
   [r|
-    jq -r '(.[].ret | .[] | if .return.retcode == 0 then "\u001B[1;32mSUCCESS\u001B[0m for " else "\u001B[1;31mFAILURE\u001B[0m for " end + .id + ":", if .return.stderr != "" then .return.stdout + "\n******\n" + .return.stderr + "\n" else .return.stdout + "\n" end)'
+    jq -r '(.ret | .[] | if .return.retcode == 0 then "\u001B[1;32mSUCCESS\u001B[0m for " else "\u001B[1;31mFAILURE\u001B[0m for " end + .id + ":", if .return.stderr != "" then .return.stdout + "\n******\n" + .return.stderr + "\n" else .return.stdout + "\n" end)'
   |]
   empty

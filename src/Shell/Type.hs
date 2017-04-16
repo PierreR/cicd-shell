@@ -15,3 +15,5 @@ data Target = Target
   } deriving Show
 
 makeClassy ''Target
+
+newtype Zone = Zone Text

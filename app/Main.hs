@@ -73,13 +73,13 @@ getStack s = do
     then die  ("The default stack is empty. Have you filled in " <> configFilePath <> " ?")
     else pure $ fromMaybe def s
 
-getTarget :: Text -> Arg -> Shell Target
-getTarget zone Arg {..} = do
+getTarget :: Zone -> Arg -> Shell Target
+getTarget (Zone zone) Arg {..} = do
   stack' <- getStack _argStack
   pure $ Target _argNode _argSubgroup _argRole stack' zone
 
-pgUrl :: Text -> Text
-pgUrl zone =
+pgUrl :: Zone -> Text
+pgUrl (Zone zone) =
   let
     pgserver_prod     = "http://pgserver-cicd.prd.srv.cirb.lan/saltstack"
     pgserver_sandbox = "http://pgserver.sandbox.srv.cirb.lan/saltstack"
@@ -90,7 +90,7 @@ pgUrl zone =
     "prod"    -> pgserver_prod <> result_suffix
     _         -> pgserver_prod <> "_" <> zone <> result_suffix
 
-puppetdbUrl zone
+puppetdbUrl (Zone zone)
   | zone == "sandbox" = "http://puppetdb.sandbox.srv.cirb.lan:8080"
   | otherwise         = "http://puppetdb.prd.srv.cirb.lan:8080"
 
@@ -103,8 +103,8 @@ dataDir:: Shell FilePath
 dataDir =
   liftIO Paths_cicd_shell.getDataDir
 
-nixShellCmd :: Text -> Text -> Shell Text
-nixShellCmd zone pep = do
+nixShellCmd :: Zone -> Text -> Shell Text
+nixShellCmd (Zone zone) pep = do
   userid <- userId
   userpwd <- userPwd
   datadir <- dataDir
@@ -113,31 +113,30 @@ nixShellCmd zone pep = do
     then pure pgr
     else pure $ pgr <> " --command '" <> pep <> "'"
 
-initTags :: Text -> Shell ()
-initTags zone = do
+initTags :: Zone -> Shell ()
+initTags z@(Zone zone) = do
   localdir <- localDir
   let tagfile = localdir </> fromText (".nodes-" <> zone)
   found <- testfile tagfile
   unless found $ do
     mktree localdir
     touch tagfile
-    runCommand zone (genTagsCmd zone localdir) >>= \case
+    runCommand z (genTagsCmd z localdir) >>= \case
       ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") zone
       ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
 
-runCommand :: Text -> PepCmd -> Shell ExitCode
-runCommand zone cmd =  do
+runCommand :: Zone -> PepCmd -> Shell ExitCode
+runCommand z cmd =  do
   shell "ping -c1 stash.cirb.lan > /dev/null 2>&1" empty .||. die "cannot connect to stash.cirb.lan, check your connection"
-  initTags zone
+  initTags z
   maybe (pure ()) interactWith (cmd ^. cmdmsg)
-  nixshell <- nixShellCmd zone (cmd^.cmdpep)
+  nixshell <- nixShellCmd z (cmd^.cmdpep)
   -- liftIO $ print nixshell
   case cmd^.cmdjq of
     Default -> interactive nixshell
     Specific jq -> do
       -- liftIO $ print jq
       inshell nixshell empty & shell jq
-
 
 -- prohibited options
 run (Options zone (Data (DataArg Nothing (Arg Nothing Nothing Nothing s))))  = die "Running data on the whole stack is currently prohibited"
@@ -156,7 +155,6 @@ run (Options zone (Du arg))                          = getTarget zone arg >>= ru
 run (Options zone (Service (action, name, arg)))     = getTarget zone arg >>= runCommand zone . serviceCmd action name
 run (Options zone (Result (ResultNum n)))            = userId >>= runCommand zone . resultCmd (pgUrl zone) Nothing (Just n)
 run (Options zone (Result (ResultJob j )))           = userId >>= runCommand zone . resultCmd (pgUrl zone) (Just j) Nothing
-
 
 main :: IO ()
 main = sh $ options (fromString ("CICD - command line utility (v" <> version <> ")")) parser >>= run

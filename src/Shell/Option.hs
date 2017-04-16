@@ -47,7 +47,7 @@ data AcrossArg
   deriving Show
 
 data Options
-  = Options Text Command
+  = Options Zone Command
 
 data Arg
   = Arg
@@ -97,7 +97,7 @@ commandParser =
 
 parser :: Parser Options
 parser =
-      Options <$> argText "zone" "ZONE such as dev, staging, testing or prod" <*> commandParser
+      Options . Zone <$> argText "zone" "ZONE such as dev, staging, testing or prod" <*> commandParser
 
 -- -- | One or none.
   -- let nix_file = format (s%"/"%s%".nix") projectDir zone
