@@ -1,21 +1,15 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE RecordWildCards   #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE QuasiQuotes     #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Shell.PepCmd where
 
-import           Control.Lens
-import           Data.Maybe        (catMaybes, fromMaybe, maybe)
-import           Data.Optional     (Optional)
-import           Data.Text         (Text)
 import qualified Data.Text         as Text
-import           Numeric.Natural
-import           Protolude         hiding ((%))
 import           Text.RawString.QQ
 import qualified Turtle
 import           Turtle.Format
 
+import           Shell.Prelude
 import           Shell.Type
 
 pepperCompoundTarget :: Bool -> Target -> Text
@@ -40,9 +34,9 @@ pepperCompoundTarget across Target{..}
 
 data PepCmd
   = PepCmd
-  { _cmdpep :: Text
-  , _cmdjq  :: Optional Text
-  , _cmdmsg :: Maybe CmdMsg -- ^ A message to be displayed before launching the command
+  { _pep :: Text
+  , _jq  :: Optional Text
+  , _beforeMsg :: Maybe CmdMsg -- ^ A message to be displayed before launching the command
   } deriving Show
 
 data CmdMsg =

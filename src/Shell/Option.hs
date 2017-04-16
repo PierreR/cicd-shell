@@ -1,13 +1,9 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 module Shell.Option where
 
-import           Control.Lens    (makeLenses)
-import           Data.Optional   (Optional)
-import           Numeric.Natural
-import           Protolude
 import           Turtle.Options
 
 import           Shell.Type
+import           Shell.Prelude
 
 data ResultArg
   = ResultJob Text

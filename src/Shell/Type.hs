@@ -1,8 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Shell.Type where
 
-import           Control.Lens
-import           Data.Text    (Text)
+import           Shell.Prelude
 
 data ServiceAction = ServiceStatus | ServiceReload deriving (Show)
 
@@ -14,6 +13,6 @@ data Target = Target
   , _zone     :: Text
   } deriving Show
 
-makeClassy ''Target
+makeLenses ''Target
 
 newtype Zone = Zone Text

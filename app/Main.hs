@@ -1,22 +1,15 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE TemplateHaskell   #-}
 module Main where
 
-import           Control.Lens              (makeLenses, strict, view)
-import           Control.Lens.Operators    hiding ((<.>))
-import           Control.Monad.Trans.Maybe
-import           Data.Maybe                (fromMaybe)
-import           Data.Optional             (Optional (..))
 import qualified Data.Text                 as Text
 import qualified Data.Text.IO              as Text
 import qualified Data.Text.Lazy            as Text.Lazy
 import qualified Data.Version              (showVersion)
 import qualified Dhall
-import           GHC.Generics
 import qualified Paths_cicd_shell
 import qualified System.Process            as Process
 import           Turtle                    hiding (FilePath, strict, view)
@@ -25,8 +18,7 @@ import qualified Turtle
 import           Shell.Option
 import           Shell.PepCmd
 import           Shell.Type
-
-import           Protolude                 hiding (die, (%), break)
+import           Shell.Prelude
 
 version = Data.Version.showVersion Paths_cicd_shell.version
 
@@ -130,14 +122,14 @@ runCommand :: Zone -> PepCmd -> Shell ExitCode
 runCommand z cmd =  do
   shell "ping -c1 stash.cirb.lan > /dev/null 2>&1" empty .||. die "cannot connect to stash.cirb.lan, check your connection"
   initTags z
-  maybe (pure ()) interactWith (cmd ^. cmdmsg)
-  nixshell <- nixShellCmd z (cmd^.cmdpep)
+  maybe (pure ()) interactWith (cmd ^. beforeMsg)
+  nixshell <- nixShellCmd z (cmd^.pep)
   -- liftIO $ print nixshell
-  case cmd^.cmdjq of
+  case cmd^.jq of
     Default -> interactive nixshell
     Specific jq -> do
       -- liftIO $ print jq
-      e <- loop 10 $ do
+      e <- loopN 10 $ do
         o0 <- shellStrict nixshell empty
         case o0 of
           (ExitFailure _, _) -> do
@@ -196,14 +188,3 @@ interactive c = do
             }
     (_, _, _, ph) <- liftIO $ Process.createProcess cp
     liftIO $ Process.waitForProcess ph
-
-continue :: MonadIO m => MaybeT m ()
-continue = empty
--- asum will strive for the first non empty value
--- that's why returning one would break the loop
--- As a note, compare this with forever ... which would have the opposite behavior
--- `runMaybeT . forever` would break whenever empty is encountered.
-break :: MonadIO m => MaybeT m ()
-break = pure ()
-loop :: MonadIO m => Int -> MaybeT m () -> m (Maybe ())
-loop n = runMaybeT . asum . replicate n
