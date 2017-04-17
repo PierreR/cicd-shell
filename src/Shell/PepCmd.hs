@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes     #-}
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Shell.PepCmd where
@@ -13,11 +12,11 @@ import           Shell.Prelude
 import           Shell.Type
 
 pepperCompoundTarget :: Bool -> Target -> Text
-pepperCompoundTarget across Target{..}
-  = "pepper -C \"" <> compound_target _zone
-                                      (if across then Nothing else Just _stack)
-                                      _subgroup
-                                      _role
+pepperCompoundTarget across t
+  = "pepper -C \"" <> compound_target (t^.zone)
+                                      (if across then Nothing else Just $ t^.stack)
+                                      (t^.subgroup)
+                                      (t^.role)
                    <> "\" "
   where
     compound_target z s g r =

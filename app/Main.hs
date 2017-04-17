@@ -1,6 +1,4 @@
 {-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE TemplateHaskell   #-}
 module Main where
@@ -67,9 +65,9 @@ getStack s = do
     else pure $ fromMaybe def s
 
 getTarget :: Zone -> Arg -> Shell Target
-getTarget (Zone zone) Arg {..} = do
-  stack' <- getStack _argStack
-  pure $ Target _argNode _argSubgroup _argRole stack' zone
+getTarget (Zone _zone) Arg{..} = do
+  _stack <- getStack _stack
+  pure $ Target{..}
 
 pgUrl :: Zone -> Text
 pgUrl (Zone zone) =

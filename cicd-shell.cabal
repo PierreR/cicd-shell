@@ -18,7 +18,11 @@ library
                        , Shell.PepCmd
                        , Shell.Prelude
   other-modules:       Paths_cicd_shell
-  default-extensions:  OverloadedStrings, StrictData, NoImplicitPrelude
+  default-extensions:    FlexibleContexts
+                       , LambdaCase
+                       , NoImplicitPrelude
+                       , OverloadedStrings
+                       , StrictData
   build-depends:       base
                        , lens
                        , optional-args >= 1.0
@@ -33,7 +37,11 @@ executable cicd
   hs-source-dirs:      app
   main-is:             Main.hs
   other-modules:       Paths_cicd_shell
-  default-extensions:  OverloadedStrings, StrictData, NoImplicitPrelude
+  default-extensions:    FlexibleContexts
+                       , LambdaCase
+                       , NoImplicitPrelude
+                       , OverloadedStrings
+                       , StrictData
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                        , cicd-shell

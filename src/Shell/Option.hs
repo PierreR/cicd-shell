@@ -47,10 +47,10 @@ data Options
 
 data Arg
   = Arg
-  { _argRole     :: Maybe Text
-  , _argNode     :: Maybe Text
-  , _argSubgroup :: Maybe Text
-  , _argStack    :: Maybe Text
+  { _role     :: Maybe Text
+  , _node     :: Maybe Text
+  , _subgroup :: Maybe Text
+  , _stack    :: Maybe Text
   } deriving Show
 
 argParser :: Parser Arg
