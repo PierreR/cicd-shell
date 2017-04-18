@@ -16,3 +16,4 @@ data Target = Target
 makeLenses ''Target
 
 newtype Zone = Zone Text
+newtype ServiceName = ServiceName Text deriving Show

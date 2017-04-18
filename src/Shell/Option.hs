@@ -22,7 +22,7 @@ data Command
   | Sync AcrossArg
   | Result ResultArg
   | GenTags
-  | Service (ServiceAction, Text, Arg)
+  | Service (ServiceAction, ServiceName, Arg)
   deriving (Show)
 
 
@@ -89,7 +89,7 @@ commandParser =
     fact_parser   = FactArg <$> switch "all" 'a' "Target whole the known stacks" <*> switch "down" 'd' "Query down node" <*> argParser
     across_parser = AcrossArg <$> switch "all" 'a' "Target whole the known stacks" <*> argParser
     orch_parser   = OrchArg <$> argText "cmd" "Command to run" <*> optional (optText "stack" 's' "Target stack/hostgroup" )
-    status_parser = (,,) <$> arg serviceParse "action" "Use 'status' or 'reload'" <*> argText "service" "Service name" <*> argParser
+    status_parser = (,,) <$> arg serviceParse "action" "Use 'status' or 'reload'" <*> (ServiceName <$> argText "service" "Service name") <*> argParser
 
 parser :: Parser Options
 parser =

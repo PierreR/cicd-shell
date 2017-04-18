@@ -105,19 +105,21 @@ duCmd target@Target {_node = Nothing} = PepCmd
   "jq '.return[0]'"
   empty
 
-serviceCmd :: ServiceAction -> Text -> Target -> PepCmd
-serviceCmd ServiceStatus name target@Target {_node = Nothing} = PepCmd
+serviceCmd :: ServiceAction -> ServiceName -> Target -> PepCmd
+serviceCmd ServiceStatus (ServiceName name) target@Target {_node = Nothing} = PepCmd
   (pepperCompoundTarget False target <> " service.status " <> name)
   "jq '.return[0]'"
   empty
-serviceCmd ServiceStatus name Target {_node = Just n} = PepCmd
+serviceCmd ServiceStatus (ServiceName name) Target {_node = Just n} = PepCmd
   ("pepper " <> n <> " service.status " <> name)
   "jq '.return[0]'"
   empty
-serviceCmd ServiceReload name Target {_node = Just n} = PepCmd
-  ("pepper " <> n <> " service.status " <> name)
+serviceCmd ServiceReload (ServiceName name) Target {_node = Just n} = PepCmd
+  ("pepper " <> n <> " service.reload " <> name)
   "jq '.return[0]'"
   empty
+serviceCmd ServiceReload _ Target {_node = Nothing} =
+  panic ("To reload a service, you need to specify a node with -n")
 
 factCmd :: Text -> Bool -> Bool -> Target -> PepCmd
 factCmd _ across _ target@Target {_node = Nothing} = PepCmd
@@ -163,6 +165,10 @@ dataCmd (Just key) target@Target {_node= Nothing}
         jq = "jq -s '.[0].return[0] * .[1].return[0]' | jq '.[] | { fqdn, subgroup, role, "<> pure key <> "}'"
     in
       PepCmd pep jq empty
+dataCmd (Just key) Target {_node= Just n} = PepCmd
+  ("pepper " <> n <> " pillar.item " <> key <> " delimiter='/'")
+  ("jq '.return[0]'")
+  empty
 
 resultCmd :: Text -> Maybe Text -> Maybe Natural -> Text -> PepCmd
 resultCmd _ Nothing (Just 0) _ = panic "NUM should be > 0"
@@ -176,3 +182,5 @@ resultCmd pgUrl (Just jobid) Nothing _ = PepCmd
     jq -r '(.ret | .[] | if .return.retcode == 0 then "\u001B[1;32mSUCCESS\u001B[0m for " else "\u001B[1;31mFAILURE\u001B[0m for " end + .id + ":", if .return.stderr != "" then .return.stdout + "\n******\n" + .return.stderr + "\n" else .return.stdout + "\n" end)'
   |]
   empty
+resultCmd _ Nothing Nothing _ = panic ("The impossible happened. The option parser should void the case")
+resultCmd _ (Just _) (Just _) _ = panic ("The impossible happened. The option parser should void the case")
