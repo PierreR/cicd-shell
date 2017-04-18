@@ -135,7 +135,7 @@ runCommand z cmd =  do
             liftIO $ threadDelay (15 * 1000 * 1000)
             continue
           (ExitSuccess, stdout) -> do
-            shell jq (select (textToLines stdout))
+            void $ shell jq (select (textToLines stdout))
             break
       case e of
         Just _ -> pure ExitSuccess
@@ -144,7 +144,7 @@ runCommand z cmd =  do
           pure $ ExitFailure 1
 
 -- prohibited options
-run (Options zone (Data (DataArg Nothing (Arg Nothing Nothing Nothing s))))  = die "Running data on the whole stack is currently prohibited"
+run (Options _ (Data (DataArg Nothing (Arg Nothing Nothing Nothing _))))  = die "Running data on the whole stack is currently prohibited"
 
 -- valid options
 run (Options zone Console)                           = dataDir>>= runCommand zone . consoleCmd zone

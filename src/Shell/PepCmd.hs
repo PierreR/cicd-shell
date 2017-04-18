@@ -81,7 +81,25 @@ runpuppetCmd target@Target {_node = Nothing} = PepCmd
 runpuppetCmd Target {_node = Just n} = PepCmd
   ( "pepper " <> n <> " puppetutils.run_agent")
   [r|
-    jq -r '.return[] | to_entries | (.[] | if .value.retcode == 0 then "\n\u001B[1;32mSUCCESS\u001B[0m for " else "\n\u001B[1;31mFAILURE\u001B[0m for " end + .key + ":" , if .value.stderr != "" then .value.stdout + "\n******\n" + .value.stderr else .value.stdout end)'
+    jq -r '.return[] |
+    to_entries |
+    (.[] |
+    if (.value|type) == "object" then
+      ( if .value.retcode? == 0 then
+          "\n\u001B[1;32mSUCCESS\u001B[0m for "
+        else
+         "\n\u001B[1;31mFAILURE\u001B[0m for "
+        end
+        + .key + ":" ,
+        if .value.stderr? != "" then
+          .value.stdout + "\n******\n" + .value.stderr?
+        else
+          .value.stdout?
+        end
+      )
+    else
+      .value
+    end )'
   |]
   empty
 
