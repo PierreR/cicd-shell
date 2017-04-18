@@ -177,9 +177,9 @@ resultCmd pgUrl Nothing (Just num) user = PepCmd
   "jq -C '.'"
   empty
 resultCmd pgUrl (Just jobid) Nothing _ = PepCmd
-   ("curl -f -s -H \"Accept: application/vnd.pgrst.object+json\" \"" <> pgUrl <> "?select=ret&jid=eq." <> jobid <> "\"" )
+  ("curl -f -s -H \"Accept: application/vnd.pgrst.object+json\" \"" <> pgUrl <> "?select=ret&jid=eq." <> jobid <> "\"" )
   [r|
-    jq -r '(.ret | .[] | if .return.retcode == 0 then "\u001B[1;32mSUCCESS\u001B[0m for " else "\u001B[1;31mFAILURE\u001B[0m for " end + .id + ":", if .return.stderr != "" then .return.stdout + "\n******\n" + .return.stderr + "\n" else .return.stdout + "\n" end)'
+    jq -r '(.ret | if .return.retcode == 0 then "\u001B[1;32mSUCCESS\u001B[0m for " else "\u001B[1;31mFAILURE\u001B[0m for " end + .id + ":", if .return.stderr != "" then .return.stdout + "\n******\n" + .return.stderr + "\n" else .return.stdout + "\n" end)'
   |]
   empty
 resultCmd _ Nothing Nothing _ = panic ("The impossible happened. The option parser should void the case")
