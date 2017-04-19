@@ -14,12 +14,13 @@ endif::env-devbox[]
 The name of the command line utility is #cicd#. The first mandatory position argument is the zone (dev, testing, staging or prod). The general scheme of the command line is:
 
 ```
-cicd ZONE facts        [ROLE] [-n NODE] [-g GROUP] [-s STACK] [-a --all]
+cicd ZONE facts        [ROLE] [-n NODE] [-g GROUP] [-s STACK] [-a --all] [-d --down]
+cicd ZONE runpuppet    [ROLE] [-n NODE] [-g GROUP] [-s STACK]
 cicd ZONE runpuppet    [ROLE] [-n NODE] [-g GROUP] [-s STACK]
 cicd ZONE ping         [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE runpuppet    [ROLE] [-n NODE] [-g GROUP] [-s STACK]
 cicd ZONE data [-k KEY][ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE orch CMD                                 [-s STACK]
+cicd ZONE orch         CMD                         [-s STACK]
+cicd ZONE service      ACTION SERVICE [ROLE] [-n NODE] [-g GROUP] [-s STACK]
 cicd ZONE console
 ```
 
@@ -173,8 +174,14 @@ For longer session within a specific zone, you can save some typing by opening a
 Another usage of the console is to run specific `salt` commands that are not exposed by the `cicd` command line. This is done via the #pep# shortcut. For instance:
 
 ```
-[cicd prod] $ pep -L foreman.sandbox.srv.cirb.lan,puppetdb.sandbox.srv.cirb.lan --client=local_async puppetutils.run_agent
+[cicd prod] $ pep -G 'hostgroup:iam' file.replace '/etc/resolv.conf' pattern='192.168.34.250' repl='192.168.34.244' <1>
+[cicd prod] $ pep -L foreman.sandbox.srv.cirb.lan,puppetdb.sandbox.srv.cirb.lan --client=local_async puppetutils.run_agent <2>
 ```
+<1> #-G# means `grain` target
+<2> #-L# means `list` target +
+#local_asyn# means the command is asynchronous and does not display its result (just a jid)
+
+Have a look at the saltstack documentation to learn more about https://docs.saltstack.com/en/latest/topics/targeting/#targeting-minions[targeting minions].
 
 ### orchestration command
 
