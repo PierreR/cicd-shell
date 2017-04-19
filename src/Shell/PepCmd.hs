@@ -147,9 +147,9 @@ factCmd _ across _ target@Target {_node = Nothing} = PepCmd
   |]
   empty
 factCmd pdbUrl _ True Target {_node = Just n} = PepCmd
-  ("pdbquery -t remote  -l " <> pdbUrl <> " facts " <> n)
+  ("pdbquery -t remote  -l " <> pdbUrl <> " facts " <> Text.toLower n)
   [r|
-    jq 'map({"key": .name, value}) | from_entries | {hostgroup, subgroup, role, "os": "\(.operatingsystem) \(.operatingsystemrelease)", "ip": .ipaddress_eth0, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}'
+    jq 'map({"key": .name, value}) | from_entries | {hostgroup, subgroup, role, "os": "\(.operatingsystem) \(.operatingsystemrelease)", "ip": .ipaddress, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}'
   |]
   empty
 factCmd _ _ False Target {_node = Just n} = PepCmd
