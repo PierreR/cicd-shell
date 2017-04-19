@@ -16,8 +16,12 @@ _pep () {
             COMPREPLY=( $(compgen -W "-s -k -n -g -h" -- "$cur" ) )
             return 0
             ;;
-        facts|sync|ping)
-            COMPREPLY=( $(compgen -W "-s -a -n -g -h" -- "$cur" ) )
+        facts)
+            COMPREPLY=( $(compgen -W "-s --all -n -g -h --down" -- "$cur" ) )
+            return 0
+            ;;
+        sync|ping)
+            COMPREPLY=( $(compgen -W "-s --all -n -g -h" -- "$cur" ) )
             return 0
             ;;
         runpuppet|du)
