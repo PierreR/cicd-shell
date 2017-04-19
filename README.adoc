@@ -1,6 +1,14 @@
 # CICD shell
 
 
+## Setup
+
+To use the tool, you need to fill in the https://github.com/CIRB/devbox/blob/master/user/config/shell[configuration file] located in `/vagrant/config/shell`.
+
+ifndef::env-devbox[]
+It is installed as part of the devbox. Please read the section __Install_outside_the_devbox__ if you need to install it on a different system.
+endif::env-devbox[]
+
 ## Usage
 
 The name of the command line utility is #cicd#. The first mandatory position argument is the zone (dev, testing, staging or prod). The general scheme of the command line is:
@@ -19,7 +27,7 @@ Here is the help as display by invoking #cicd# alone:
 
 ....
 → cicd
-CICD command line utility
+CICD command line utility (v1.1.0)
 
 Usage: cicd ZONE (console | stats | data | orch | facts | ping | du | runpuppet
             | sync | result)
@@ -51,7 +59,7 @@ You can request the help at each level. For instance:
 [NOTE]
 ====
 - Commands are executed remotely through an API. Behind the scene they call either the `puppetdb`, the `saltmaster` or the `pgserver`.
-- All commands to the saltmaster together with their results are recorded in a centralize database included the date and name of the person that execute them.
+- Commands to the saltmaster together with their results are recorded in a centralized database included the date and name of the person that executes them.
 - By default, all commands target a specific default hostgroup/stack defined in `/vagrant/conf/shell`
 ====
 
