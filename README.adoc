@@ -1,13 +1,24 @@
+ifndef::env-devbox[]
+:toc: left
+:experimental:
+:icons: font
+:docinfo1:
+:nofooter:
+endif::env-devbox[]
 
 # CICD shell
 
+ifndef::env-devbox[]
+[.text-right]
+icon:print[link="cicd-shell.pdf"]
+endif::env-devbox[]
 
 ## Setup
 
-To use the tool, you need to fill in the https://github.com/CIRB/devbox/blob/master/user/config/shell[configuration file] located in `/vagrant/config/shell`.
+To use the `cicd` command, you need to fill in the https://github.com/CIRB/devbox/blob/master/user/config/shell[configuration file] located in `/vagrant/config/shell`.
 
 ifndef::env-devbox[]
-It is installed as part of the devbox. Please read the section __Install_outside_the_devbox__ if you need to install it on a different system.
+The cicd shell is installed with the devbox. Please read the section __Install_outside_the_devbox__ if you need to install it on a different system.
 endif::env-devbox[]
 
 ## Usage
@@ -29,10 +40,10 @@ Here is the help as display by invoking #cicd# alone:
 
 ....
 → cicd
-CICD command line utility (v1.1.0)
+CICD command line utility (v1.1.1)
 
-Usage: cicd ZONE (console | stats | data | orch | facts | ping | du | runpuppet
-            | sync | result)
+Usage: cicd ZONE (console | stats | data | orch | facts | ping | du | service
+              runpuppet | sync | result | gentags)
 
 Available options:
   -h,--help                Show this help text
@@ -66,7 +77,7 @@ You can request the help at each level. For instance:
 ====
 
 
-### facts command
+### icon:terminal[] facts
 
 The command displays a subset of important facts (static information) about your nodes such as the `fqdn`, `ip`, `os`, `role`, ...
 
@@ -106,10 +117,10 @@ As usual, use `-n` to target a single node:
 }
 ```
 
-TIP:  Use the `--down` flag  to gather `facts` on disconnected minions.
+TIP:  Use the `--down` flag  to gather `facts` on a disconnected minion.
 
 
-### data command
+### icon:terminal[] data
 
 The command displays configuration data about your node. For instance you might display the docker version of your jenkins slave:
 
@@ -123,33 +134,36 @@ The command displays configuration data about your node. For instance you might 
 }
 ```
 
-To display all known configuration of a specific node:
+To display ALL known configurations for a specific node:
 ```
 → cicd prod data -n svappcavl771.prd.srv.cirb.lan
 ```
 
-### run puppet command
+### icon:terminal[] runpuppet
 
-The command runs the puppet agent on one or multiple nodes. For instance you can run the agent on all the dev nodes of your stack with:
-
-```
-→ cicd dev runpuppet
-```
-
-Or you can select a subgroup with
+The command runs the puppet agent on one or multiple nodes. When a node is specified with `-n`, the command will wait back for a result.
 
 ```
-→ cicd dev runpuppet -g jenkins
+→ cicd dev runpuppet -n svappcavl000.dev.srv.cirb.lan
 ```
 
-### du command
+On all other cases, the command first asks for confirmation, then returns quickly with a `jobid`.
+The process is asynchronous because it might take quite a while to complete.
 
-The command displays disk usage. Try:
-```
-→ cicd staging du -n svappcavl703.sta.srv.cirb.lan
-```
+Here are some examples:
 
-### result command
+```
+→ cicd dev runpuppet <1>
+→ cicd dev runpuppet -g jenkins <2>
+→ cicd dev runpuppet jenkins.slave <3>
+```
+<1> run puppet on all the dev nodes of your stack
+<2> run on a subgroup of machines
+<3> target a role
+
+In a second step, you use icon:terminal[] `result` to retrieve from the database the result of your callfootnote:[polling is currently the sole supported workflow, server push notification could be implemented in the future].
+
+### icon:terminal[] result
 
 You can view the result of a `runpuppet` by using the provided job id (`jid`)
 ```
@@ -162,7 +176,14 @@ You can also ask for the last n executed commands:
 → cicd testing result -n 2
 ```
 
-### console command
+### icon:terminal[] du
+
+The command displays disk usage. Try:
+```
+→ cicd staging du -n svappcavl703.sta.srv.cirb.lan
+```
+
+### icon:terminal[] console
 
 For longer session within a specific zone, you can save some typing by opening a `console` for that zone. Inside the console, you would omit the zone from the command line. Here is an example:
 
@@ -180,13 +201,17 @@ $ pep -G 'hostgroup:iam' file.replace '/etc/resolv.conf' pattern='192.168.34.250
 
 $ pep -L fqdn1,fqdn2 --client=local_async puppetutils.run_agent <2>
 ```
-<1> #-G# means `grain` target
+<1> #-G# means `grain` target (__grains__ is the salt terminology for facts).
 <2> #-L# means `list` target +
 #local_asyn# means the :autofit-option:command is asynchronous and does not display its result (just a jid)
 
-Have a look at the saltstack documentation to learn more about https://docs.saltstack.com/en/latest/topics/targeting/#targeting-minions[targeting minions].
+[TIP]
+====
+- Have a look at the saltstack documentation to learn more about https://docs.saltstack.com/en/latest/topics/targeting/#targeting-minions[targeting minions].
+- Take a look https://docs.saltstack.com/en/latest/ref/index.html#salt-module-reference[here] for a list of possible commands.
+====
 
-### orchestration command
+### icon:terminal[] orch
 
 Salt can run multiple commands as well using the orchestrate runner. The orchestration is executed on the salt master to allow inter minion requisites, like ordering the application of states on different minions that must not happen simultaneously, or for halting the state run on all minions if a minion fails one of its states (more about this topic can be found https://docs.saltstack.com/en/latest/topics/tutorials/states_pt5.html#orchestrate-runner[in the saltstack website]).
 
@@ -198,7 +223,7 @@ Orchestrate commands can be started using:
 → cicd testing orch CMD
 ```
 
-## Identification & authorization
+## Authentication
 ====
 The permissions to target machines and perform actions are realized through our Active directory.
 As an example to access the machines of the `middleware` hostgroup, you will need to be part of the `GP_APP_SALT_MIDDLEWARE` group.

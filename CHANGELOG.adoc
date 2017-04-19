@@ -1,0 +1,5 @@
+# Changelog
+
+## v1.1, 19/04/2017
+
+- `retries` when a command fails
