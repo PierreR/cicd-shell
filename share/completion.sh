@@ -33,7 +33,7 @@ _pep () {
             return 0
             ;;
         service)
-            COMPREPLY=( $(compgen -W "status reload" -- "$cur" ) )
+            COMPREPLY=( $(compgen -W "status restart" -- "$cur" ) )
             return 0
             ;;
         "-n")

@@ -1,3 +1,4 @@
+
 # CICD shell
 
 
@@ -173,13 +174,15 @@ For longer session within a specific zone, you can save some typing by opening a
 
 Another usage of the console is to run specific `salt` commands that are not exposed by the `cicd` command line. This is done via the #pep# shortcut. For instance:
 
+[%autofit]
 ```
-[cicd prod] $ pep -G 'hostgroup:iam' file.replace '/etc/resolv.conf' pattern='192.168.34.250' repl='192.168.34.244' <1>
-[cicd prod] $ pep -L foreman.sandbox.srv.cirb.lan,puppetdb.sandbox.srv.cirb.lan --client=local_async puppetutils.run_agent <2>
+$ pep -G 'hostgroup:iam' file.replace '/etc/resolv.conf' pattern='192.168.34.250' repl='192.168.34.244' <1>
+
+$ pep -L fqdn1,fqdn2 --client=local_async puppetutils.run_agent <2>
 ```
 <1> #-G# means `grain` target
 <2> #-L# means `list` target +
-#local_asyn# means the command is asynchronous and does not display its result (just a jid)
+#local_asyn# means the :autofit-option:command is asynchronous and does not display its result (just a jid)
 
 Have a look at the saltstack documentation to learn more about https://docs.saltstack.com/en/latest/topics/targeting/#targeting-minions[targeting minions].
 

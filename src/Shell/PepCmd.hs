@@ -132,12 +132,12 @@ serviceCmd ServiceStatus (ServiceName name) Target {_node = Just n} = PepCmd
   ("pepper " <> n <> " service.status " <> name)
   "jq '.return[0]'"
   empty
-serviceCmd ServiceReload (ServiceName name) Target {_node = Just n} = PepCmd
-  ("pepper " <> n <> " service.reload " <> name)
+serviceCmd ServiceRestart (ServiceName name) Target {_node = Just n} = PepCmd
+  ("pepper " <> n <> " service.restart " <> name)
   "jq '.return[0]'"
   empty
-serviceCmd ServiceReload _ Target {_node = Nothing} =
-  panic ("To reload a service, you need to specify a node with -n")
+serviceCmd ServiceRestart _ Target {_node = Nothing} =
+  panic ("To restart a service, you need to specify a node with -n")
 
 factCmd :: Text -> Bool -> Bool -> Target -> PepCmd
 factCmd _ across _ target@Target {_node = Nothing} = PepCmd

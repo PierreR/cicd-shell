@@ -3,7 +3,7 @@ module Shell.Type where
 
 import           Shell.Prelude
 
-data ServiceAction = ServiceStatus | ServiceReload deriving (Show)
+data ServiceAction = ServiceStatus | ServiceRestart deriving (Show)
 
 data Target = Target
   { _node     :: Maybe Text
