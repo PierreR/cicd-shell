@@ -36,9 +36,11 @@ Available commands:
   facts                    Return essential facts about nodes
   ping                     Ping nodes
   du                       Return disk usage
+  service                  Service management for a specific node
   runpuppet                Apply puppet configuration
   sync                     Sync data from master to nodes
   result                   Display the results of jobs executed by the user
+  gentags                  Generate node completion file
 ....
 
 You can request the help at each level. For instance:
@@ -48,9 +50,9 @@ You can request the help at each level. For instance:
 
 [NOTE]
 ====
-- These commands are executed remotely (if you have the right to execute them) through an API. Behind the scene they might call either the `puppetdb` or the `saltmaster`. For instance `cicd ZONE node facts -n NODE` would call the puppetdb and return a result even if the node is down.
+- Commands are executed remotely through an API. Behind the scene they call either the `puppetdb`, the `saltmaster` or the `pgserver`.
 - All commands to the saltmaster together with their results are recorded in a centralize database included the date and name of the person that execute them.
-- By default, all commands target a specific default hostgroup/stack. You can look at the `devbox` README to know how to set the default value for your stack in the devbox.
+- By default, all commands target a specific default hostgroup/stack defined in `/vagrant/conf/shell`
 ====
 
 
@@ -61,7 +63,7 @@ The command displays a subset of important facts (static information) about your
 You can toggle the `facts` query to target all hostgroups/stacks with the `-a/ --all` flag. Here is how to get all facts for all slaves in every stack:
 
 ```
-λ ~ → cicd prod facts jenkins.slave -a
+λ ~ → cicd prod facts jenkins.slave --all
 {
   "fqdn": "SVAPPCAVL595.cirb.lan",
   "ip": "192.168.34.153",
@@ -93,6 +95,9 @@ As usual, use `-n` to target a single node:
   "jenkins job": "22"
 }
 ```
+
+TIP:  Use the `--down` flag  to gather `facts` on disconnected minions.
+
 
 ### data command
 
@@ -136,9 +141,14 @@ The command displays disk usage. Try:
 
 ### result command
 
-You can view the result of any command by using the jobid (`jid`) or request a display of the last `n` commands :
+You can view the result of a `runpuppet` by using the provided job id (`jid`)
 ```
 → cicd testing result -j 20160621104434055991
+```
+In case the result is not yet available the command will automatically be retry 12 times (3 min).
+
+You can also ask for the last n executed commands:
+```
 → cicd testing result -n 2
 ```
 
@@ -149,7 +159,7 @@ For longer session within a specific zone, you can save some typing by opening a
 ```
 → cicd staging console
 
-[cicd prod]$ cicd facts
+[cicd prod]$ facts
 ```
 
 Another usage of the console is to run specific `salt` commands that are not exposed by the `cicd` command line. This is done via the #pep# shortcut. For instance:
@@ -185,13 +195,14 @@ ifndef::env-devbox[]
 Before installing the `cicd-shell` on any linux systemfootnote:[`macos` might also work], you will need:
 
 . the https://nixos.org/nix/[nix package manager] installed and active for your user.
-. the https://github.com/CIRB/nixpkgs-overlays[cirb nixpkgs overlays]
+. the https://github.com/CIRB/nixpkgs-config[cirb nixpkgs config]
 
-You can then install for your user with:
+You can then proceed to install with:
 
 ```
-nix-env -i cicd-shell
+nix-env -f ~/.config/nixpkgs/pin.nix -i cicd-shell <1>
 ```
+<1> the `-f` flag ensures that we point to the same nixpkgs version but can be omitted
 
 ====
 If you haven't installed `nix` already, here is the quick how to:
