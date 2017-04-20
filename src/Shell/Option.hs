@@ -11,6 +11,12 @@ data ResultArg
   deriving (Show)
 
 data Command
+  = ZoneCommand Zone SubCommand
+  | HelpCommand HelpType
+
+data HelpType = HtmlHelp
+
+data SubCommand
   = Console
   | Data DataArg
   | Facts FactArg
@@ -42,8 +48,7 @@ data AcrossArg
   = AcrossArg Bool Arg -- ^ Query with the across all stacks flag
   deriving Show
 
-data Options
-  = Options Zone Command
+data Options = Options Command
 
 data Arg
   = Arg
@@ -69,8 +74,12 @@ serviceParse "status" = Just ServiceStatus
 serviceParse "restart" = Just ServiceRestart
 serviceParse _        = Nothing
 
-commandParser :: Parser Command
-commandParser =
+helpTypeParse :: Text -> Maybe HelpType
+helpTypeParse "html" = Just HtmlHelp
+helpTypeParse _ = Nothing
+
+subCommandParser :: Parser SubCommand
+subCommandParser =
       Console     <$  subcommand "console" "Open the cicd console" (pure ())
   <|> Stats       <$  subcommand "stats" "Stats (special permission required)" (pure ())
   <|> Data        <$> subcommand "data" "Return configuration data for a specific property" data_parser
@@ -82,18 +91,23 @@ commandParser =
   <|> Runpuppet   <$> subcommand "runpuppet" "Apply puppet configuration" argParser
   <|> Sync        <$> subcommand "sync" "Sync data from master to nodes" across_parser
   <|> Result      <$> subcommand "result" "Display the results of the most recent jobs executed by the user or for a specific id" result_parser
-  <|> GenTags     <$ subcommand "gentags" "Generate node completion file" (pure ())
+  <|> GenTags     <$  subcommand "gentags" "Generate node completion file" (pure ())
   where
     result_parser = ResultNum <$> optNatural "Num" 'n' "Number of results to display" <|>  ResultJob <$> optText "job" 'j' "Job id"
     data_parser   = DataArg <$> optional (optText "key" 'k' "Property to look up for" ) <*> argParser
     fact_parser   = FactArg <$> switch "all" 'a' "Target whole the known stacks" <*> switch "down" 'd' "Query down node" <*> argParser
     across_parser = AcrossArg <$> switch "all" 'a' "Target whole the known stacks" <*> argParser
-    orch_parser   = OrchArg <$> argText "cmd" "Command to run" <*> optional (optText "stack" 's' "Target stack/hostgroup" )
+    orch_parser   = OrchArg <$> argText "cmd" "SubCommand to run" <*> optional (optText "stack" 's' "Target stack/hostgroup" )
     status_parser = (,,) <$> arg serviceParse "action" "Use 'status' or 'restart'" <*> (ServiceName <$> argText "service" "Service name") <*> argParser
+
+commandParser :: Parser Command
+commandParser =
+      HelpCommand <$> subcommand "help" "Help utilities" (arg helpTypeParse "type" "(html) to open the guide in a browser")
+  <|> ZoneCommand . Zone <$> argText "zone" "ZONE such as dev, staging, testing or prod" <*> subCommandParser
 
 parser :: Parser Options
 parser =
-      Options . Zone <$> argText "zone" "ZONE such as dev, staging, testing or prod" <*> commandParser
+      Options <$> commandParser
 
 -- -- | One or none.
   -- let nix_file = format (s%"/"%s%".nix") projectDir zone

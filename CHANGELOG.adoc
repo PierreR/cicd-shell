@@ -1,5 +1,11 @@
 # Changelog
 
-## v1.1, 19/04/2017
+
+## v1.2, (not yet released)
+
+- add `cicd help` subcommand
+
+## v1.1, 21/04/2017
 
 - `retries` when a command fails
+- fix issues with the `result` subcommand output

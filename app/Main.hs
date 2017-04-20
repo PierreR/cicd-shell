@@ -143,23 +143,31 @@ runCommand z cmd =  do
           echo "Could not get a response from the server after 12 attempts (3 min). You might want to try again later."
           pure $ ExitFailure 1
 
+
+-- help options
+run (Options (HelpCommand HtmlHelp)) = do
+  datadir <- dataDir
+  let help_fp = Text.pack (datadir <> "/share/doc/cicd-shell.html")
+  proc "google-chrome-stable"
+       [help_fp] empty
+
 -- prohibited options
-run (Options _ (Data (DataArg Nothing (Arg Nothing Nothing Nothing _))))  = die "Running data on the whole stack is currently prohibited"
+run (Options (ZoneCommand _ (Data (DataArg Nothing (Arg Nothing Nothing Nothing _)))))  = die "Running data on the whole stack is currently prohibited"
 
 -- valid options
-run (Options zone Console)                           = dataDir>>= runCommand zone . consoleCmd zone
-run (Options zone Stats)                             = runCommand zone statCmd
-run (Options zone GenTags)                           = localDir >>= runCommand zone . genTagsCmd zone
-run (Options zone (Runpuppet arg))                   = getTarget zone arg >>= runCommand zone . runpuppetCmd
-run (Options zone (Ping (AcrossArg across arg)))     = getTarget zone arg >>= runCommand zone . pingCmd across
-run (Options zone (Facts (FactArg across down arg))) = getTarget zone arg >>= runCommand zone . factCmd (puppetdbUrl zone) across down
-run (Options zone (Sync (AcrossArg across arg)))     = getTarget zone arg >>= runCommand zone . syncCmd across
-run (Options zone (Data (DataArg key arg)))          = getTarget zone arg >>= runCommand zone . dataCmd key
-run (Options zone (Orchestrate (OrchArg cmd s)))     = getStack s >>= runCommand zone . orchCmd cmd
-run (Options zone (Du arg))                          = getTarget zone arg >>= runCommand zone . duCmd
-run (Options zone (Service (action, name, arg)))     = getTarget zone arg >>= runCommand zone . serviceCmd action name
-run (Options zone (Result (ResultNum n)))            = userId >>= runCommand zone . resultCmd (pgUrl zone) Nothing (Just n)
-run (Options zone (Result (ResultJob j )))           = userId >>= runCommand zone . resultCmd (pgUrl zone) (Just j) Nothing
+run (Options (ZoneCommand zone Console))                           = dataDir>>= runCommand zone . consoleCmd zone
+run (Options (ZoneCommand zone Stats))                             = runCommand zone statCmd
+run (Options (ZoneCommand zone GenTags))                           = localDir >>= runCommand zone . genTagsCmd zone
+run (Options (ZoneCommand zone (Runpuppet arg)))                   = getTarget zone arg >>= runCommand zone . runpuppetCmd
+run (Options (ZoneCommand zone (Ping (AcrossArg across arg))))     = getTarget zone arg >>= runCommand zone . pingCmd across
+run (Options (ZoneCommand zone (Facts (FactArg across down arg)))) = getTarget zone arg >>= runCommand zone . factCmd (puppetdbUrl zone) across down
+run (Options (ZoneCommand zone (Sync (AcrossArg across arg))))     = getTarget zone arg >>= runCommand zone . syncCmd across
+run (Options (ZoneCommand zone (Data (DataArg key arg))))          = getTarget zone arg >>= runCommand zone . dataCmd key
+run (Options (ZoneCommand zone (Orchestrate (OrchArg cmd s))))     = getStack s >>= runCommand zone . orchCmd cmd
+run (Options (ZoneCommand zone (Du arg)))                          = getTarget zone arg >>= runCommand zone . duCmd
+run (Options (ZoneCommand zone (Service (action, name, arg))))     = getTarget zone arg >>= runCommand zone . serviceCmd action name
+run (Options (ZoneCommand zone (Result (ResultNum n))))            = userId >>= runCommand zone . resultCmd (pgUrl zone) Nothing (Just n)
+run (Options (ZoneCommand zone (Result (ResultJob j ))))           = userId >>= runCommand zone . resultCmd (pgUrl zone) (Just j) Nothing
 
 main :: IO ()
 main = sh $ options (fromString ("CICD - command line utility (v" <> version <> ")")) parser >>= run
