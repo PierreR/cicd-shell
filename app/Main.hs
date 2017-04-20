@@ -111,15 +111,27 @@ initTags z@(Zone zone) = do
   found <- testfile tagfile
   unless found $ do
     mktree localdir
-    touch tagfile
+    touch tagfile -- avoid the infine loop ...
     runCommand z (genTagsCmd z localdir) >>= \case
       ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") zone
       ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
+
+initHelpTopics :: Shell ()
+initHelpTopics = do
+  localdir <- localDir
+  let topic_file = localdir </> fromText ".topics"
+  found <- testfile topic_file
+  unless found $ do
+    touch topic_file -- avoid the infine loop ...
+    runCommand (Zone "dev") (genHelpTopicCmd (pure $ Turtle.format fp topic_file)) >>= \case
+      ExitSuccess -> printf "help topics generated completed successfully.\n"
+      ExitFailure _ -> printf "WARNING: cannot generate help topics for completion file.\n"
 
 runCommand :: Zone -> PepCmd -> Shell ExitCode
 runCommand z cmd =  do
   shell "ping -c1 stash.cirb.lan > /dev/null 2>&1" empty .||. die "cannot connect to stash.cirb.lan, check your connection"
   initTags z
+  initHelpTopics
   maybe (pure ()) interactWith (cmd ^. beforeMsg)
   nixshell <- nixShellCmd z (cmd^.pep)
   -- liftIO $ print nixshell
@@ -150,6 +162,8 @@ run (Options (HelpCommand HtmlHelp)) = do
   let help_fp = Text.pack (datadir <> "/share/doc/cicd-shell.html")
   proc "google-chrome-stable"
        [help_fp] empty
+-- help commands are running on the dev saltmaster where permission can be loosen
+run (Options (HelpCommand TopicHelp)) = runCommand (Zone "dev") (genHelpTopicCmd empty)
 
 -- prohibited options
 run (Options (ZoneCommand _ (Data (DataArg Nothing (Arg Nothing Nothing Nothing _)))))  = die "Running data on the whole stack is currently prohibited"

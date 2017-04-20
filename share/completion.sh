@@ -4,6 +4,25 @@ set -o pipefail
 zone=$1
 
 _pep () {
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    cur="${COMP_WORDS[COMP_CWORD]}"
+
+    case "${prev}" in
+        pep)
+            local nodes=$(cat "$HOME/.local/share/cicd/.nodes-${zone}")
+            COMPREPLY=( $(compgen -W "$nodes" -- $cur ) )
+            return 0
+            ;;
+        *)
+            local topics=$(cat "$HOME/.local/share/cicd/.topics")
+            COMPREPLY=( $(compgen -W "$topics" -- $cur ) )
+            return 0
+            ;;
+    esac
+
+ }
+
+_cmdalias () {
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
@@ -49,6 +68,7 @@ _pep () {
 
     ret=0;
 } &&
-complete -F _pep pep data runpuppet du facts result service sync ping
+complete -F _cmdalias data runpuppet du facts result service sync ping
+complete -F _pep pep
 
 # end

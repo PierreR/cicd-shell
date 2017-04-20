@@ -14,7 +14,7 @@ data Command
   = ZoneCommand Zone SubCommand
   | HelpCommand HelpType
 
-data HelpType = HtmlHelp
+data HelpType = HtmlHelp | TopicHelp 
 
 data SubCommand
   = Console
@@ -76,6 +76,7 @@ serviceParse _        = Nothing
 
 helpTypeParse :: Text -> Maybe HelpType
 helpTypeParse "html" = Just HtmlHelp
+helpTypeParse "topic" = Just TopicHelp
 helpTypeParse _ = Nothing
 
 subCommandParser :: Parser SubCommand
@@ -102,7 +103,7 @@ subCommandParser =
 
 commandParser :: Parser Command
 commandParser =
-      HelpCommand <$> subcommand "help" "Help utilities" (arg helpTypeParse "type" "(html) to open the guide in a browser")
+      HelpCommand <$> subcommand "help" "Help utilities" (arg helpTypeParse "type" "(html|topic) to open the guide in a browser")
   <|> ZoneCommand . Zone <$> argText "zone" "ZONE such as dev, staging, testing or prod" <*> subCommandParser
 
 parser :: Parser Options
