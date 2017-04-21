@@ -92,6 +92,8 @@ You can toggle the `facts` query to target all hostgroups/stacks with the `-a/ -
   "hostgroup": "irisbox",
   "subgroup": "jenkins",
   "role": "slave"
+  "puppet run": "Tue Apr 18 14:26:15 CEST 2017",
+  "jenkins job": "633"
 }
 {
   "fqdn": "SVAPPCAVL649.prd.srv.cirb.lan",
@@ -100,6 +102,8 @@ You can toggle the `facts` query to target all hostgroups/stacks with the `-a/ -
   "hostgroup": "iam",
   "subgroup": "jenkins",
   "role": "slave"
+  "puppet run": "Tue Apr 18 14:26:15 CEST 2017",
+  "jenkins job": "633"
 }
 ...
 ```
@@ -107,13 +111,14 @@ As usual, use `-n` to target a single node:
 ```
 → cicd prod facts -n svappcavl771.prd.srv.cirb.lan
 {
+  "fqdn": "svappcavl771.prd.srv.cirb.lan",
+  "ip": "192.168.34.81",
+  "os": "RedHat 7.2",
   "hostgroup": "fmx",
   "subgroup": "jenkins",
   "role": "slave",
-  "os": "RedHat 7.2",
-  "ip": "192.168.34.81",
-  "puppet run": "Wed Dec  7 15:23:00 CET 2016",
-  "jenkins job": "22"
+  "puppet run": "Thu Jan 26 11:06:00 CET 2017",
+  "jenkins job": "30"
 }
 ```
 

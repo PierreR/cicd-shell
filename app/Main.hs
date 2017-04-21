@@ -123,7 +123,7 @@ initHelpTopics = do
   found <- testfile topic_file
   unless found $ do
     touch topic_file -- avoid the infine loop ...
-    runCommand (Zone "dev") (genHelpTopicCmd (pure $ Turtle.format fp topic_file)) >>= \case
+    runCommand (Zone "dev") (genHelpTopicCmd (format fp topic_file)) >>= \case
       ExitSuccess -> printf "help topics generated completed successfully.\n"
       ExitFailure _ -> printf "WARNING: cannot generate help topics for completion file.\n"
 
@@ -163,7 +163,10 @@ run (Options (HelpCommand HtmlHelp)) = do
   proc "google-chrome-stable"
        [help_fp] empty
 -- help commands are running on the dev saltmaster where permission can be loosen
-run (Options (HelpCommand TopicHelp)) = runCommand (Zone "dev") (genHelpTopicCmd empty)
+run (Options (HelpCommand TopicHelp)) = do
+  localdir <- localDir
+  let topic_file = format (fp%"/.topics.json") localdir
+  proc "jq" [ ".", topic_file ] empty
 
 -- prohibited options
 run (Options (ZoneCommand _ (Data (DataArg Nothing (Arg Nothing Nothing Nothing _)))))  = die "Running data on the whole stack is currently prohibited"

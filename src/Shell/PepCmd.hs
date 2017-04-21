@@ -59,13 +59,14 @@ genTagsCmd (Zone zone) cfdir =
   ("jq '.return[0]' | jq keys | jq -r 'join (\" \")' > " <> pure nodefile)
   (Just $ CmdMsg False ("Generating " <> nodefile))
 
-genHelpTopicCmd :: Optional Text -> PepCmd
-genHelpTopicCmd topic = PepCmd
-  "pepper --client=runner doc.execution"
-  (case topic of
-    Default -> "jq '.return[0] | keys'"
-    Specific _ -> "jq '.return[0] | keys' | jq -r 'join (\" \")' > " <> topic)
-  empty
+genHelpTopicCmd :: Text -> PepCmd
+genHelpTopicCmd topic =
+  let jsonfile = topic <> ".json"
+  in
+    PepCmd
+    "pepper --client=runner doc.execution"
+    ("jq '.return[0] | keys' | tee " <> pure jsonfile <> " | jq -r 'join (\" \")' > " <> pure topic)
+    empty
 
 statCmd :: PepCmd
 statCmd = PepCmd
