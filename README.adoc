@@ -181,6 +181,23 @@ You can also ask for the last n executed commands:
 → cicd testing result -n 2
 ```
 
+### icon:terminal[] service
+
+To know if a service is up and running, you would use:
+```
+→ cicd prod service status docker jenkins.slave
+{
+  "svappcavl736.prd.srv.cirb.lan": true
+}
+```
+You can also restart a service. However such operation in only allowed for a single machine. Here is how to restart the `nexus` service :
+```
+→ cicd prod service restart nexus -n svappcavl761.prd.srv.cirb.lan
+{
+  "svappcavl761.prd.srv.cirb.lan": true
+}
+```
+
 ### icon:terminal[] du
 
 The command displays disk usage. Try:
