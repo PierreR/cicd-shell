@@ -26,13 +26,12 @@ endif::env-devbox[]
 The name of the command line utility is #cicd#. The first mandatory position argument is the zone (dev, testing, staging or prod). The general scheme of the command line is:
 
 ```
-cicd ZONE facts        [ROLE] [-n NODE] [-g GROUP] [-s STACK] [-a --all] [-d --down]
-cicd ZONE runpuppet    [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE runpuppet    [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE ping         [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE data [-k KEY][ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE orch         CMD                         [-s STACK]
-cicd ZONE service      ACTION SERVICE [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE facts                  [ROLE] [-n NODE] [-g GROUP] [-s STACK] [-a --all] [-d --down]
+cicd ZONE data   [-k KEY]        [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE runpuppet              [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE result [-j JID] [-n NUM] [--raw]
+cicd ZONE service ACTION SERVICE [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE orch    CMD                                        [-s STACK]
 cicd ZONE console
 ```
 
@@ -176,6 +175,8 @@ You can view the result of a `runpuppet` by using the provided job id (`jid`)
 ```
 In case the result is not yet available the command will automatically be retry 12 times (3 min).
 
+IMPORTANT: The pretty printer is tailored to work on jobid coming from `icon:terminal[] runpuppet`. For all other JIDs, you should add the `--raw` flag.
+
 You can also ask for the last n executed commands:
 ```
 → cicd testing result -n 2
@@ -284,5 +285,11 @@ To activate `nix` in your shell, add the following line in your `.bash_profile`:
 source ~/.nix-profile/etc/profile.d/nix.sh'
 ```
 ====
+
+:leveloffset: +1
+
+include::CHANGELOG.adoc[]
+
+:leveloffset: -1
 
 endif::env-devbox[]

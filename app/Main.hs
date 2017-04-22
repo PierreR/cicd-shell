@@ -112,7 +112,7 @@ initTags z@(Zone zone) = do
   unless found $ do
     mktree localdir
     touch tagfile -- avoid the infine loop ...
-    runCommand z (genTagsCmd z localdir) >>= \case
+    runCommand z False (genTagsCmd z localdir) >>= \case
       ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") zone
       ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
 
@@ -123,12 +123,12 @@ initHelpTopics = do
   found <- testfile topic_file
   unless found $ do
     touch topic_file -- avoid the infine loop ...
-    runCommand (Zone "dev") (genHelpTopicCmd (format fp topic_file)) >>= \case
+    runCommand (Zone "dev") False (genHelpTopicCmd (format fp topic_file)) >>= \case
       ExitSuccess -> printf "help topics generated completed successfully.\n"
       ExitFailure _ -> printf "WARNING: cannot generate help topics for completion file.\n"
 
-runCommand :: Zone -> PepCmd -> Shell ExitCode
-runCommand z cmd =  do
+runCommand :: Zone -> Bool -> PepCmd -> Shell ExitCode
+runCommand z raw cmd =  do
   shell "ping -c1 stash.cirb.lan > /dev/null 2>&1" empty .||. die "cannot connect to stash.cirb.lan, check your connection"
   initTags z
   initHelpTopics
@@ -140,14 +140,20 @@ runCommand z cmd =  do
     Specific jq -> do
       -- liftIO $ print jq
       e <- loopN 10 $ do
-        o0 <- shellStrict nixshell empty
+        o0 <- shellStrictWithErr nixshell empty
         case o0 of
-          (ExitFailure _, _) -> do
-            echo "Failing to get a response from the server. Retrying in 15 sec. Press Ctrl-C to abort."
-            liftIO $ threadDelay (15 * 1000 * 1000)
-            continue
-          (ExitSuccess, stdout) -> do
-            void $ shell jq (select (textToLines stdout))
+          (ExitFailure _, _, stderr) ->
+            if Text.null stderr
+            then do
+              echo "Failing to get a response from the server. Retrying in 15 sec. Press Ctrl-C to abort."
+              liftIO $ threadDelay (15 * 1000 * 1000)
+              continue
+            else do
+              printf ("Failing to execute:\n"%s%"\n"%s) (cmd^.pep) stderr
+              break
+          (ExitSuccess, stdout, _) -> do
+            let stdout' = select (textToLines stdout)
+            if raw then procs "jq" [ "."] stdout' else shells jq stdout' -- .[].ret | {id, return}
             break
       case e of
         Just _ -> pure ExitSuccess
@@ -169,22 +175,22 @@ run (Options (HelpCommand TopicHelp)) = do
   proc "jq" [ ".", topic_file ] empty
 
 -- prohibited options
-run (Options (ZoneCommand _ (Data (DataArg Nothing (Arg Nothing Nothing Nothing _)))))  = die "Running data on the whole stack is currently prohibited"
+run (Options (ZoneCommand _ (Data (DataArg Nothing (Arg Nothing Nothing Nothing _ _)))))  = die "Running data on the whole stack is currently prohibited"
 
 -- valid options
-run (Options (ZoneCommand zone Console))                           = dataDir>>= runCommand zone . consoleCmd zone
-run (Options (ZoneCommand zone Stats))                             = runCommand zone statCmd
-run (Options (ZoneCommand zone GenTags))                           = localDir >>= runCommand zone . genTagsCmd zone
-run (Options (ZoneCommand zone (Runpuppet arg)))                   = getTarget zone arg >>= runCommand zone . runpuppetCmd
-run (Options (ZoneCommand zone (Ping (AcrossArg across arg))))     = getTarget zone arg >>= runCommand zone . pingCmd across
-run (Options (ZoneCommand zone (Facts (FactArg across down arg)))) = getTarget zone arg >>= runCommand zone . factCmd (puppetdbUrl zone) across down
-run (Options (ZoneCommand zone (Sync (AcrossArg across arg))))     = getTarget zone arg >>= runCommand zone . syncCmd across
-run (Options (ZoneCommand zone (Data (DataArg key arg))))          = getTarget zone arg >>= runCommand zone . dataCmd key
-run (Options (ZoneCommand zone (Orchestrate (OrchArg cmd s))))     = getStack s >>= runCommand zone . orchCmd cmd
-run (Options (ZoneCommand zone (Du arg)))                          = getTarget zone arg >>= runCommand zone . duCmd
-run (Options (ZoneCommand zone (Service (action, name, arg))))     = getTarget zone arg >>= runCommand zone . serviceCmd action name
-run (Options (ZoneCommand zone (Result (ResultNum n))))            = userId >>= runCommand zone . resultCmd (pgUrl zone) Nothing (Just n)
-run (Options (ZoneCommand zone (Result (ResultJob j ))))           = userId >>= runCommand zone . resultCmd (pgUrl zone) (Just j) Nothing
+run (Options (ZoneCommand zone Console))                                       = dataDir>>= runCommand zone True . consoleCmd zone
+run (Options (ZoneCommand zone Stats))                                         = runCommand zone False statCmd
+run (Options (ZoneCommand zone GenTags))                                       = localDir >>= runCommand zone False . genTagsCmd zone
+run (Options (ZoneCommand zone (Runpuppet arg)))                               = getTarget zone arg >>= runCommand zone (arg^.raw) . runpuppetCmd
+run (Options (ZoneCommand zone (Ping (AcrossArg across arg))))                 = getTarget zone arg >>= runCommand zone (arg^.raw) . pingCmd across
+run (Options (ZoneCommand zone (Facts (FactArg down (AcrossArg across arg))))) = getTarget zone arg >>= runCommand zone (arg^.raw) . factCmd (puppetdbUrl zone) across down
+run (Options (ZoneCommand zone (Sync (AcrossArg across arg))))                 = getTarget zone arg >>= runCommand zone (arg^.raw) . syncCmd across
+run (Options (ZoneCommand zone (Data (DataArg key arg))))                      = getTarget zone arg >>= runCommand zone (arg^.raw) . dataCmd key
+run (Options (ZoneCommand zone (Du arg)))                                      = getTarget zone arg >>= runCommand zone (arg^.raw) . duCmd
+run (Options (ZoneCommand zone (Service (action, name, arg))))                 = getTarget zone arg >>= runCommand zone (arg^.raw) . serviceCmd action name
+run (Options (ZoneCommand zone (Orchestrate (OrchArg cmd s))))                 = getStack s >>= runCommand zone True . orchCmd cmd
+run (Options (ZoneCommand zone (Result (ResultArg raw (ResultNum n)))))        = userId >>= runCommand zone raw . resultCmd (pgUrl zone) raw Nothing (Just n)
+run (Options (ZoneCommand zone (Result (ResultArg raw (ResultJob j)))))        = userId >>= runCommand zone raw . resultCmd (pgUrl zone) raw (Just j) Nothing
 
 main :: IO ()
 main = sh $ options (fromString ("CICD - command line utility (v" <> version <> ")")) parser >>= run

@@ -197,17 +197,17 @@ dataCmd (Just key) Target {_node= Just n} = PepCmd
   ("jq '.return[0]'")
   empty
 
-resultCmd :: Text -> Maybe Text -> Maybe Natural -> Text -> PepCmd
-resultCmd _ Nothing (Just 0) _ = panic "NUM should be > 0"
-resultCmd pgUrl Nothing (Just num) user = PepCmd
+resultCmd :: Text -> Bool -> Maybe Text -> Maybe Natural -> Text -> PepCmd
+resultCmd _ _ Nothing (Just 0) _ = panic "NUM should be > 0"
+resultCmd pgUrl _ Nothing (Just num) user = PepCmd
   (format ("curl -f -s -H \"Range: 0-"%d%"\" \""%s%"?user=eq."%s%"&order=jid.desc\"") (num - 1) pgUrl user)
   "jq -C '.'"
   empty
-resultCmd pgUrl (Just jobid) Nothing _ = PepCmd
-  ("curl -f -s -H \"Accept: application/vnd.pgrst.object+json\" \"" <> pgUrl <> "?select=ret&jid=eq." <> jobid <> "\"" )
+resultCmd pgUrl raw (Just jobid) Nothing _ = PepCmd
+  ("curl -s " <> (if raw then mempty else "-f -H \"Accept: application/vnd.pgrst.object+json\" ") <> "\"" <> pgUrl <> "?select=ret&jid=eq." <> jobid <> "\"" )
   [r|
     jq -r '(.ret | if .return.retcode == 0 then "\u001B[1;32mSUCCESS\u001B[0m for " else "\u001B[1;31mFAILURE\u001B[0m for " end + .id + ":", if .return.stderr != "" then .return.stdout + "\n******\n" + .return.stderr + "\n" else .return.stdout + "\n" end)'
   |]
   empty
-resultCmd _ Nothing Nothing _ = panic ("The impossible happened. The option parser should void the case")
-resultCmd _ (Just _) (Just _) _ = panic ("The impossible happened. The option parser should void the case")
+resultCmd _ _ Nothing Nothing _ = panic ("The impossible happened. The option parser should void the case")
+resultCmd _ _ (Just _) (Just _) _ = panic ("The impossible happened. The option parser should void the case")
