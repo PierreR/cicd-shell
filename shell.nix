@@ -6,7 +6,7 @@
 #
 #     $ nix-shell
 #
-{ nixpkgs ? import <nixpkgs> {}, compiler ? "default" }:
+{ nixpkgs ? import ~/.config/nixpkgs/pin.nix, compiler ? "default" }:
 
 let
   inherit (nixpkgs) pkgs;
@@ -15,7 +15,6 @@ let
                        then pkgs.haskellPackages
                        else pkgs.haskell.packages.${compiler};
   drv = hlib.dontHaddock(haskellPackages.callPackage ./. {
-    dhall = haskellPackages.dhall_git;
     protolude = haskellPackages.protolude_git;
   });
 
