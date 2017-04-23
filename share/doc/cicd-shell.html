@@ -503,10 +503,10 @@ mark {
 <h2 id="_setup">Setup</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>To use the <code>cicd</code> command, you need to fill in the <a href="https://github.com/CIRB/devbox/blob/master/user/config/shell">configuration file</a> located in <code>/vagrant/config/shell</code>.</p>
+<p>To use the <code>cicd shell</code>, you need to fill in the <a href="https://github.com/CIRB/devbox/blob/master/user/config/shell">configuration file</a> located in <code>/vagrant/config/shell</code>.</p>
 </div>
 <div class="paragraph">
-<p>The cicd shell is installed with the devbox. Please read the section <em>Install_outside_the_devbox</em> if you need to install it on a different system.</p>
+<p>The shell is installed with the devbox. Please read the section <em>Install_outside_the_devbox</em> if you need to install it on a different system.</p>
 </div>
 </div>
 </div>
@@ -514,36 +514,24 @@ mark {
 <h2 id="_usage">Usage</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The name of the command line utility is <mark>cicd</mark>. The first mandatory position argument is the zone (dev, testing, staging or prod). The general scheme of the command line is:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code>cicd ZONE facts                  [ROLE] [-n NODE] [-g GROUP] [-s STACK] [-a --all] [-d --down]
-cicd ZONE data   [-k KEY]        [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE runpuppet              [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE result [-j JID] [-n NUM] [--raw]
-cicd ZONE service ACTION SERVICE [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE orch    CMD                                        [-s STACK]
-cicd ZONE console</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Here is the help as display by invoking <mark>cicd</mark> alone:</p>
+<p>The name of the command line utility is <mark>cicd</mark>. The first mandatory position argument is the zone (dev, testing, staging or prod).</p>
 </div>
 <div class="literalblock">
+<div class="title">Help output after invoking <mark>cicd</mark></div>
 <div class="content">
 <pre>→ cicd
-CICD command line utility (v1.1.1)
+CICD - command line utility (v1.2.0)
 
-Usage: cicd ZONE (console | stats | data | orch | facts | ping | du | service
-              runpuppet | sync | result | gentags)
+Usage: cicd (help | ZONE (console | stats | data | orch | facts | ping | du |
+            service | runpuppet | sync | result | gentags))
 
 Available options:
   -h,--help                Show this help text
   ZONE                     ZONE such as dev, staging, testing or prod
 
 Available commands:
-  console                  Open the specialized salt console
+  help                     Help utilities
+  console                  Open the cicd console
   stats                    Stats (special permission required)
   data                     Return configuration data for a specific property
   orch                     Run an orchestration command on the infrastructure
@@ -553,12 +541,26 @@ Available commands:
   service                  Service management for a specific node
   runpuppet                Apply puppet configuration
   sync                     Sync data from master to nodes
-  result                   Display the results of jobs executed by the user
+  result                   Display the results of the most recent jobs executed by the user or for a specific id
   gentags                  Generate node completion file</pre>
 </div>
 </div>
+<div class="listingblock">
+<div class="title">General scheme of the command line</div>
+<div class="content">
+<pre class="highlight"><code>cicd ZONE facts                  [ROLE] [-n NODE] [-g GROUP] [-s STACK] [--all] [--down]
+cicd ZONE runpuppet              [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE data   [-k KEY]        [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE service ACTION SERVICE [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE orch    CMD                                        [-s STACK]
+cicd ZONE result [-j JID] [-n NUM] [--raw]
+cicd ZONE console
+
+cicd help (html | topic)</code></pre>
+</div>
+</div>
 <div class="paragraph">
-<p>You can request the help at each level. For instance:</p>
+<p>The auto-completion feature helps you to complete the command. You can also request the help at each level. For instance:</p>
 </div>
 <div class="listingblock">
 <div class="content">

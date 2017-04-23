@@ -15,41 +15,31 @@ endif::env-devbox[]
 
 ## Setup
 
-To use the `cicd` command, you need to fill in the https://github.com/CIRB/devbox/blob/master/user/config/shell[configuration file] located in `/vagrant/config/shell`.
+To use the `cicd shell`, you need to fill in the https://github.com/CIRB/devbox/blob/master/user/config/shell[configuration file] located in `/vagrant/config/shell`.
 
 ifndef::env-devbox[]
-The cicd shell is installed with the devbox. Please read the section __Install_outside_the_devbox__ if you need to install it on a different system.
+The shell is installed with the devbox. Please read the section __Install_outside_the_devbox__ if you need to install it on a different system.
 endif::env-devbox[]
 
 ## Usage
 
-The name of the command line utility is #cicd#. The first mandatory position argument is the zone (dev, testing, staging or prod). The general scheme of the command line is:
+The name of the command line utility is #cicd#. The first mandatory position argument is the zone (dev, testing, staging or prod).
 
-```
-cicd ZONE facts                  [ROLE] [-n NODE] [-g GROUP] [-s STACK] [-a --all] [-d --down]
-cicd ZONE data   [-k KEY]        [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE runpuppet              [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE result [-j JID] [-n NUM] [--raw]
-cicd ZONE service ACTION SERVICE [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE orch    CMD                                        [-s STACK]
-cicd ZONE console
-```
-
-Here is the help as display by invoking #cicd# alone:
-
+.Help output after invoking #cicd#
 ....
 → cicd
-CICD command line utility (v1.1.1)
+CICD - command line utility (v1.2.0)
 
-Usage: cicd ZONE (console | stats | data | orch | facts | ping | du | service
-              runpuppet | sync | result | gentags)
+Usage: cicd (help | ZONE (console | stats | data | orch | facts | ping | du |
+            service | runpuppet | sync | result | gentags))
 
 Available options:
   -h,--help                Show this help text
   ZONE                     ZONE such as dev, staging, testing or prod
 
 Available commands:
-  console                  Open the specialized salt console
+  help                     Help utilities
+  console                  Open the cicd console
   stats                    Stats (special permission required)
   data                     Return configuration data for a specific property
   orch                     Run an orchestration command on the infrastructure
@@ -59,11 +49,25 @@ Available commands:
   service                  Service management for a specific node
   runpuppet                Apply puppet configuration
   sync                     Sync data from master to nodes
-  result                   Display the results of jobs executed by the user
+  result                   Display the results of the most recent jobs executed by the user or for a specific id
   gentags                  Generate node completion file
 ....
 
-You can request the help at each level. For instance:
+.General scheme of the command line
+[%autofit]
+```
+cicd ZONE facts                  [ROLE] [-n NODE] [-g GROUP] [-s STACK] [--all] [--down]
+cicd ZONE runpuppet              [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE data   [-k KEY]        [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE service ACTION SERVICE [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE orch    CMD                                        [-s STACK]
+cicd ZONE result [-j JID] [-n NUM] [--raw]
+cicd ZONE console
+
+cicd help (html | topic)
+```
+
+The auto-completion feature helps you to complete the command. You can also request the help at each level. For instance:
 ```
 → cicd staging facts -h
 ```

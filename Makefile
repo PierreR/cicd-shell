@@ -7,7 +7,7 @@ configure:
 	@nix-shell --run "cabal configure"
 
 local:
-	@cabal install
+	@nix-shell --run "cabal install"
 
 doc: share/doc/cicd-shell.html share/doc/cicd-shell.pdf
 
@@ -19,4 +19,4 @@ share/doc/cicd-shell.pdf: README.adoc
 
 clean:
 	@nix-shell --run "cabal clean"
-	rm -f doc/*.*
+	rm -f share/doc/*.*

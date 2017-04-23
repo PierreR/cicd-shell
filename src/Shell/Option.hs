@@ -87,10 +87,10 @@ serviceParse "status" = Just ServiceStatus
 serviceParse "restart" = Just ServiceRestart
 serviceParse _        = Nothing
 
-helpTypeParse :: Text -> Maybe HelpType
-helpTypeParse "html" = Just HtmlHelp
-helpTypeParse "topic" = Just TopicHelp
-helpTypeParse _ = Nothing
+helpTypeParser :: Parser HelpType
+helpTypeParser =
+      HtmlHelp <$ subcommand "html" "Open the guide in a browser" (pure ())
+  <|> TopicHelp <$ subcommand "topic" "Output all possible salt execution modules" (pure ())
 
 subCommandParser :: Parser SubCommand
 subCommandParser =
@@ -115,7 +115,7 @@ subCommandParser =
 
 commandParser :: Parser Command
 commandParser =
-      HelpCommand <$> subcommand "help" "Help utilities" (arg helpTypeParse "type" "(html|topic) to open the guide in a browser")
+      HelpCommand <$> subcommand "help" "Help utilities" helpTypeParser
   <|> ZoneCommand . Zone <$> argText "zone" "ZONE such as dev, staging, testing or prod" <*> subCommandParser
 
 parser :: Parser Options
