@@ -25,7 +25,23 @@ endif::env-devbox[]
 
 The name of the command line utility is #cicd#. The first mandatory position argument is the zone (dev, testing, staging or prod).
 
-.Help output after invoking #cicd#
+.General scheme of the command line
+[%autofit]
+```
+cicd ZONE facts                  [ROLE] [-n NODE] [-g GROUP] [-s STACK] [--all] [--down]
+cicd ZONE runpuppet              [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE data   [-k KEY]        [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE service ACTION SERVICE [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE orch    CMD                                        [-s STACK]
+cicd ZONE result [-j JID] [-n NUM] [--raw]
+cicd ZONE console
+
+cicd help (html | modules | mod MOD)
+```
+
+The auto-completion feature helps you to complete the command. You can also request the help at each level:
+
+.General help output for #cicd#
 ....
 → cicd
 CICD - command line utility (v1.2.0)
@@ -49,27 +65,27 @@ Available commands:
   service                  Service management for a specific node
   runpuppet                Apply puppet configuration
   sync                     Sync data from master to nodes
-  result                   Display the results of the most recent jobs executed by the user or for a specific id
+  result                   Output command results stored in the database
   gentags                  Generate node completion file
 ....
 
-.General scheme of the command line
-[%autofit]
-```
-cicd ZONE facts                  [ROLE] [-n NODE] [-g GROUP] [-s STACK] [--all] [--down]
-cicd ZONE runpuppet              [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE data   [-k KEY]        [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE service ACTION SERVICE [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE orch    CMD                                        [-s STACK]
-cicd ZONE result [-j JID] [-n NUM] [--raw]
-cicd ZONE console
-
-cicd help (html | topic)
-```
-
-The auto-completion feature helps you to complete the command. You can also request the help at each level. For instance:
+.Help output for #facts#
 ```
 → cicd staging facts -h
+Usage: cicd facts [-d|--down] [-a|--all] [ROLE] [-n|--node NODE]
+                  [-g|--subgroup SUBGROUP] [-s|--stack STACK] [-r|--raw]
+  Return essential facts about nodes
+
+Available options:
+  -d,--down                Query down node
+  -a,--all                 Target whole the known stacks
+  ROLE                     Role name maybe prefixed by a subgroup
+                           ('subgroup.role')
+  -n,--node NODE           Target node
+  -g,--subgroup SUBGROUP   Target subgroup
+  -s,--stack STACK         Target stack/hostgroup
+  -r,--raw                 Raw output (no jq)
+  -h,--help                Show this help text
 ```
 
 [NOTE]
@@ -84,7 +100,7 @@ The auto-completion feature helps you to complete the command. You can also requ
 
 The command displays a subset of important facts (static information) about your nodes such as the `fqdn`, `ip`, `os`, `role`, ...
 
-You can toggle the `facts` query to target all hostgroups/stacks with the `-a/ --all` flag. Here is how to get all facts for all slaves in every stack:
+You can toggle the `facts` query to target all hostgroups/stacks with the `--all` flag. Here is how to get all facts for all slaves in every stack:
 
 ```
 λ ~ → cicd prod facts jenkins.slave --all
@@ -203,13 +219,16 @@ You can also restart a service. However such operation in only allowed for a sin
 }
 ```
 
-
 ### icon:terminal[] du
 
 The command displays disk usage. Try:
 ```
 → cicd staging du -n svappcavl703.sta.srv.cirb.lan
 ```
+
+### icon:terminal[] help
+
+The `help` subcommand will open the guide in a browser, display the list of available salt module and show the help for each of them.
 
 ### icon:terminal[] console
 

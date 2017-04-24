@@ -17,7 +17,10 @@ data Command
   = ZoneCommand Zone SubCommand
   | HelpCommand HelpType
 
-data HelpType = HtmlHelp | TopicHelp
+data HelpType
+  = HtmlHelp
+  | ModListHelp
+  | ModHelp Text
 
 data SubCommand
   = Console
@@ -90,7 +93,8 @@ serviceParse _        = Nothing
 helpTypeParser :: Parser HelpType
 helpTypeParser =
       HtmlHelp <$ subcommand "html" "Open the guide in a browser" (pure ())
-  <|> TopicHelp <$ subcommand "topic" "Output all possible salt execution modules" (pure ())
+  <|> ModListHelp <$ subcommand "modules" "Output all possible salt execution modules" (pure ())
+  <|> ModHelp <$> subcommand "mod" "Help about a specific salt module" (argText "name" "Module name")
 
 subCommandParser :: Parser SubCommand
 subCommandParser =

@@ -476,6 +476,7 @@ mark {
 <li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_result"><span class="icon"><i class="fa fa-terminal"></i></span> result</a></li>
 <li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_service"><span class="icon"><i class="fa fa-terminal"></i></span> service</a></li>
 <li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_du"><span class="icon"><i class="fa fa-terminal"></i></span> du</a></li>
+<li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_help"><span class="icon"><i class="fa fa-terminal"></i></span> help</a></li>
 <li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_console"><span class="icon"><i class="fa fa-terminal"></i></span> console</a></li>
 <li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_orch"><span class="icon"><i class="fa fa-terminal"></i></span> orch</a></li>
 </ul>
@@ -516,8 +517,25 @@ mark {
 <div class="paragraph">
 <p>The name of the command line utility is <mark>cicd</mark>. The first mandatory position argument is the zone (dev, testing, staging or prod).</p>
 </div>
+<div class="listingblock">
+<div class="title">General scheme of the command line</div>
+<div class="content">
+<pre class="highlight"><code>cicd ZONE facts                  [ROLE] [-n NODE] [-g GROUP] [-s STACK] [--all] [--down]
+cicd ZONE runpuppet              [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE data   [-k KEY]        [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE service ACTION SERVICE [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE orch    CMD                                        [-s STACK]
+cicd ZONE result [-j JID] [-n NUM] [--raw]
+cicd ZONE console
+
+cicd help (html | modules | mod MOD)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The auto-completion feature helps you to complete the command. You can also request the help at each level:</p>
+</div>
 <div class="literalblock">
-<div class="title">Help output after invoking <mark>cicd</mark></div>
+<div class="title">General help output for <mark>cicd</mark></div>
 <div class="content">
 <pre>→ cicd
 CICD - command line utility (v1.2.0)
@@ -541,30 +559,28 @@ Available commands:
   service                  Service management for a specific node
   runpuppet                Apply puppet configuration
   sync                     Sync data from master to nodes
-  result                   Display the results of the most recent jobs executed by the user or for a specific id
+  result                   Output command results stored in the database
   gentags                  Generate node completion file</pre>
 </div>
 </div>
 <div class="listingblock">
-<div class="title">General scheme of the command line</div>
+<div class="title">Help output for <mark>facts</mark></div>
 <div class="content">
-<pre class="highlight"><code>cicd ZONE facts                  [ROLE] [-n NODE] [-g GROUP] [-s STACK] [--all] [--down]
-cicd ZONE runpuppet              [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE data   [-k KEY]        [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE service ACTION SERVICE [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE orch    CMD                                        [-s STACK]
-cicd ZONE result [-j JID] [-n NUM] [--raw]
-cicd ZONE console
+<pre class="highlight"><code>→ cicd staging facts -h
+Usage: cicd facts [-d|--down] [-a|--all] [ROLE] [-n|--node NODE]
+                  [-g|--subgroup SUBGROUP] [-s|--stack STACK] [-r|--raw]
+  Return essential facts about nodes
 
-cicd help (html | topic)</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The auto-completion feature helps you to complete the command. You can also request the help at each level. For instance:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code>→ cicd staging facts -h</code></pre>
+Available options:
+  -d,--down                Query down node
+  -a,--all                 Target whole the known stacks
+  ROLE                     Role name maybe prefixed by a subgroup
+                           ('subgroup.role')
+  -n,--node NODE           Target node
+  -g,--subgroup SUBGROUP   Target subgroup
+  -s,--stack STACK         Target stack/hostgroup
+  -r,--raw                 Raw output (no jq)
+  -h,--help                Show this help text</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -597,7 +613,7 @@ cicd help (html | topic)</code></pre>
 <p>The command displays a subset of important facts (static information) about your nodes such as the <code>fqdn</code>, <code>ip</code>, <code>os</code>, <code>role</code>, &#8230;&#8203;</p>
 </div>
 <div class="paragraph">
-<p>You can toggle the <code>facts</code> query to target all hostgroups/stacks with the <code>-a/ --all</code> flag. Here is how to get all facts for all slaves in every stack:</p>
+<p>You can toggle the <code>facts</code> query to target all hostgroups/stacks with the <code>--all</code> flag. Here is how to get all facts for all slaves in every stack:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -796,6 +812,12 @@ The pretty printer is tailored to work on jobid coming from <code><span class="i
 </div>
 </div>
 <div class="sect2">
+<h3 id="__span_class_icon_i_class_fa_fa_terminal_i_span_help"><span class="icon"><i class="fa fa-terminal"></i></span> help</h3>
+<div class="paragraph">
+<p>The <code>help</code> subcommand will open the guide in a browser, display the list of available salt module and show the help for each of them.</p>
+</div>
+</div>
+<div class="sect2">
 <h3 id="__span_class_icon_i_class_fa_fa_terminal_i_span_console"><span class="icon"><i class="fa fa-terminal"></i></span> console</h3>
 <div class="paragraph">
 <p>For longer session within a specific zone, you can save some typing by opening a <code>console</code> for that zone. Inside the console, you would omit the zone from the command line. Here is an example:</p>
@@ -952,7 +974,20 @@ As an example to access the machines of the <code>middleware</code> hostgroup, y
 <div class="ulist">
 <ul>
 <li>
-<p>add <code>cicd help html</code> &amp; <code>cicd help topic</code> subcommands</p>
+<p>add</p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>cicd help html</code></p>
+</li>
+<li>
+<p><code>cicd help mod MOD</code></p>
+</li>
+<li>
+<p><code>cicd help modules</code></p>
+</li>
+</ul>
+</div>
 </li>
 <li>
 <p>add <code>--raw</code> option to display output without <code>jq</code> pretty printer</p>

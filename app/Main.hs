@@ -116,22 +116,26 @@ initTags z@(Zone zone) = do
       ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") zone
       ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
 
-initHelpTopics :: Shell ()
-initHelpTopics = do
-  localdir <- localDir
-  let topic_file = localdir </> fromText ".topics"
-  found <- testfile topic_file
-  unless found $ do
-    touch topic_file -- avoid the infine loop ...
-    runCommand (Zone "dev") False (genHelpTopicCmd (format fp topic_file)) >>= \case
-      ExitSuccess -> printf "help topics generated completed successfully.\n"
-      ExitFailure _ -> printf "WARNING: cannot generate help topics for completion file.\n"
+initHelp :: Shell ()
+initHelp = do
+  gen_help genSaltModListCmd "modlist"
+  gen_help genSaltModjsonCmd "modhelp"
+  where
+    gen_help cmd tag = do
+      localdir <- localDir
+      let fpath = localdir </> fromText ("." <> tag)
+      found <- testfile fpath
+      unless found $ do
+        touch fpath -- avoid the infine loop ...
+        runCommand (Zone "dev") False (cmd (format fp fpath)) >>= \case
+          ExitSuccess -> printf (fp%" generated successfully.\n") fpath
+          ExitFailure _ -> printf ("WARNING: cannot generate '"%fp%"' (completion).\n") fpath
 
 runCommand :: Zone -> Bool -> PepCmd -> Shell ExitCode
 runCommand z raw cmd =  do
   shell "ping -c1 stash.cirb.lan > /dev/null 2>&1" empty .||. die "cannot connect to stash.cirb.lan, check your connection"
   initTags z
-  initHelpTopics
+  initHelp
   maybe (pure ()) interactWith (cmd ^. beforeMsg)
   nixshell <- nixShellCmd z (cmd^.pep)
   -- liftIO $ print nixshell
@@ -169,10 +173,15 @@ run (Options (HelpCommand HtmlHelp)) = do
   proc "google-chrome-stable"
        [help_fp] empty
 -- help commands are running on the dev saltmaster where permission can be loosen
-run (Options (HelpCommand TopicHelp)) = do
+run (Options (HelpCommand ModListHelp)) = do
   localdir <- localDir
-  let topic_file = format (fp%"/.topics.json") localdir
-  proc "jq" [ ".", topic_file ] empty
+  let fpath = format (fp%"/.modlist.json") localdir
+  proc "jq" [ ".", fpath ] empty
+
+run (Options (HelpCommand (ModHelp mod))) = do
+  localdir <- localDir
+  let fpath = format (fp%"/.modhelp.json") localdir
+  proc "jq" [ "-r", (".[\"" <> mod <> "\"]"), fpath ] empty
 
 -- prohibited options
 run (Options (ZoneCommand _ (Data (DataArg Nothing (Arg Nothing Nothing Nothing _ _)))))  = die "Running data on the whole stack is currently prohibited"
