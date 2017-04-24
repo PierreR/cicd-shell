@@ -94,7 +94,7 @@ runpuppetCmd target@Target {_node = Nothing} = PepCmd
   "jq '.return'"
   (Just $ CmdMsg True ("Run puppet on " <> Text.intercalate "." (catMaybes [target^.role, target^.subgroup] <> [target^.stack, target^.zone])))
 runpuppetCmd Target {_node = Just n} = PepCmd
-  ( "pepper " <> n <> " puppetutils.run_agent")
+  ( "pepper " <> n <> " -t 180 puppetutils.run_agent")
   [r|
     jq -r '.return[] |
     to_entries |
