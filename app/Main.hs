@@ -186,7 +186,8 @@ run (Options (HelpCommand (ModHelp mod))) = do
   proc "jq" [ "-r", (".[\"" <> mod <> "\"]"), fpath ] empty
 
 -- prohibited options
-run (Options (ZoneCommand _ (Data (DataArg Nothing (Arg Nothing Nothing Nothing _ _)))))  = die "Running data on the whole stack is currently prohibited"
+run (Options (ZoneCommand _ (Data (DataArg Nothing (AcrossArg False (Arg Nothing Nothing Nothing _ _))))))  = shell "cicd dev data -h" empty
+run (Options (ZoneCommand _ (Data (DataArg Nothing (AcrossArg True _)))))  = die "Running data on all stacks without providing a key is currently prohibited"
 
 -- valid options
 run (Options (ZoneCommand zone Console))                                       = dataDir>>= runCommand zone True . consoleCmd zone
@@ -196,7 +197,7 @@ run (Options (ZoneCommand zone (Runpuppet arg)))                               =
 run (Options (ZoneCommand zone (Ping (AcrossArg across arg))))                 = getTarget zone arg >>= runCommand zone (arg^.raw) . pingCmd across
 run (Options (ZoneCommand zone (Facts (FactArg down (AcrossArg across arg))))) = getTarget zone arg >>= runCommand zone (arg^.raw) . factCmd (puppetdbUrl zone) across down
 run (Options (ZoneCommand zone (Sync (AcrossArg across arg))))                 = getTarget zone arg >>= runCommand zone (arg^.raw) . syncCmd across
-run (Options (ZoneCommand zone (Data (DataArg key arg))))                      = getTarget zone arg >>= runCommand zone (arg^.raw) . dataCmd key
+run (Options (ZoneCommand zone (Data (DataArg key (AcrossArg across arg)))))   = getTarget zone arg >>= runCommand zone (arg^.raw) . dataCmd across key
 run (Options (ZoneCommand zone (Du arg)))                                      = getTarget zone arg >>= runCommand zone (arg^.raw) . duCmd
 run (Options (ZoneCommand zone (Service (action, name, arg))))                 = getTarget zone arg >>= runCommand zone (arg^.raw) . serviceCmd action name
 run (Options (ZoneCommand zone (Orchestrate (OrchArg cmd s))))                 = getStack s >>= runCommand zone True . orchCmd cmd

@@ -8,6 +8,8 @@
 * `cicd help mod MOD`
 * `cicd help modules`
 - add `--raw` option to display output without `jq` pretty printer
+- allow `--all` to be used with the `data` subcommand
+- increase default timeout (up to 3min) for synchronous `runpuppet`
 
 ## v1.1, 21/04/2017
 

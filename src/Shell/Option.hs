@@ -43,7 +43,7 @@ data OrchArg =
   deriving Show
 
 data DataArg =
-  DataArg (Maybe Text) Arg -- ^ Query config data optionally with a key
+  DataArg (Maybe Text) AcrossArg -- ^ Query config data optionally with a key
   deriving Show
 
 data FactArg
@@ -111,7 +111,7 @@ subCommandParser =
   <|> Result      <$> subcommand "result" "Display the results of the most recent jobs executed by the user or for a specific id" resultParser
   <|> GenTags     <$  subcommand "gentags" "Generate node completion file" (pure ())
   where
-    data_parser   = DataArg <$> optional (optText "key" 'k' "Property to look up for" ) <*> argParser
+    data_parser   = DataArg <$> optional (optText "key" 'k' "Property to look up for" ) <*> across_parser
     fact_parser   = FactArg <$> switch "down" 'd' "Query down node" <*> across_parser
     across_parser = AcrossArg <$> switch "all" 'a' "Target whole the known stacks" <*> argParser
     orch_parser   = OrchArg <$> argText "cmd" "SubCommand to run" <*> optional (optText "stack" 's' "Target stack/hostgroup" )

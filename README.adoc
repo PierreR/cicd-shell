@@ -29,8 +29,8 @@ The name of the command line utility is #cicd#. The first mandatory position arg
 [%autofit]
 ```
 cicd ZONE facts                  [ROLE] [-n NODE] [-g GROUP] [-s STACK] [--all] [--down]
+cicd ZONE data   [-k KEY]        [ROLE] [-n NODE] [-g GROUP] [-s STACK] [--all]
 cicd ZONE runpuppet              [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE data   [-k KEY]        [ROLE] [-n NODE] [-g GROUP] [-s STACK]
 cicd ZONE service ACTION SERVICE [ROLE] [-n NODE] [-g GROUP] [-s STACK]
 cicd ZONE orch    CMD                                        [-s STACK]
 cicd ZONE result [-j JID] [-n NUM] [--raw]

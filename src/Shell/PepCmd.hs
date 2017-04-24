@@ -11,6 +11,8 @@ import           Turtle.Format
 import           Shell.Prelude
 import           Shell.Type
 
+panic' = panic "The impossible happened. The option parser should void the case"
+
 pepperCompoundTarget :: Bool -> Target -> Text
 pepperCompoundTarget across t
   = "pepper -C \"" <> compound_target (t^.zone)
@@ -184,21 +186,22 @@ pingCmd _ Target {_node = Just n} = PepCmd
   "jq '.return[0]'"
   empty
 
-dataCmd :: Maybe Text -> Target -> PepCmd
-dataCmd Nothing Target {_node= Just n} = PepCmd
+dataCmd :: Bool -> Maybe Text -> Target -> PepCmd
+dataCmd _ Nothing Target {_node= Just n} = PepCmd
   ("pepper " <> n <> " pillar.items delimiter='/'")
   "jq '.return[0]'"
   empty
-dataCmd Nothing target@Target {_node= Nothing} = PepCmd
+dataCmd True Nothing Target {_node= Nothing} = panic'
+dataCmd False Nothing target@Target {_node= Nothing} = PepCmd
   (pepperCompoundTarget False target  <> " pillar.items delimiter='/'")
   "jq '.return[0]'"
   empty
-dataCmd (Just key) target@Target {_node= Nothing}
-  = let pep = "( " <> pepperCompoundTarget False target <> "grains.item fqdn subgroup role ; " <> pepperCompoundTarget False target <> "pillar.item " <> key <> " delimiter='/' )"
+dataCmd across (Just key) target@Target {_node= Nothing}
+  = let pep = "( " <> pepperCompoundTarget across target <> "grains.item fqdn subgroup role ; " <> pepperCompoundTarget False target <> "pillar.item " <> key <> " delimiter='/' )"
         jq = "jq -s '.[0].return[0] * .[1].return[0]' | jq '.[] | { fqdn, subgroup, role, "<> pure key <> "}'"
     in
       PepCmd pep jq empty
-dataCmd (Just key) Target {_node= Just n} = PepCmd
+dataCmd _ (Just key) Target {_node= Just n} = PepCmd
   ("pepper " <> n <> " pillar.item " <> key <> " delimiter='/'")
   ("jq '.return[0]'")
   empty
@@ -215,5 +218,5 @@ resultCmd pgUrl raw (Just jobid) Nothing _ = PepCmd
     jq -r '(.ret | if .return.retcode == 0 then "\u001B[1;32mSUCCESS\u001B[0m for " else "\u001B[1;31mFAILURE\u001B[0m for " end + .id + ":", if .return.stderr != "" then .return.stdout + "\n******\n" + .return.stderr + "\n" else .return.stdout + "\n" end)'
   |]
   empty
-resultCmd _ _ Nothing Nothing _ = panic ("The impossible happened. The option parser should void the case")
-resultCmd _ _ (Just _) (Just _) _ = panic ("The impossible happened. The option parser should void the case")
+resultCmd _ _ Nothing Nothing _ = panic'
+resultCmd _ _ (Just _) (Just _) _ = panic'
