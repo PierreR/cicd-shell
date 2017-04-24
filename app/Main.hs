@@ -169,9 +169,11 @@ runCommand z raw cmd =  do
 -- help options
 run (Options (HelpCommand HtmlHelp)) = do
   datadir <- dataDir
+  browser <- fromMaybe "firefox" <$> need "BROWSER"
   let help_fp = Text.pack (datadir <> "/share/doc/cicd-shell.html")
-  proc "google-chrome-stable"
+  proc browser
        [help_fp] empty
+
 -- help commands are running on the dev saltmaster where permission can be loosen
 run (Options (HelpCommand ModListHelp)) = do
   localdir <- localDir
