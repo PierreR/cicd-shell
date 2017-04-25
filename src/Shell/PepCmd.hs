@@ -197,7 +197,7 @@ dataCmd False Nothing target@Target {_node= Nothing} = PepCmd
   "jq '.return[0]'"
   empty
 dataCmd across (Just key) target@Target {_node= Nothing}
-  = let pep = "( " <> pepperCompoundTarget across target <> "grains.item fqdn subgroup role ; " <> pepperCompoundTarget False target <> "pillar.item " <> key <> " delimiter='/' )"
+  = let pep = "( " <> pepperCompoundTarget across target <> "grains.item fqdn subgroup role ; " <> pepperCompoundTarget across target <> "pillar.item " <> key <> " delimiter='/' )"
         jq = "jq -s '.[0].return[0] * .[1].return[0]' | jq '.[] | { fqdn, subgroup, role, "<> pure key <> "}'"
     in
       PepCmd pep jq empty
