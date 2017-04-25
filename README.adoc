@@ -85,7 +85,7 @@ Available options:
   -g,--subgroup SUBGROUP   Target subgroup
   -s,--stack STACK         Target stack/hostgroup
   -r,--raw                 Raw output (no jq)
-  -v,--verbose             Verbose output
+  -v,--verbose             Display the executed command
   -h,--help                Show this help text
 ```
 
@@ -227,10 +227,6 @@ The command displays disk usage. Try:
 → cicd staging du -n svappcavl703.sta.srv.cirb.lan
 ```
 
-### icon:terminal[] help
-
-The `help` subcommand will open the guide in a browser, display the list of available salt module and show the help for each of them.
-
 ### icon:terminal[] console
 
 For longer session within a specific zone, you can save some typing by opening a `console` for that zone. Inside the console, you would omit the zone from the command line. Here is an example:
@@ -251,7 +247,7 @@ $ pep -L fqdn1,fqdn2 --client=local_async puppetutils.run_agent <2>
 ```
 <1> #-G# means `grain` target (__grains__ is the salt terminology for facts).
 <2> #-L# means `list` target +
-#local_asyn# means the :autofit-option:command is asynchronous and does not display its result (just a jid)
+#local_asyn# means the command is asynchronous and does not display its result (just a jid)
 
 [TIP]
 ====
@@ -261,14 +257,34 @@ $ pep -L fqdn1,fqdn2 --client=local_async puppetutils.run_agent <2>
 
 ### icon:terminal[] orch
 
-Salt can run multiple commands as well using the orchestrate runner. The orchestration is executed on the salt master to allow inter minion requisites, like ordering the application of states on different minions that must not happen simultaneously, or for halting the state run on all minions if a minion fails one of its states (more about this topic can be found https://docs.saltstack.com/en/latest/topics/tutorials/states_pt5.html#orchestrate-runner[in the saltstack website]).
+Salt is able to orchestrate deployment scenarios across machines.
 
-The orchestration should be defined in the orch folder. You will find some examples http://stash.cirb.lan/projects/MIDDLEWARE/repos/salt-stack-middleware/browse/orch?at=refs%2Fheads%2Fmiddleware[here].
+The orchestration is executed on the salt master to allow inter minion requisites, like ordering the application of states on different minions that must not happen simultaneously, or for halting the state run on all minions if a minion fails one of its states (more about this topic can be found https://docs.saltstack.com/en/latest/topics/tutorials/states_pt5.html#orchestrate-runner[in the saltstack website]).
 
-Orchestrate commands can be started using:
+To write some specific orchestration scripts for your stack, you need to request a salt stack repository. For `bos` it would be named `salt-stack-bos`. This process is similar to the creation of `puppet-stack-bos` . The scripts should sit in the `orch` folder. You can find some examples http://stash.cirb.lan/projects/MIDDLEWARE/repos/salt-stack-middleware/browse/orch?at=refs%2Fheads%2Fmiddleware[here].
+
+Orchestrate commands are executed with:
 
 ```
 → cicd testing orch CMD
+```
+
+### icon:terminal[] help
+
+The `help` subcommand will open the guide in a browser, display the list of available salt module and show the help for each of them.
+
+```
+→ cicd help
+Usage: cicd help (html | modules | mod)
+  Help utilities
+
+Available options:
+  -h,--help                Show this help text
+
+Available commands:
+  html                     Open the guide in a browser
+  modules                  Output all possible salt execution modules
+  mod                      Help about a specific salt module
 ```
 
 ## Authentication

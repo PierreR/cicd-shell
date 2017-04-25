@@ -476,9 +476,9 @@ mark {
 <li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_result"><span class="icon"><i class="fa fa-terminal"></i></span> result</a></li>
 <li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_service"><span class="icon"><i class="fa fa-terminal"></i></span> service</a></li>
 <li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_du"><span class="icon"><i class="fa fa-terminal"></i></span> du</a></li>
-<li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_help"><span class="icon"><i class="fa fa-terminal"></i></span> help</a></li>
 <li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_console"><span class="icon"><i class="fa fa-terminal"></i></span> console</a></li>
 <li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_orch"><span class="icon"><i class="fa fa-terminal"></i></span> orch</a></li>
+<li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_help"><span class="icon"><i class="fa fa-terminal"></i></span> help</a></li>
 </ul>
 </li>
 <li><a href="#_authentication">Authentication</a></li>
@@ -580,7 +580,7 @@ Available options:
   -g,--subgroup SUBGROUP   Target subgroup
   -s,--stack STACK         Target stack/hostgroup
   -r,--raw                 Raw output (no jq)
-  -v,--verbose             Verbose output
+  -v,--verbose             Display the executed command
   -h,--help                Show this help text</code></pre>
 </div>
 </div>
@@ -813,12 +813,6 @@ The pretty printer is tailored to work on jobid coming from <code><span class="i
 </div>
 </div>
 <div class="sect2">
-<h3 id="__span_class_icon_i_class_fa_fa_terminal_i_span_help"><span class="icon"><i class="fa fa-terminal"></i></span> help</h3>
-<div class="paragraph">
-<p>The <code>help</code> subcommand will open the guide in a browser, display the list of available salt module and show the help for each of them.</p>
-</div>
-</div>
-<div class="sect2">
 <h3 id="__span_class_icon_i_class_fa_fa_terminal_i_span_console"><span class="icon"><i class="fa fa-terminal"></i></span> console</h3>
 <div class="paragraph">
 <p>For longer session within a specific zone, you can save some typing by opening a <code>console</code> for that zone. Inside the console, you would omit the zone from the command line. Here is an example:</p>
@@ -849,7 +843,7 @@ $ pep -L fqdn1,fqdn2 --client=local_async puppetutils.run_agent <i class="conum"
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
 <td><mark>-L</mark> means <code>list</code> target<br>
-<mark>local_asyn</mark> means the :autofit-option:command is asynchronous and does not display its result (just a jid)</td>
+<mark>local_asyn</mark> means the command is asynchronous and does not display its result (just a jid)</td>
 </tr>
 </table>
 </div>
@@ -878,17 +872,41 @@ $ pep -L fqdn1,fqdn2 --client=local_async puppetutils.run_agent <i class="conum"
 <div class="sect2">
 <h3 id="__span_class_icon_i_class_fa_fa_terminal_i_span_orch"><span class="icon"><i class="fa fa-terminal"></i></span> orch</h3>
 <div class="paragraph">
-<p>Salt can run multiple commands as well using the orchestrate runner. The orchestration is executed on the salt master to allow inter minion requisites, like ordering the application of states on different minions that must not happen simultaneously, or for halting the state run on all minions if a minion fails one of its states (more about this topic can be found <a href="https://docs.saltstack.com/en/latest/topics/tutorials/states_pt5.html#orchestrate-runner">in the saltstack website</a>).</p>
+<p>Salt is able to orchestrate deployment scenarios across machines.</p>
 </div>
 <div class="paragraph">
-<p>The orchestration should be defined in the orch folder. You will find some examples <a href="http://stash.cirb.lan/projects/MIDDLEWARE/repos/salt-stack-middleware/browse/orch?at=refs%2Fheads%2Fmiddleware">here</a>.</p>
+<p>The orchestration is executed on the salt master to allow inter minion requisites, like ordering the application of states on different minions that must not happen simultaneously, or for halting the state run on all minions if a minion fails one of its states (more about this topic can be found <a href="https://docs.saltstack.com/en/latest/topics/tutorials/states_pt5.html#orchestrate-runner">in the saltstack website</a>).</p>
 </div>
 <div class="paragraph">
-<p>Orchestrate commands can be started using:</p>
+<p>To write some specific orchestration scripts for your stack, you need to request a salt stack repository. For <code>bos</code> it would be named <code>salt-stack-bos</code>. This process is similar to the creation of <code>puppet-stack-bos</code> . The scripts should sit in the <code>orch</code> folder. You can find some examples <a href="http://stash.cirb.lan/projects/MIDDLEWARE/repos/salt-stack-middleware/browse/orch?at=refs%2Fheads%2Fmiddleware">here</a>.</p>
+</div>
+<div class="paragraph">
+<p>Orchestrate commands are executed with:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code>→ cicd testing orch CMD</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="__span_class_icon_i_class_fa_fa_terminal_i_span_help"><span class="icon"><i class="fa fa-terminal"></i></span> help</h3>
+<div class="paragraph">
+<p>The <code>help</code> subcommand will open the guide in a browser, display the list of available salt module and show the help for each of them.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>→ cicd help
+Usage: cicd help (html | modules | mod)
+  Help utilities
+
+Available options:
+  -h,--help                Show this help text
+
+Available commands:
+  html                     Open the guide in a browser
+  modules                  Output all possible salt execution modules
+  mod                      Help about a specific salt module</code></pre>
 </div>
 </div>
 </div>
@@ -1001,6 +1019,9 @@ As an example to access the machines of the <code>middleware</code> hostgroup, y
 </li>
 <li>
 <p>increase default timeout (up to 3min) for synchronous <code>runpuppet</code></p>
+</li>
+<li>
+<p>provide completion for salt modules in the console</p>
 </li>
 </ul>
 </div>

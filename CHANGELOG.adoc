@@ -11,6 +11,7 @@
 - add `--verbose` option to display the executed command
 - allow `--all` to be used with the `data` subcommand
 - increase default timeout (up to 3min) for synchronous `runpuppet`
+- provide completion for salt modules in the console
 
 ## v1.1, 21/04/2017
 

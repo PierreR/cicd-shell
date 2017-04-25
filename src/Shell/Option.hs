@@ -82,7 +82,7 @@ rawParser :: Parser Bool
 rawParser = switch "raw" 'r' "Raw output (no jq)"
 
 verboseParser :: Parser Bool
-verboseParser = switch "verbose" 'v' "Verbose output"
+verboseParser = switch "verbose" 'v' "Display the executed command"
 
 resultParser
   = ResultArg <$> rawParser <*> (ResultNum <$> optNatural "Num" 'n' "Number of results to display" <|> ResultJob <$> optText "job" 'j' "Job id")
