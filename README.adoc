@@ -51,7 +51,7 @@ Usage: cicd (help | ZONE (console | stats | data | orch | facts | ping | du |
 
 Available options:
   -h,--help                Show this help text
-  ZONE                     ZONE such as dev, staging, testing or prod
+  ZONE                     ZONE (dev|testing|staging|prod)
 
 Available commands:
   help                     Help utilities
@@ -74,17 +74,18 @@ Available commands:
 → cicd staging facts -h
 Usage: cicd facts [-d|--down] [-a|--all] [ROLE] [-n|--node NODE]
                   [-g|--subgroup SUBGROUP] [-s|--stack STACK] [-r|--raw]
+                  [-v|--verbose]
   Return essential facts about nodes
 
 Available options:
   -d,--down                Query down node
   -a,--all                 Target whole the known stacks
-  ROLE                     Role name maybe prefixed by a subgroup
-                           ('subgroup.role')
+  ROLE                     Role name maybe prefixed by a subgroup ('subgroup.role')
   -n,--node NODE           Target node
   -g,--subgroup SUBGROUP   Target subgroup
   -s,--stack STACK         Target stack/hostgroup
   -r,--raw                 Raw output (no jq)
+  -v,--verbose             Verbose output
   -h,--help                Show this help text
 ```
 

@@ -521,8 +521,8 @@ mark {
 <div class="title">General scheme of the command line</div>
 <div class="content">
 <pre class="highlight"><code>cicd ZONE facts                  [ROLE] [-n NODE] [-g GROUP] [-s STACK] [--all] [--down]
+cicd ZONE data   [-k KEY]        [ROLE] [-n NODE] [-g GROUP] [-s STACK] [--all]
 cicd ZONE runpuppet              [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE data   [-k KEY]        [ROLE] [-n NODE] [-g GROUP] [-s STACK]
 cicd ZONE service ACTION SERVICE [ROLE] [-n NODE] [-g GROUP] [-s STACK]
 cicd ZONE orch    CMD                                        [-s STACK]
 cicd ZONE result [-j JID] [-n NUM] [--raw]
@@ -545,7 +545,7 @@ Usage: cicd (help | ZONE (console | stats | data | orch | facts | ping | du |
 
 Available options:
   -h,--help                Show this help text
-  ZONE                     ZONE such as dev, staging, testing or prod
+  ZONE                     ZONE (dev|testing|staging|prod)
 
 Available commands:
   help                     Help utilities
@@ -569,17 +569,18 @@ Available commands:
 <pre class="highlight"><code>→ cicd staging facts -h
 Usage: cicd facts [-d|--down] [-a|--all] [ROLE] [-n|--node NODE]
                   [-g|--subgroup SUBGROUP] [-s|--stack STACK] [-r|--raw]
+                  [-v|--verbose]
   Return essential facts about nodes
 
 Available options:
   -d,--down                Query down node
   -a,--all                 Target whole the known stacks
-  ROLE                     Role name maybe prefixed by a subgroup
-                           ('subgroup.role')
+  ROLE                     Role name maybe prefixed by a subgroup ('subgroup.role')
   -n,--node NODE           Target node
   -g,--subgroup SUBGROUP   Target subgroup
   -s,--stack STACK         Target stack/hostgroup
   -r,--raw                 Raw output (no jq)
+  -v,--verbose             Verbose output
   -h,--help                Show this help text</code></pre>
 </div>
 </div>
@@ -991,6 +992,15 @@ As an example to access the machines of the <code>middleware</code> hostgroup, y
 </li>
 <li>
 <p>add <code>--raw</code> option to display output without <code>jq</code> pretty printer</p>
+</li>
+<li>
+<p>add <code>--verbose</code> option to display the executed command</p>
+</li>
+<li>
+<p>allow <code>--all</code> to be used with the <code>data</code> subcommand</p>
+</li>
+<li>
+<p>increase default timeout (up to 3min) for synchronous <code>runpuppet</code></p>
 </li>
 </ul>
 </div>
