@@ -63,6 +63,7 @@ data Arg
   , _subgroup :: Maybe Text
   , _stack    :: Maybe Text
   , _raw      :: Bool
+  , _verbose  :: Bool
   } deriving Show
 
 makeLenses ''Arg
@@ -75,9 +76,13 @@ argParser
   <*> optional (optText "subgroup" 'g' "Target subgroup")
   <*> optional (optText "stack" 's' "Target stack/hostgroup")
   <*> rawParser
+  <*> verboseParser
 
 rawParser :: Parser Bool
 rawParser = switch "raw" 'r' "Raw output (no jq)"
+
+verboseParser :: Parser Bool
+verboseParser = switch "verbose" 'v' "Verbose output"
 
 resultParser
   = ResultArg <$> rawParser <*> (ResultNum <$> optNatural "Num" 'n' "Number of results to display" <|> ResultJob <$> optText "job" 'j' "Job id")
@@ -120,7 +125,7 @@ subCommandParser =
 commandParser :: Parser Command
 commandParser =
       HelpCommand <$> subcommand "help" "Help utilities" helpTypeParser
-  <|> ZoneCommand . Zone <$> argText "zone" "ZONE such as dev, staging, testing or prod" <*> subCommandParser
+  <|> ZoneCommand . Zone <$> argText "zone" "ZONE (dev|testing|staging|prod)" <*> subCommandParser
 
 parser :: Parser Options
 parser =
