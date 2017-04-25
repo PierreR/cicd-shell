@@ -112,7 +112,7 @@ initTags z@(Zone zone) = do
   unless found $ do
     mktree localdir
     touch tagfile -- avoid the infine loop ...
-    runCommand z False False (genTagsCmd z localdir) >>= \case
+    runCommand z (Verbose False) (Raw False) (genTagsCmd z localdir) >>= \case
       ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") zone
       ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
 
@@ -127,12 +127,12 @@ initHelp = do
       found <- testfile fpath
       unless found $ do
         touch fpath -- avoid the infine loop ...
-        runCommand (Zone "dev") False False (cmd (format fp fpath)) >>= \case
+        runCommand (Zone "dev") (Verbose False) (Raw False) (cmd (format fp fpath)) >>= \case
           ExitSuccess -> printf (fp%" generated successfully.\n") fpath
           ExitFailure _ -> printf ("WARNING: cannot generate '"%fp%"' (completion).\n") fpath
 
-runCommand :: Zone -> Bool -> Bool -> PepCmd -> Shell ExitCode
-runCommand z verbose raw cmd =  do
+runCommand :: Zone -> Verbose -> Raw -> PepCmd -> Shell ExitCode
+runCommand z (Verbose verbose) (Raw raw) cmd =  do
   shell "ping -c1 stash.cirb.lan > /dev/null 2>&1" empty .||. die "cannot connect to stash.cirb.lan, check your connection"
   initTags z
   initHelp
@@ -192,9 +192,9 @@ run (Options (ZoneCommand _ (Data (DataArg Nothing (AcrossArg True _))))) =
   die "Running data across all stacks without providing a key is currently prohibited"
 
 -- valid options
-run (Options (ZoneCommand zone Console))                                       = dataDir>>= runCommand zone False True . consoleCmd zone
-run (Options (ZoneCommand zone Stats))                                         = runCommand zone False False statCmd
-run (Options (ZoneCommand zone GenTags))                                       = localDir >>= runCommand zone False False . genTagsCmd zone
+run (Options (ZoneCommand zone Console))                                       = dataDir>>= runCommand zone (Verbose False) (Raw True ) . consoleCmd zone
+run (Options (ZoneCommand zone Stats))                                         = runCommand zone (Verbose False) (Raw False) statCmd
+run (Options (ZoneCommand zone GenTags))                                       = localDir >>= runCommand zone (Verbose False) (Raw False) . genTagsCmd zone
 run (Options (ZoneCommand zone (Runpuppet arg)))                               = getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . runpuppetCmd
 run (Options (ZoneCommand zone (Ping (AcrossArg across arg))))                 = getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . pingCmd across
 run (Options (ZoneCommand zone (Facts (FactArg down (AcrossArg across arg))))) = getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . factCmd (puppetdbUrl zone) across down
@@ -202,9 +202,9 @@ run (Options (ZoneCommand zone (Sync (AcrossArg across arg))))                 =
 run (Options (ZoneCommand zone (Data (DataArg key (AcrossArg across arg)))))   = getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . dataCmd across key
 run (Options (ZoneCommand zone (Du arg)))                                      = getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . duCmd
 run (Options (ZoneCommand zone (Service (action, name, arg))))                 = getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . serviceCmd action name
-run (Options (ZoneCommand zone (Orchestrate (OrchArg cmd s))))                 = getStack s >>= runCommand zone False True . orchCmd cmd
-run (Options (ZoneCommand zone (Result (ResultArg raw (ResultNum n)))))        = userId >>= runCommand zone False raw . resultCmd (pgUrl zone) raw Nothing (Just n)
-run (Options (ZoneCommand zone (Result (ResultArg raw (ResultJob j)))))        = userId >>= runCommand zone False raw . resultCmd (pgUrl zone) raw (Just j) Nothing
+run (Options (ZoneCommand zone (Orchestrate (OrchArg cmd s))))                 = getStack s >>= runCommand zone (Verbose False) (Raw True) . orchCmd cmd
+run (Options (ZoneCommand zone (Result (ResultArg raw (ResultNum n)))))        = userId >>= runCommand zone (Verbose False) raw . resultCmd (pgUrl zone) raw Nothing (Just n)
+run (Options (ZoneCommand zone (Result (ResultArg raw (ResultJob j)))))        = userId >>= runCommand zone (Verbose False) raw . resultCmd (pgUrl zone) raw (Just j) Nothing
 
 main :: IO ()
 main = sh $ options (fromString ("CICD - command line utility (v" <> version <> ")")) parser >>= run

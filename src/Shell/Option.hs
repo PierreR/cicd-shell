@@ -6,7 +6,7 @@ import           Turtle.Options
 import           Shell.Type
 import           Shell.Prelude
 
-data ResultArg = ResultArg Bool ResultType deriving Show
+data ResultArg = ResultArg Raw ResultType deriving Show
 
 data ResultType
   = ResultJob Text
@@ -62,8 +62,8 @@ data Arg
   , _node     :: Maybe Text
   , _subgroup :: Maybe Text
   , _stack    :: Maybe Text
-  , _raw      :: Bool
-  , _verbose  :: Bool
+  , _raw      :: Raw
+  , _verbose  :: Verbose
   } deriving Show
 
 makeLenses ''Arg
@@ -78,11 +78,11 @@ argParser
   <*> rawParser
   <*> verboseParser
 
-rawParser :: Parser Bool
-rawParser = switch "raw" 'r' "Raw output (no jq)"
+rawParser :: Parser Raw
+rawParser = Raw <$> switch "raw" 'r' "Raw output (no jq)"
 
-verboseParser :: Parser Bool
-verboseParser = switch "verbose" 'v' "Display the executed command"
+verboseParser :: Parser Verbose
+verboseParser = Verbose <$> switch "verbose" 'v' "Display the executed command"
 
 resultParser
   = ResultArg <$> rawParser <*> (ResultNum <$> optNatural "Num" 'n' "Number of results to display" <|> ResultJob <$> optText "job" 'j' "Job id")

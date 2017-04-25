@@ -17,3 +17,5 @@ makeLenses ''Target
 
 newtype Zone = Zone Text
 newtype ServiceName = ServiceName Text deriving Show
+newtype Verbose = Verbose Bool deriving Show
+newtype Raw = Raw Bool deriving Show
