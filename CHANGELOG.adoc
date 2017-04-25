@@ -1,5 +1,19 @@
 # Changelog
 
-## v1.1, 19/04/2017
+
+## v1.2, (not yet released)
+
+- add
+* `cicd help html`
+* `cicd help mod MOD`
+* `cicd help modules`
+- add `--raw` option to display output without `jq` pretty printer
+- add `--verbose` option to display the executed command
+- allow `--all` to be used with the `data` subcommand
+- increase default timeout (up to 3min) for synchronous `runpuppet`
+- provide completion for salt modules in the console
+
+## v1.1, 21/04/2017
 
 - `retries` when a command fails
+- fix issues with the `result` subcommand output

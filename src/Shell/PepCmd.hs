@@ -11,6 +11,8 @@ import           Turtle.Format
 import           Shell.Prelude
 import           Shell.Type
 
+panic' = panic "The impossible happened. The option parser should void the case"
+
 pepperCompoundTarget :: Bool -> Target -> Text
 pepperCompoundTarget across t
   = "pepper -C \"" <> compound_target (t^.zone)
@@ -59,6 +61,21 @@ genTagsCmd (Zone zone) cfdir =
   ("jq '.return[0]' | jq keys | jq -r 'join (\" \")' > " <> pure nodefile)
   (Just $ CmdMsg False ("Generating " <> nodefile))
 
+genSaltModListCmd :: Text -> PepCmd
+genSaltModListCmd fpath =
+  let jsonfile = fpath <> ".json"
+  in
+    PepCmd
+    "pepper --client=runner doc.execution"
+    ("jq '.return[0] | keys' | tee " <> pure jsonfile <> " | jq -r 'join (\" \")' > " <> pure fpath)
+    empty
+
+genSaltModjsonCmd :: Text -> PepCmd
+genSaltModjsonCmd fpath = PepCmd
+  "pepper --client=runner doc.execution"
+  ("jq '.return[0]' > " <> pure (fpath <> ".json"))
+  empty
+
 statCmd :: PepCmd
 statCmd = PepCmd
   "pepper --client=runner manage.status"
@@ -79,7 +96,7 @@ runpuppetCmd target@Target {_node = Nothing} = PepCmd
   "jq '.return'"
   (Just $ CmdMsg True ("Run puppet on " <> Text.intercalate "." (catMaybes [target^.role, target^.subgroup] <> [target^.stack, target^.zone])))
 runpuppetCmd Target {_node = Just n} = PepCmd
-  ( "pepper " <> n <> " puppetutils.run_agent")
+  ( "pepper " <> n <> " -t 180 puppetutils.run_agent")
   [r|
     jq -r '.return[] |
     to_entries |
@@ -169,36 +186,37 @@ pingCmd _ Target {_node = Just n} = PepCmd
   "jq '.return[0]'"
   empty
 
-dataCmd :: Maybe Text -> Target -> PepCmd
-dataCmd Nothing Target {_node= Just n} = PepCmd
+dataCmd :: Bool -> Maybe Text -> Target -> PepCmd
+dataCmd _ Nothing Target {_node= Just n} = PepCmd
   ("pepper " <> n <> " pillar.items delimiter='/'")
   "jq '.return[0]'"
   empty
-dataCmd Nothing target@Target {_node= Nothing} = PepCmd
+dataCmd True Nothing Target {_node= Nothing} = panic'
+dataCmd False Nothing target@Target {_node= Nothing} = PepCmd
   (pepperCompoundTarget False target  <> " pillar.items delimiter='/'")
   "jq '.return[0]'"
   empty
-dataCmd (Just key) target@Target {_node= Nothing}
-  = let pep = "( " <> pepperCompoundTarget False target <> "grains.item fqdn subgroup role ; " <> pepperCompoundTarget False target <> "pillar.item " <> key <> " delimiter='/' )"
+dataCmd across (Just key) target@Target {_node= Nothing}
+  = let pep = "( " <> pepperCompoundTarget across target <> "grains.item fqdn subgroup role ; " <> pepperCompoundTarget False target <> "pillar.item " <> key <> " delimiter='/' )"
         jq = "jq -s '.[0].return[0] * .[1].return[0]' | jq '.[] | { fqdn, subgroup, role, "<> pure key <> "}'"
     in
       PepCmd pep jq empty
-dataCmd (Just key) Target {_node= Just n} = PepCmd
+dataCmd _ (Just key) Target {_node= Just n} = PepCmd
   ("pepper " <> n <> " pillar.item " <> key <> " delimiter='/'")
   ("jq '.return[0]'")
   empty
 
-resultCmd :: Text -> Maybe Text -> Maybe Natural -> Text -> PepCmd
-resultCmd _ Nothing (Just 0) _ = panic "NUM should be > 0"
-resultCmd pgUrl Nothing (Just num) user = PepCmd
+resultCmd :: Text -> Bool -> Maybe Text -> Maybe Natural -> Text -> PepCmd
+resultCmd _ _ Nothing (Just 0) _ = panic "NUM should be > 0"
+resultCmd pgUrl _ Nothing (Just num) user = PepCmd
   (format ("curl -f -s -H \"Range: 0-"%d%"\" \""%s%"?user=eq."%s%"&order=jid.desc\"") (num - 1) pgUrl user)
   "jq -C '.'"
   empty
-resultCmd pgUrl (Just jobid) Nothing _ = PepCmd
-  ("curl -f -s -H \"Accept: application/vnd.pgrst.object+json\" \"" <> pgUrl <> "?select=ret&jid=eq." <> jobid <> "\"" )
+resultCmd pgUrl raw (Just jobid) Nothing _ = PepCmd
+  ("curl -s " <> (if raw then mempty else "-f -H \"Accept: application/vnd.pgrst.object+json\" ") <> "\"" <> pgUrl <> "?select=ret&jid=eq." <> jobid <> "\"" )
   [r|
     jq -r '(.ret | if .return.retcode == 0 then "\u001B[1;32mSUCCESS\u001B[0m for " else "\u001B[1;31mFAILURE\u001B[0m for " end + .id + ":", if .return.stderr != "" then .return.stdout + "\n******\n" + .return.stderr + "\n" else .return.stdout + "\n" end)'
   |]
   empty
-resultCmd _ Nothing Nothing _ = panic ("The impossible happened. The option parser should void the case")
-resultCmd _ (Just _) (Just _) _ = panic ("The impossible happened. The option parser should void the case")
+resultCmd _ _ Nothing Nothing _ = panic'
+resultCmd _ _ (Just _) (Just _) _ = panic'

@@ -4,4 +4,3 @@ result
 stack.yaml
 dist/
 default.nix
-doc/

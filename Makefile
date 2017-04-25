@@ -7,16 +7,16 @@ configure:
 	@nix-shell --run "cabal configure"
 
 local:
-	@cabal install
+	@nix-shell --run "cabal install"
 
-doc: doc/cicd-shell.html doc/cicd-shell.pdf
+doc: share/doc/cicd-shell.html share/doc/cicd-shell.pdf
 
-doc/cicd-shell.html: README.adoc
+share/doc/cicd-shell.html: README.adoc
 	@nix-shell -p asciidoctor --command "asciidoctor $< -o $@"
 
-doc/cicd-shell.pdf: README.adoc
+share/doc/cicd-shell.pdf: README.adoc
 	@nix-shell -p asciidoctor --command "asciidoctor -r asciidoctor-pdf -b pdf $< -o $@"
 
 clean:
 	@nix-shell --run "cabal clean"
-	rm -f doc/*.*
+	rm -f share/doc/*.*

@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Shell.Option where
 
 import           Turtle.Options
@@ -5,12 +6,23 @@ import           Turtle.Options
 import           Shell.Type
 import           Shell.Prelude
 
-data ResultArg
+data ResultArg = ResultArg Bool ResultType deriving Show
+
+data ResultType
   = ResultJob Text
   | ResultNum Natural
   deriving (Show)
 
 data Command
+  = ZoneCommand Zone SubCommand
+  | HelpCommand HelpType
+
+data HelpType
+  = HtmlHelp
+  | ModListHelp
+  | ModHelp Text
+
+data SubCommand
   = Console
   | Data DataArg
   | Facts FactArg
@@ -31,19 +43,18 @@ data OrchArg =
   deriving Show
 
 data DataArg =
-  DataArg (Maybe Text) Arg -- ^ Query config data optionally with a key
+  DataArg (Maybe Text) AcrossArg -- ^ Query config data optionally with a key
   deriving Show
 
 data FactArg
-  = FactArg Bool Bool Arg -- ^ Query facts with the across all stacks and disconnect flags
+  = FactArg Bool AcrossArg -- ^ disconnect & across flags
   deriving Show
 
 data AcrossArg
   = AcrossArg Bool Arg -- ^ Query with the across all stacks flag
   deriving Show
 
-data Options
-  = Options Zone Command
+data Options = Options Command
 
 data Arg
   = Arg
@@ -51,7 +62,11 @@ data Arg
   , _node     :: Maybe Text
   , _subgroup :: Maybe Text
   , _stack    :: Maybe Text
+  , _raw      :: Bool
+  , _verbose  :: Bool
   } deriving Show
+
+makeLenses ''Arg
 
 argParser :: Parser Arg
 argParser
@@ -60,6 +75,17 @@ argParser
   <*> optional (optText "node" 'n' "Target node")
   <*> optional (optText "subgroup" 'g' "Target subgroup")
   <*> optional (optText "stack" 's' "Target stack/hostgroup")
+  <*> rawParser
+  <*> verboseParser
+
+rawParser :: Parser Bool
+rawParser = switch "raw" 'r' "Raw output (no jq)"
+
+verboseParser :: Parser Bool
+verboseParser = switch "verbose" 'v' "Display the executed command"
+
+resultParser
+  = ResultArg <$> rawParser <*> (ResultNum <$> optNatural "Num" 'n' "Number of results to display" <|> ResultJob <$> optText "job" 'j' "Job id")
 
 optNatural :: ArgName -> ShortName -> Optional HelpMessage -> Parser Natural
 optNatural = optRead
@@ -69,8 +95,14 @@ serviceParse "status" = Just ServiceStatus
 serviceParse "restart" = Just ServiceRestart
 serviceParse _        = Nothing
 
-commandParser :: Parser Command
-commandParser =
+helpTypeParser :: Parser HelpType
+helpTypeParser =
+      HtmlHelp <$ subcommand "html" "Open the guide in a browser" (pure ())
+  <|> ModListHelp <$ subcommand "modules" "Output all possible salt execution modules" (pure ())
+  <|> ModHelp <$> subcommand "mod" "Help about a specific salt module" (argText "name" "Module name")
+
+subCommandParser :: Parser SubCommand
+subCommandParser =
       Console     <$  subcommand "console" "Open the cicd console" (pure ())
   <|> Stats       <$  subcommand "stats" "Stats (special permission required)" (pure ())
   <|> Data        <$> subcommand "data" "Return configuration data for a specific property" data_parser
@@ -81,19 +113,23 @@ commandParser =
   <|> Service     <$> subcommand "service" "Service management for a specific node" status_parser
   <|> Runpuppet   <$> subcommand "runpuppet" "Apply puppet configuration" argParser
   <|> Sync        <$> subcommand "sync" "Sync data from master to nodes" across_parser
-  <|> Result      <$> subcommand "result" "Display the results of the most recent jobs executed by the user or for a specific id" result_parser
-  <|> GenTags     <$ subcommand "gentags" "Generate node completion file" (pure ())
+  <|> Result      <$> subcommand "result" "Display the results of the most recent jobs executed by the user or for a specific id" resultParser
+  <|> GenTags     <$  subcommand "gentags" "Generate node completion file" (pure ())
   where
-    result_parser = ResultNum <$> optNatural "Num" 'n' "Number of results to display" <|>  ResultJob <$> optText "job" 'j' "Job id"
-    data_parser   = DataArg <$> optional (optText "key" 'k' "Property to look up for" ) <*> argParser
-    fact_parser   = FactArg <$> switch "all" 'a' "Target whole the known stacks" <*> switch "down" 'd' "Query down node" <*> argParser
+    data_parser   = DataArg <$> optional (optText "key" 'k' "Property to look up for" ) <*> across_parser
+    fact_parser   = FactArg <$> switch "down" 'd' "Query down node" <*> across_parser
     across_parser = AcrossArg <$> switch "all" 'a' "Target whole the known stacks" <*> argParser
-    orch_parser   = OrchArg <$> argText "cmd" "Command to run" <*> optional (optText "stack" 's' "Target stack/hostgroup" )
+    orch_parser   = OrchArg <$> argText "cmd" "SubCommand to run" <*> optional (optText "stack" 's' "Target stack/hostgroup" )
     status_parser = (,,) <$> arg serviceParse "action" "Use 'status' or 'restart'" <*> (ServiceName <$> argText "service" "Service name") <*> argParser
+
+commandParser :: Parser Command
+commandParser =
+      HelpCommand <$> subcommand "help" "Help utilities" helpTypeParser
+  <|> ZoneCommand . Zone <$> argText "zone" "ZONE (dev|testing|staging|prod)" <*> subCommandParser
 
 parser :: Parser Options
 parser =
-      Options . Zone <$> argText "zone" "ZONE such as dev, staging, testing or prod" <*> commandParser
+      Options <$> commandParser
 
 -- -- | One or none.
   -- let nix_file = format (s%"/"%s%".nix") projectDir zone

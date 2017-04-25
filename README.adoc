@@ -15,42 +15,47 @@ endif::env-devbox[]
 
 ## Setup
 
-To use the `cicd` command, you need to fill in the https://github.com/CIRB/devbox/blob/master/user/config/shell[configuration file] located in `/vagrant/config/shell`.
+To use the `cicd shell`, you need to fill in the https://github.com/CIRB/devbox/blob/master/user/config/shell[configuration file] located in `/vagrant/config/shell`.
 
 ifndef::env-devbox[]
-The cicd shell is installed with the devbox. Please read the section __Install_outside_the_devbox__ if you need to install it on a different system.
+The shell is installed with the devbox. Please read the section __Install_outside_the_devbox__ if you need to install it on a different system.
 endif::env-devbox[]
 
 ## Usage
 
-The name of the command line utility is #cicd#. The first mandatory position argument is the zone (dev, testing, staging or prod). The general scheme of the command line is:
+The name of the command line utility is #cicd#. The first mandatory position argument is the zone (dev, testing, staging or prod).
 
+.General scheme of the command line
+[%autofit]
 ```
-cicd ZONE facts        [ROLE] [-n NODE] [-g GROUP] [-s STACK] [-a --all] [-d --down]
-cicd ZONE runpuppet    [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE runpuppet    [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE ping         [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE data [-k KEY][ROLE] [-n NODE] [-g GROUP] [-s STACK]
-cicd ZONE orch         CMD                         [-s STACK]
-cicd ZONE service      ACTION SERVICE [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE facts                  [ROLE] [-n NODE] [-g GROUP] [-s STACK] [--all] [--down]
+cicd ZONE data   [-k KEY]        [ROLE] [-n NODE] [-g GROUP] [-s STACK] [--all]
+cicd ZONE runpuppet              [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE service ACTION SERVICE [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+cicd ZONE orch    CMD                                        [-s STACK]
+cicd ZONE result [-j JID] [-n NUM] [--raw]
 cicd ZONE console
+
+cicd help (html | modules | mod MOD)
 ```
 
-Here is the help as display by invoking #cicd# alone:
+The auto-completion feature helps you to complete the command. You can also request the help at each level:
 
+.General help output for #cicd#
 ....
 → cicd
-CICD command line utility (v1.1.1)
+CICD - command line utility (v1.2.0)
 
-Usage: cicd ZONE (console | stats | data | orch | facts | ping | du | service
-              runpuppet | sync | result | gentags)
+Usage: cicd (help | ZONE (console | stats | data | orch | facts | ping | du |
+            service | runpuppet | sync | result | gentags))
 
 Available options:
   -h,--help                Show this help text
-  ZONE                     ZONE such as dev, staging, testing or prod
+  ZONE                     ZONE (dev|testing|staging|prod)
 
 Available commands:
-  console                  Open the specialized salt console
+  help                     Help utilities
+  console                  Open the cicd console
   stats                    Stats (special permission required)
   data                     Return configuration data for a specific property
   orch                     Run an orchestration command on the infrastructure
@@ -60,13 +65,28 @@ Available commands:
   service                  Service management for a specific node
   runpuppet                Apply puppet configuration
   sync                     Sync data from master to nodes
-  result                   Display the results of jobs executed by the user
+  result                   Output command results stored in the database
   gentags                  Generate node completion file
 ....
 
-You can request the help at each level. For instance:
+.Help output for #facts#
 ```
 → cicd staging facts -h
+Usage: cicd facts [-d|--down] [-a|--all] [ROLE] [-n|--node NODE]
+                  [-g|--subgroup SUBGROUP] [-s|--stack STACK] [-r|--raw]
+                  [-v|--verbose]
+  Return essential facts about nodes
+
+Available options:
+  -d,--down                Query down node
+  -a,--all                 Target whole the known stacks
+  ROLE                     Role name maybe prefixed by a subgroup ('subgroup.role')
+  -n,--node NODE           Target node
+  -g,--subgroup SUBGROUP   Target subgroup
+  -s,--stack STACK         Target stack/hostgroup
+  -r,--raw                 Raw output (no jq)
+  -v,--verbose             Display the executed command
+  -h,--help                Show this help text
 ```
 
 [NOTE]
@@ -81,7 +101,7 @@ You can request the help at each level. For instance:
 
 The command displays a subset of important facts (static information) about your nodes such as the `fqdn`, `ip`, `os`, `role`, ...
 
-You can toggle the `facts` query to target all hostgroups/stacks with the `-a/ --all` flag. Here is how to get all facts for all slaves in every stack:
+You can toggle the `facts` query to target all hostgroups/stacks with the `--all` flag. Here is how to get all facts for all slaves in every stack:
 
 ```
 λ ~ → cicd prod facts jenkins.slave --all
@@ -102,8 +122,8 @@ You can toggle the `facts` query to target all hostgroups/stacks with the `-a/ -
   "hostgroup": "iam",
   "subgroup": "jenkins",
   "role": "slave"
-  "puppet run": "Wed Dec  7 15:23:00 CET 2016",
-  "jenkins job": "22"
+  "puppet run": "Tue Apr 18 14:26:15 CEST 2017",
+  "jenkins job": "633"
 }
 ...
 ```
@@ -176,6 +196,8 @@ You can view the result of a `runpuppet` by using the provided job id (`jid`)
 ```
 In case the result is not yet available the command will automatically be retry 12 times (3 min).
 
+IMPORTANT: The pretty printer is tailored to work on jobid coming from `icon:terminal[] runpuppet`. For all other JIDs, you should add the `--raw` flag.
+
 You can also ask for the last n executed commands:
 ```
 → cicd testing result -n 2
@@ -225,7 +247,7 @@ $ pep -L fqdn1,fqdn2 --client=local_async puppetutils.run_agent <2>
 ```
 <1> #-G# means `grain` target (__grains__ is the salt terminology for facts).
 <2> #-L# means `list` target +
-#local_asyn# means the :autofit-option:command is asynchronous and does not display its result (just a jid)
+#local_asyn# means the command is asynchronous and does not display its result (just a jid)
 
 [TIP]
 ====
@@ -235,14 +257,34 @@ $ pep -L fqdn1,fqdn2 --client=local_async puppetutils.run_agent <2>
 
 ### icon:terminal[] orch
 
-Salt can run multiple commands as well using the orchestrate runner. The orchestration is executed on the salt master to allow inter minion requisites, like ordering the application of states on different minions that must not happen simultaneously, or for halting the state run on all minions if a minion fails one of its states (more about this topic can be found https://docs.saltstack.com/en/latest/topics/tutorials/states_pt5.html#orchestrate-runner[in the saltstack website]).
+Salt is able to orchestrate deployment scenarios across machines.
 
-The orchestration should be defined in the orch folder. You will find some examples http://stash.cirb.lan/projects/MIDDLEWARE/repos/salt-stack-middleware/browse/orch?at=refs%2Fheads%2Fmiddleware[here].
+The orchestration is executed on the salt master to allow inter minion requisites, like ordering the application of states on different minions that must not happen simultaneously, or for halting the state run on all minions if a minion fails one of its states (more about this topic can be found https://docs.saltstack.com/en/latest/topics/tutorials/states_pt5.html#orchestrate-runner[in the saltstack website]).
 
-Orchestrate commands can be started using:
+To write some specific orchestration scripts for your stack, you need to request a salt stack repository. For `bos` it would be named `salt-stack-bos`. This process is similar to the creation of `puppet-stack-bos` . The scripts should sit in the `orch` folder. You can find some examples http://stash.cirb.lan/projects/MIDDLEWARE/repos/salt-stack-middleware/browse/orch?at=refs%2Fheads%2Fmiddleware[here].
+
+Orchestrate commands are executed with:
 
 ```
 → cicd testing orch CMD
+```
+
+### icon:terminal[] help
+
+The `help` subcommand will open the guide in a browser, display the list of available salt module and show the help for each of them.
+
+```
+→ cicd help
+Usage: cicd help (html | modules | mod)
+  Help utilities
+
+Available options:
+  -h,--help                Show this help text
+
+Available commands:
+  html                     Open the guide in a browser
+  modules                  Output all possible salt execution modules
+  mod                      Help about a specific salt module
 ```
 
 ## Authentication
@@ -283,5 +325,11 @@ To activate `nix` in your shell, add the following line in your `.bash_profile`:
 source ~/.nix-profile/etc/profile.d/nix.sh'
 ```
 ====
+
+:leveloffset: +1
+
+include::CHANGELOG.adoc[]
+
+:leveloffset: -1
 
 endif::env-devbox[]
