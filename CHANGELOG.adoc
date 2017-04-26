@@ -1,7 +1,7 @@
 # Changelog
 
 
-## v1.2, (not yet released)
+## v1.2, 26/04/2017
 
 - add
 * `cicd help html`
@@ -13,7 +13,7 @@
 - increase default timeout (up to 3min) for synchronous `runpuppet`
 - provide completion for salt modules in the console
 
-## v1.1, 21/04/2017
+## v1.1, 19/04/2017
 
 - `retries` when a command fails
 - fix issues with the `result` subcommand output
