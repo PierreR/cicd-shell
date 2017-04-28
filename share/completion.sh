@@ -14,7 +14,7 @@ _pep () {
             return 0
             ;;
         *)
-            local topics=$(cat "$HOME/.local/share/cicd/.topics")
+            local topics=$(cat "$HOME/.local/share/cicd/.modlist")
             COMPREPLY=( $(compgen -W "$topics" -- $cur ) )
             return 0
             ;;
