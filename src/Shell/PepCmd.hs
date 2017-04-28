@@ -92,11 +92,11 @@ orchCmd cmd stack = PepCmd
 
 runpuppetCmd :: Target -> PepCmd
 runpuppetCmd target@Target {_node = Nothing} = PepCmd
-  ( pepperCompoundTarget False target <> "--client=local_async puppetutils.run_agent")
+  ( pepperCompoundTarget False target <> "--client=local_async puppetutils.run_agent zone=" <> target^.zone <> " hostgroup=" <> target^.stack)
   "jq '.return'"
   (Just $ CmdMsg True ("Run puppet on " <> Text.intercalate "." (catMaybes [target^.role, target^.subgroup] <> [target^.stack, target^.zone])))
-runpuppetCmd Target {_node = Just n} = PepCmd
-  ( "pepper " <> n <> " -t 180 puppetutils.run_agent")
+runpuppetCmd target@Target {_node = Just n} = PepCmd
+  ( "pepper " <> n <> " -t 240 puppetutils.run_agent zone=" <> target^.zone <> " hostgroup=" <> target^.stack)
   [r|
     jq -r '.return[] |
     to_entries |
