@@ -169,17 +169,17 @@ runCommand z (Verbose verbose) (Raw raw) cmd =  do
 run :: Options -> Shell ExitCode
 run = \case
 
-  HelpCommand HtmlHelp -> do
+  DocCommand HtmlDoc -> do
     datadir <- dataDir
     browser <- fromMaybe "firefox" <$> need "BROWSER"
     let help_fp = Text.pack (datadir <> "/share/doc/cicd-shell.html")
     proc browser
          [help_fp] empty
-  HelpCommand ModListHelp -> do
+  DocCommand ModListDoc -> do
     localdir <- localDir
     let fpath = format (fp%"/.modlist.json") localdir
     proc "jq" [ ".", fpath ] empty
-  HelpCommand (ModHelp mod) -> do
+  DocCommand (ModDoc mod) -> do
     localdir <- localDir
     let fpath = format (fp%"/.modhelp.json") localdir
     proc "jq" [ "-r", (".[\"" <> mod <> "\"]"), fpath ] empty

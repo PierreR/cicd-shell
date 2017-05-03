@@ -14,8 +14,8 @@ _pep () {
             return 0
             ;;
         *)
-            local topics=$(cat "$HOME/.local/share/cicd/.modlist")
-            COMPREPLY=( $(compgen -W "$topics" -- $cur ) )
+            local mods=$(cat "$HOME/.local/share/cicd/.modlist")
+            COMPREPLY=( $(compgen -W "$mods" -- $cur ) )
             return 0
             ;;
     esac
@@ -33,6 +33,10 @@ _cmdalias () {
             ;;
         data)
             COMPREPLY=( $(compgen -W "-s -k -n -g -h" -- "$cur" ) )
+            return 0
+            ;;
+        doc)
+            COMPREPLY=( $(compgen -W "html mod modules" -- "$cur" ) )
             return 0
             ;;
         facts)
@@ -55,6 +59,11 @@ _cmdalias () {
             COMPREPLY=( $(compgen -W "status restart" -- "$cur" ) )
             return 0
             ;;
+        "mod")
+            local mods=$(cat "$HOME/.local/share/cicd/.modlist")
+            COMPREPLY=( $(compgen -W "$mods" -- $cur ) )
+            return 0
+            ;;
         "-n")
             local nodes=$(cat "$HOME/.local/share/cicd/.nodes-${zone}")
             COMPREPLY=( $(compgen -W "$nodes" -- $cur ) )
@@ -68,7 +77,7 @@ _cmdalias () {
 
     ret=0;
 } &&
-complete -F _cmdalias data runpuppet du facts result service sync ping
+complete -F _cmdalias data runpuppet du facts result service sync ping doc
 complete -F _pep pep
 
 # end

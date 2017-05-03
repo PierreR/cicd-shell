@@ -36,7 +36,7 @@ cicd ZONE orch    CMD                                        [-s STACK]
 cicd ZONE result [-j JID] [-n NUM] [--raw]
 cicd ZONE console
 
-cicd help (html | modules | mod MOD)
+cicd doc (html | modules | mod MOD)
 ```
 
 The auto-completion feature helps you to complete the command. You can also request the help at each level:
@@ -274,17 +274,17 @@ Orchestrate commands are executed with:
 The `help` subcommand will open the guide in a browser, display the list of available salt module and show the help for each of them.
 
 ```
-→ cicd help
-Usage: cicd help (html | modules | mod)
-  Help utilities
+→ cicd doc
+Usage: cicd doc (html | modules | mod)
+  Documentation utilities
 
 Available options:
   -h,--help                Show this help text
 
 Available commands:
-  html                     Open the guide in a browser
+  html                     Open the documentation in a browser
   modules                  Output all possible salt execution modules
-  mod                      Help about a specific salt module
+  mod                      Doc about a specific salt module
 ```
 
 ## Authentication

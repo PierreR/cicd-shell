@@ -1,6 +1,11 @@
 # Changelog
 
 
+## v1.3, /05/2017
+
+### changes
+- `cicd help` is now `cicd doc`
+
 ## v1.2, 26/04/2017
 
 - add

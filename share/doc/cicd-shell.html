@@ -485,8 +485,9 @@ mark {
 <li><a href="#_install_outside_the_devbox">Install outside the devbox</a></li>
 <li><a href="#_changelog">Changelog</a>
 <ul class="sectlevel2">
-<li><a href="#_v1_2_not_yet_released">v1.2, (not yet released)</a></li>
-<li><a href="#_v1_1_21_04_2017">v1.1, 21/04/2017</a></li>
+<li><a href="#_v1_3_05_2017">v1.3, /05/2017</a></li>
+<li><a href="#_v1_2_26_04_2017">v1.2, 26/04/2017</a></li>
+<li><a href="#_v1_1_19_04_2017">v1.1, 19/04/2017</a></li>
 </ul>
 </li>
 </ul>
@@ -528,7 +529,7 @@ cicd ZONE orch    CMD                                        [-s STACK]
 cicd ZONE result [-j JID] [-n NUM] [--raw]
 cicd ZONE console
 
-cicd help (html | modules | mod MOD)</code></pre>
+cicd doc (html | modules | mod MOD)</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -896,17 +897,17 @@ $ pep -L fqdn1,fqdn2 --client=local_async puppetutils.run_agent <i class="conum"
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>→ cicd help
-Usage: cicd help (html | modules | mod)
-  Help utilities
+<pre class="highlight"><code>→ cicd doc
+Usage: cicd doc (html | modules | mod)
+  Documentation utilities
 
 Available options:
   -h,--help                Show this help text
 
 Available commands:
-  html                     Open the guide in a browser
+  html                     Open the documentation in a browser
   modules                  Output all possible salt execution modules
-  mod                      Help about a specific salt module</code></pre>
+  mod                      Doc about a specific salt module</code></pre>
 </div>
 </div>
 </div>
@@ -989,7 +990,20 @@ As an example to access the machines of the <code>middleware</code> hostgroup, y
 <h2 id="_changelog">Changelog</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_v1_2_not_yet_released">v1.2, (not yet released)</h3>
+<h3 id="_v1_3_05_2017">v1.3, /05/2017</h3>
+<div class="sect3">
+<h4 id="_changes">changes</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><code>cicd help</code> is now <code>cicd doc</code></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_v1_2_26_04_2017">v1.2, 26/04/2017</h3>
 <div class="ulist">
 <ul>
 <li>
@@ -1027,7 +1041,7 @@ As an example to access the machines of the <code>middleware</code> hostgroup, y
 </div>
 </div>
 <div class="sect2">
-<h3 id="_v1_1_21_04_2017">v1.1, 21/04/2017</h3>
+<h3 id="_v1_1_19_04_2017">v1.1, 19/04/2017</h3>
 <div class="ulist">
 <ul>
 <li>

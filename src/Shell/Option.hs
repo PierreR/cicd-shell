@@ -15,12 +15,12 @@ data ResultType
 
 data Options
   = ZoneCommand Zone SubCommand
-  | HelpCommand HelpType
+  | DocCommand DocType
 
-data HelpType
-  = HtmlHelp
-  | ModListHelp
-  | ModHelp Text
+data DocType
+  = HtmlDoc
+  | ModListDoc
+  | ModDoc Text
 
 data SubCommand
   = Console
@@ -93,11 +93,11 @@ serviceParse "status" = Just ServiceStatus
 serviceParse "restart" = Just ServiceRestart
 serviceParse _        = Nothing
 
-helpTypeParser :: Parser HelpType
-helpTypeParser =
-      HtmlHelp <$ subcommand "html" "Open the guide in a browser" (pure ())
-  <|> ModListHelp <$ subcommand "modules" "Output all possible salt execution modules" (pure ())
-  <|> ModHelp <$> subcommand "mod" "Help about a specific salt module" (argText "name" "Module name")
+docTypeParser :: Parser DocType
+docTypeParser =
+      HtmlDoc <$ subcommand "html" "Open the documentation in a browser" (pure ())
+  <|> ModListDoc <$ subcommand "modules" "Output all possible salt execution modules" (pure ())
+  <|> ModDoc <$> subcommand "mod" "Doc about a specific salt module" (argText "name" "Module name")
 
 subCommandParser :: Parser SubCommand
 subCommandParser =
@@ -122,7 +122,7 @@ subCommandParser =
 
 optionParser :: Parser Options
 optionParser =
-      HelpCommand <$> subcommand "help" "Help utilities" helpTypeParser
+      DocCommand <$> subcommand "doc" "Documentation utilities" docTypeParser
   <|> ZoneCommand . Zone <$> argText "zone" "ZONE (dev|testing|staging|prod)" <*> subCommandParser
 
 -- -- | One or none.
