@@ -1,5 +1,5 @@
 name:                cicd-shell
-version:             1.2.2
+version:             1.2.3
 homepage:            ssh://git@stash.cirb.lan:7999/cicd/salt-shell.git
 license:             BSD3
 build-type:          Simple

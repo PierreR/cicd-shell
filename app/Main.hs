@@ -133,7 +133,7 @@ initHelp = do
 
 runCommand :: Zone -> Verbose -> Raw -> PepCmd -> Shell ExitCode
 runCommand z (Verbose verbose) (Raw raw) cmd =  do
-  shell "ping -c1 stash.cirb.lan > /dev/null 2>&1" empty .||. die "cannot connect to stash.cirb.lan, check your connection"
+  void $ shell "ping -c1 stash.cirb.lan > /dev/null 2>&1" empty .||. die "cannot connect to stash.cirb.lan, check your connection"
   initTags z
   initHelp
   maybe (pure ()) interactWith (cmd ^. beforeMsg)
@@ -166,48 +166,57 @@ runCommand z (Verbose verbose) (Raw raw) cmd =  do
           pure $ ExitFailure 1
 
 
--- help options
-run (Options (HelpCommand HtmlHelp)) = do
-  datadir <- dataDir
-  browser <- fromMaybe "firefox" <$> need "BROWSER"
-  let help_fp = Text.pack (datadir <> "/share/doc/cicd-shell.html")
-  proc browser
-       [help_fp] empty
+run :: Options -> Shell ExitCode
+run = \case
 
--- help commands are running on the dev saltmaster where permission can be loosen
-run (Options (HelpCommand ModListHelp)) = do
-  localdir <- localDir
-  let fpath = format (fp%"/.modlist.json") localdir
-  proc "jq" [ ".", fpath ] empty
+  HelpCommand HtmlHelp -> do
+    datadir <- dataDir
+    browser <- fromMaybe "firefox" <$> need "BROWSER"
+    let help_fp = Text.pack (datadir <> "/share/doc/cicd-shell.html")
+    proc browser
+         [help_fp] empty
+  HelpCommand ModListHelp -> do
+    localdir <- localDir
+    let fpath = format (fp%"/.modlist.json") localdir
+    proc "jq" [ ".", fpath ] empty
+  HelpCommand (ModHelp mod) -> do
+    localdir <- localDir
+    let fpath = format (fp%"/.modhelp.json") localdir
+    proc "jq" [ "-r", (".[\"" <> mod <> "\"]"), fpath ] empty
 
-run (Options (HelpCommand (ModHelp mod))) = do
-  localdir <- localDir
-  let fpath = format (fp%"/.modhelp.json") localdir
-  proc "jq" [ "-r", (".[\"" <> mod <> "\"]"), fpath ] empty
-
--- prohibited options
-run (Options (ZoneCommand _ (Data (DataArg Nothing (AcrossArg False (Arg Nothing Nothing Nothing _ _ _)))))) =
-  die "Running data on all nodes within a stack without providing a key is currently prohibited"
-run (Options (ZoneCommand _ (Data (DataArg Nothing (AcrossArg True _))))) =
-  die "Running data across all stacks without providing a key is currently prohibited"
-
--- valid options
-run (Options (ZoneCommand zone Console))                                       = dataDir>>= runCommand zone (Verbose False) (Raw True ) . consoleCmd zone
-run (Options (ZoneCommand zone Stats))                                         = runCommand zone (Verbose False) (Raw False) statCmd
-run (Options (ZoneCommand zone GenTags))                                       = localDir >>= runCommand zone (Verbose False) (Raw False) . genTagsCmd zone
-run (Options (ZoneCommand zone (Runpuppet arg)))                               = getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . runpuppetCmd
-run (Options (ZoneCommand zone (Ping (AcrossArg across arg))))                 = getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . pingCmd across
-run (Options (ZoneCommand zone (Facts (FactArg down (AcrossArg across arg))))) = getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . factCmd (puppetdbUrl zone) across down
-run (Options (ZoneCommand zone (Sync (AcrossArg across arg))))                 = getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . syncCmd across
-run (Options (ZoneCommand zone (Data (DataArg key (AcrossArg across arg)))))   = getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . dataCmd across key
-run (Options (ZoneCommand zone (Du arg)))                                      = getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . duCmd
-run (Options (ZoneCommand zone (Service (action, name, arg))))                 = getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . serviceCmd action name
-run (Options (ZoneCommand zone (Orchestrate (OrchArg cmd s))))                 = getStack s >>= runCommand zone (Verbose False) (Raw True) . orchCmd cmd
-run (Options (ZoneCommand zone (Result (ResultArg raw (ResultNum n)))))        = userId >>= runCommand zone (Verbose False) raw . resultCmd (pgUrl zone) raw Nothing (Just n)
-run (Options (ZoneCommand zone (Result (ResultArg raw (ResultJob j)))))        = userId >>= runCommand zone (Verbose False) raw . resultCmd (pgUrl zone) raw (Just j) Nothing
+  ZoneCommand zone Stats ->
+    runCommand zone (Verbose False) (Raw False) statCmd
+  ZoneCommand zone Console ->
+    dataDir >>= runCommand zone (Verbose False) (Raw True) . consoleCmd zone
+  ZoneCommand zone GenTags ->
+    localDir >>= runCommand zone (Verbose False) (Raw False) . genTagsCmd zone
+  ZoneCommand zone (Runpuppet arg) ->
+    getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . runpuppetCmd
+  ZoneCommand zone (Ping (AcrossArg across arg)) ->
+    getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . pingCmd across
+  ZoneCommand zone (Sync (AcrossArg across arg)) ->
+    getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . syncCmd across
+  ZoneCommand zone (Facts (FactArg down (AcrossArg across arg))) ->
+    getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . factCmd (puppetdbUrl zone) across down
+  ZoneCommand _ (Data (DataArg Nothing (AcrossArg False (Arg Nothing Nothing Nothing _ _ _)))) ->
+    die "Running data on all nodes within a stack without providing a key is currently prohibited"
+  ZoneCommand _ (Data (DataArg Nothing (AcrossArg True _))) ->
+    die "Running data across all stacks without providing a key is currently prohibited"
+  ZoneCommand zone (Data (DataArg key (AcrossArg across arg))) ->
+    getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . dataCmd across key
+  ZoneCommand zone (Du arg) ->
+    getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . duCmd
+  ZoneCommand zone (Service (action, name, arg)) ->
+    getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . serviceCmd action name
+  ZoneCommand zone (Orchestrate (OrchArg cmd s)) ->
+    getStack s >>= runCommand zone (Verbose False) (Raw True) . orchCmd cmd
+  ZoneCommand zone (Result (ResultArg raw (ResultNum n))) ->
+    userId >>= runCommand zone (Verbose False) raw . resultCmd (pgUrl zone) raw Nothing (Just n)
+  ZoneCommand zone (Result (ResultArg raw (ResultJob j))) ->
+    userId >>= runCommand zone (Verbose False) raw . resultCmd (pgUrl zone) raw (Just j) Nothing
 
 main :: IO ()
-main = sh $ options (fromString ("CICD - command line utility (v" <> version <> ")")) parser >>= run
+main = sh $ options (fromString ("CICD - command line utility (v" <> version <> ")")) optionParser >>= run
 
 interactWith (CmdMsg False msg) =
   liftIO $ Text.putStrLn msg

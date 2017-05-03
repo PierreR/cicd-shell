@@ -13,7 +13,7 @@ data ResultType
   | ResultNum Natural
   deriving (Show)
 
-data Command
+data Options
   = ZoneCommand Zone SubCommand
   | HelpCommand HelpType
 
@@ -53,8 +53,6 @@ data FactArg
 data AcrossArg
   = AcrossArg Bool Arg -- ^ Query with the across all stacks flag
   deriving Show
-
-data Options = Options Command
 
 data Arg
   = Arg
@@ -122,14 +120,10 @@ subCommandParser =
     orch_parser   = OrchArg <$> argText "cmd" "SubCommand to run" <*> optional (optText "stack" 's' "Target stack/hostgroup" )
     status_parser = (,,) <$> arg serviceParse "action" "Use 'status' or 'restart'" <*> (ServiceName <$> argText "service" "Service name") <*> argParser
 
-commandParser :: Parser Command
-commandParser =
+optionParser :: Parser Options
+optionParser =
       HelpCommand <$> subcommand "help" "Help utilities" helpTypeParser
   <|> ZoneCommand . Zone <$> argText "zone" "ZONE (dev|testing|staging|prod)" <*> subCommandParser
-
-parser :: Parser Options
-parser =
-      Options <$> commandParser
 
 -- -- | One or none.
   -- let nix_file = format (s%"/"%s%".nix") projectDir zone
