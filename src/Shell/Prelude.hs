@@ -3,7 +3,9 @@ module Shell.Prelude (
   , loopN, break, continue
 ) where
 
-import           Control.Lens              as Exports (makeLenses, strict, view)
+import           Control.Lens              as Exports (makeClassy,
+                                                       makeFieldsNoPrefix,
+                                                       makeLenses, strict, view)
 import           Control.Lens.Operators    as Exports hiding ((<.>))
 import           Control.Monad.Trans.Maybe
 import           Data.Optional             as Exports (Optional, Optional (Default, Specific))

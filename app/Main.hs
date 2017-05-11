@@ -1,22 +1,23 @@
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE RecordWildCards   #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE LambdaCase      #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Main where
 
-import qualified Data.Text                 as Text
-import qualified Data.Text.IO              as Text
-import qualified Data.Text.Lazy            as Text.Lazy
-import qualified Data.Version              (showVersion)
+import qualified Data.Text        as Text
+import qualified Data.Text.IO     as Text
+import qualified Data.Text.Lazy   as Text.Lazy
+import qualified Data.Version     (showVersion)
 import qualified Dhall
 import qualified Paths_cicd_shell
-import qualified System.Process            as Process
-import           Turtle                    hiding (FilePath, strict, view)
+import qualified System.Process   as Process
+import           Turtle           hiding (FilePath, strict, view)
 import qualified Turtle
 
-import           Shell.Option
+import           Shell.Cli
 import           Shell.PepCmd
-import           Shell.Type
 import           Shell.Prelude
+import           Shell.Type
 
 version = Data.Version.showVersion Paths_cicd_shell.version
 
@@ -191,29 +192,31 @@ run = \case
   ZoneCommand zone GenTags ->
     localDir >>= runCommand zone (Verbose False) (Raw False) . genTagsCmd zone
   ZoneCommand zone (Runpuppet arg) ->
-    getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . runpuppetCmd
+    getTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . runpuppetCmd
   ZoneCommand zone (Ping (AcrossArg across arg)) ->
-    getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . pingCmd across
+    getTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . pingCmd across
   ZoneCommand zone (Sync (AcrossArg across arg)) ->
-    getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . syncCmd across
+    getTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . syncCmd across
   ZoneCommand zone (Facts (FactArg down (AcrossArg across arg))) ->
-    getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . factCmd (puppetdbUrl zone) across down
-  ZoneCommand _ (Data (DataArg Nothing (AcrossArg False (Arg Nothing Nothing Nothing _ _ _)))) ->
+    getTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . factCmd (puppetdbUrl zone) across down
+  ZoneCommand _ (Data (DataArg Nothing (AcrossArg False (Arg Nothing Nothing Nothing _ _ )))) ->
     die "Running data on all nodes within a stack without providing a key is currently prohibited"
   ZoneCommand _ (Data (DataArg Nothing (AcrossArg True _))) ->
     die "Running data across all stacks without providing a key is currently prohibited"
   ZoneCommand zone (Data (DataArg key (AcrossArg across arg))) ->
-    getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . dataCmd across key
+    getTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . dataCmd across key
   ZoneCommand zone (Du arg) ->
-    getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . duCmd
+    getTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . duCmd
   ZoneCommand zone (Service (action, name, arg)) ->
-    getTarget zone arg >>= runCommand zone (arg^.verbose) (arg^.raw) . serviceCmd action name
+    getTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . serviceCmd action name
   ZoneCommand zone (Orchestrate (OrchArg cmd s)) ->
     getStack s >>= runCommand zone (Verbose False) (Raw True) . orchCmd cmd
   ZoneCommand zone (Result (ResultArg raw (ResultNum n))) ->
     userId >>= runCommand zone (Verbose False) raw . resultCmd (pgUrl zone) raw Nothing (Just n)
   ZoneCommand zone (Result (ResultArg raw (ResultJob j))) ->
     userId >>= runCommand zone (Verbose False) raw . resultCmd (pgUrl zone) raw (Just j) Nothing
+  ZoneCommand zone (Setfacts arg) ->
+    runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) (setfactsCmd arg)
 
 main :: IO ()
 main = sh $ options (fromString ("CICD - command line utility (v" <> version <> ")")) optionParser >>= run

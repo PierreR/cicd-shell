@@ -44,17 +44,17 @@ The auto-completion feature helps you to complete the command. You can also requ
 .General help output for #cicd#
 ....
 → cicd
-CICD - command line utility (v1.2.0)
+CICD - command line utility (v1.4.0)
 
-Usage: cicd (help | ZONE (console | stats | data | orch | facts | ping | du |
-            service | runpuppet | sync | result | gentags))
+Usage: cicd (doc | ZONE (console | stats | data | orch | facts | ping | du |
+            service | runpuppet | sync | setfacts | result | gentags))
 
 Available options:
   -h,--help                Show this help text
   ZONE                     ZONE (dev|testing|staging|prod)
 
 Available commands:
-  help                     Help utilities
+  doc                      Documentation utilities
   console                  Open the cicd console
   stats                    Stats (special permission required)
   data                     Return configuration data for a specific property
@@ -64,27 +64,27 @@ Available commands:
   du                       Return disk usage
   service                  Service management for a specific node
   runpuppet                Apply puppet configuration
-  sync                     Sync data from master to nodes
-  result                   Output command results stored in the database
+  sync                     Syncmetavar  data from master to nodes
+  setfacts                 Set/update the 4 base machine facts
+  result                   Display the results of the most recent jobs executed by the user or for a specific id
   gentags                  Generate node completion file
 ....
 
 .Help output for #facts#
 ```
 → cicd staging facts -h
-Usage: cicd facts [-d|--down] [-a|--all] [ROLE] [-n|--node NODE]
-                  [-g|--subgroup SUBGROUP] [-s|--stack STACK] [-r|--raw]
-                  [-v|--verbose]
+Usage: cicd facts [--down] [--all] [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+                  [--raw] [-v|--verbose]
   Return essential facts about nodes
 
 Available options:
-  -d,--down                Query down node
-  -a,--all                 Target whole the known stacks
   ROLE                     Role name maybe prefixed by a subgroup ('subgroup.role')
-  -n,--node NODE           Target node
-  -g,--subgroup SUBGROUP   Target subgroup
-  -s,--stack STACK         Target stack/hostgroup
-  -r,--raw                 Raw output (no jq)
+  -n NODE                  Target node
+  -g GROUP                 Target subgroup
+  -s STACK                 Target stack/hostgroup
+  --down                   Query down node
+  --all                    Target whole the known stacks
+  --raw                    Raw output (no jq)
   -v,--verbose             Display the executed command
   -h,--help                Show this help text
 ```
@@ -226,6 +226,19 @@ The command displays disk usage. Try:
 ```
 → cicd staging du -n svappcavl703.sta.srv.cirb.lan
 ```
+
+### icon:terminal[] setfacts
+
+To set (or update) the four basic `facts` on a specific machine:
+```
+→ cicd dev setfacts -n fqdn --subgroup jenkins --role slave --zone dev --hostgroup bas
+```
+
+You can of course update just one fact with:
+```
+→ cicd dev setfacts -n fqdn --subgroup jenkins2
+```
+NOTE: the `setfacts` subcommand always requires a target node (`-n`)
 
 ### icon:terminal[] console
 

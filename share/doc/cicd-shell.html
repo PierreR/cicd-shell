@@ -476,6 +476,7 @@ mark {
 <li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_result"><span class="icon"><i class="fa fa-terminal"></i></span> result</a></li>
 <li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_service"><span class="icon"><i class="fa fa-terminal"></i></span> service</a></li>
 <li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_du"><span class="icon"><i class="fa fa-terminal"></i></span> du</a></li>
+<li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_setfacts"><span class="icon"><i class="fa fa-terminal"></i></span> setfacts</a></li>
 <li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_console"><span class="icon"><i class="fa fa-terminal"></i></span> console</a></li>
 <li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_orch"><span class="icon"><i class="fa fa-terminal"></i></span> orch</a></li>
 <li><a href="#__span_class_icon_i_class_fa_fa_terminal_i_span_help"><span class="icon"><i class="fa fa-terminal"></i></span> help</a></li>
@@ -485,7 +486,8 @@ mark {
 <li><a href="#_install_outside_the_devbox">Install outside the devbox</a></li>
 <li><a href="#_changelog">Changelog</a>
 <ul class="sectlevel2">
-<li><a href="#_v1_3_05_2017">v1.3, /05/2017</a></li>
+<li><a href="#_v1_4_05_2017">v1.4, /05/2017</a></li>
+<li><a href="#_v1_3_08_05_2017">v1.3, 08/05/2017</a></li>
 <li><a href="#_v1_2_26_04_2017">v1.2, 26/04/2017</a></li>
 <li><a href="#_v1_1_19_04_2017">v1.1, 19/04/2017</a></li>
 </ul>
@@ -539,17 +541,17 @@ cicd doc (html | modules | mod MOD)</code></pre>
 <div class="title">General help output for <mark>cicd</mark></div>
 <div class="content">
 <pre>→ cicd
-CICD - command line utility (v1.2.0)
+CICD - command line utility (v1.4.0)
 
-Usage: cicd (help | ZONE (console | stats | data | orch | facts | ping | du |
-            service | runpuppet | sync | result | gentags))
+Usage: cicd (doc | ZONE (console | stats | data | orch | facts | ping | du |
+            service | runpuppet | sync | setfacts | result | gentags))
 
 Available options:
   -h,--help                Show this help text
   ZONE                     ZONE (dev|testing|staging|prod)
 
 Available commands:
-  help                     Help utilities
+  doc                      Documentation utilities
   console                  Open the cicd console
   stats                    Stats (special permission required)
   data                     Return configuration data for a specific property
@@ -559,8 +561,9 @@ Available commands:
   du                       Return disk usage
   service                  Service management for a specific node
   runpuppet                Apply puppet configuration
-  sync                     Sync data from master to nodes
-  result                   Output command results stored in the database
+  sync                     Syncmetavar  data from master to nodes
+  setfacts                 Set/update the 4 base machine facts
+  result                   Display the results of the most recent jobs executed by the user or for a specific id
   gentags                  Generate node completion file</pre>
 </div>
 </div>
@@ -568,19 +571,18 @@ Available commands:
 <div class="title">Help output for <mark>facts</mark></div>
 <div class="content">
 <pre class="highlight"><code>→ cicd staging facts -h
-Usage: cicd facts [-d|--down] [-a|--all] [ROLE] [-n|--node NODE]
-                  [-g|--subgroup SUBGROUP] [-s|--stack STACK] [-r|--raw]
-                  [-v|--verbose]
+Usage: cicd facts [--down] [--all] [ROLE] [-n NODE] [-g GROUP] [-s STACK]
+                  [--raw] [-v|--verbose]
   Return essential facts about nodes
 
 Available options:
-  -d,--down                Query down node
-  -a,--all                 Target whole the known stacks
   ROLE                     Role name maybe prefixed by a subgroup ('subgroup.role')
-  -n,--node NODE           Target node
-  -g,--subgroup SUBGROUP   Target subgroup
-  -s,--stack STACK         Target stack/hostgroup
-  -r,--raw                 Raw output (no jq)
+  -n NODE                  Target node
+  -g GROUP                 Target subgroup
+  -s STACK                 Target stack/hostgroup
+  --down                   Query down node
+  --all                    Target whole the known stacks
+  --raw                    Raw output (no jq)
   -v,--verbose             Display the executed command
   -h,--help                Show this help text</code></pre>
 </div>
@@ -814,6 +816,37 @@ The pretty printer is tailored to work on jobid coming from <code><span class="i
 </div>
 </div>
 <div class="sect2">
+<h3 id="__span_class_icon_i_class_fa_fa_terminal_i_span_setfacts"><span class="icon"><i class="fa fa-terminal"></i></span> setfacts</h3>
+<div class="paragraph">
+<p>To set (or update) the four basic facts on a specific machine:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>→ cicd dev setfacts -n fqdn --subgroup jenkins --role slave --zone dev --hostgroup bas</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can of course update just one fact with:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>→ cicd dev setfacts -n fqdn --subgroup jenkins2</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+the <code>setfacts</code> subcommand always requires a target node (<code>-n</code>)
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
 <h3 id="__span_class_icon_i_class_fa_fa_terminal_i_span_console"><span class="icon"><i class="fa fa-terminal"></i></span> console</h3>
 <div class="paragraph">
 <p>For longer session within a specific zone, you can save some typing by opening a <code>console</code> for that zone. Inside the console, you would omit the zone from the command line. Here is an example:</p>
@@ -990,7 +1023,17 @@ As an example to access the machines of the <code>middleware</code> hostgroup, y
 <h2 id="_changelog">Changelog</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_v1_3_05_2017">v1.3, /05/2017</h3>
+<h3 id="_v1_4_05_2017">v1.4, /05/2017</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>add `cicd ZONE setfacts --subgroup= --role=server --hostgroup=middleware</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_v1_3_08_05_2017">v1.3, 08/05/2017</h3>
 <div class="sect3">
 <h4 id="_changes">changes</h4>
 <div class="ulist">

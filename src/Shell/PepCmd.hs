@@ -1,5 +1,6 @@
 {-# LANGUAGE QuasiQuotes     #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Shell.PepCmd where
 
@@ -119,6 +120,22 @@ runpuppetCmd target@Target {_node = Just n} = PepCmd
     end )'
   |]
   empty
+
+setfactsCmd :: SetfactArg -> PepCmd
+setfactsCmd SetfactArg {..} = PepCmd
+  ("pepper '" <> _node <> "' cicd.set_facts " <> join_facts)
+  empty
+  empty
+
+  where
+    join_facts =
+      let join_values = Text.intercalate " " . catMaybes
+      in join_values
+           [ ("subgroup=" <>) <$> _subgroup
+           , ("role=" <>) <$> _role
+           , ("hostgroup=" <>) <$> _hostgroup
+           , ("zone=" <>) <$> _zone
+           ]
 
 syncCmd :: Bool -> Target -> PepCmd
 syncCmd across target@Target { _node = Nothing} = PepCmd
