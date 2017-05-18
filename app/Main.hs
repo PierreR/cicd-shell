@@ -10,7 +10,6 @@ import qualified Data.Text.Lazy   as Text.Lazy
 import qualified Data.Version     (showVersion)
 import qualified Dhall
 import qualified Paths_cicd_shell
-import qualified System.Process   as Process
 import           Turtle           hiding (FilePath, strict, view)
 import qualified Turtle
 
@@ -141,7 +140,7 @@ runCommand z (Verbose verbose) (Raw raw) cmd =  do
   nixshell <- nixShellCmd z (cmd^.pep)
   if verbose then putText (cmd^.pep) else pure()
   case cmd^.jq of
-    Default -> interactive nixshell
+    Default -> interactiveShell nixshell
     Specific jq -> do
       -- liftIO $ print jq
       e <- loopN 10 $ do
@@ -221,25 +220,13 @@ run = \case
 main :: IO ()
 main = sh $ options (fromString ("CICD - command line utility (v" <> version <> ")")) optionParser >>= run
 
-interactWith (CmdMsg False msg) =
-  liftIO $ Text.putStrLn msg
-
-interactWith (CmdMsg True msg) = do
-  liftIO $ putStrLn (msg <> " ? (Y/N)")
-  r <- readline
-  case r of
-    Just "Y" -> return ()
-    _        -> die "Abort by the user"
-
-
-interactive :: MonadIO io => Text -> io ExitCode
-interactive c = do
-    let
-      cp = (Process.shell (toS c))
-            { Process.std_in  = Process.Inherit
-            , Process.std_out = Process.Inherit
-            , Process.std_err = Process.Inherit
-            , Process.delegate_ctlc = True
-            }
-    (_, _, _, ph) <- liftIO $ Process.createProcess cp
-    liftIO $ Process.waitForProcess ph
+interactWith :: CmdMsg -> Shell ()
+interactWith = \case
+  CmdMsg False msg ->
+    liftIO $ Text.putStrLn msg
+  CmdMsg True msg -> do
+    liftIO $ putStrLn (msg <> " ? (Y/N)")
+    r <- readline
+    case r of
+      Just "Y" -> return ()
+      _        -> die "Abort by the user"
