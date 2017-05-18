@@ -10,7 +10,6 @@ import           Control.Lens                 as Exports (makeClassy,
                                                           view)
 import           Control.Lens.Operators       as Exports hiding ((<.>))
 import           Control.Monad.Trans.Maybe
-import           Data.Optional                as Exports (Optional, Optional (Default, Specific))
 import           Numeric.Natural              as Exports
 import           Protolude                    as Exports hiding (break, die,
                                                           (%))

@@ -4,6 +4,7 @@
 
 module Shell.PepCmd (
     PepCmd
+  , CmdMode (..)
   , CmdMsg (CmdMsg)
   , HasPepCmd(..)
   , consoleCmd
@@ -53,15 +54,22 @@ pepperCompoundTarget across t
            , (role_target . Text.splitOn ".") <$> r
            ]
 
+data CmdMode
+  = NormalMode
+  | ConsoleMode
+  | RetryMode
+  deriving Show
+
 data PepCmd
   = PepCmd
   { _pep :: Text
-  , _jq  :: Optional Text
+  , _jq  :: Text
   , _beforeMsg :: Maybe CmdMsg -- ^ A message to be displayed before launching the command
+  , _cmdMode :: CmdMode
   } deriving Show
 
 def :: PepCmd
-def = PepCmd mempty empty empty
+def = PepCmd mempty "jq ." empty NormalMode
 
 data CmdMsg =
   CmdMsg Bool Text -- True for interactive message
@@ -75,24 +83,25 @@ consoleCmd (Zone zone) datadir =
     completion_cmd = format ("source "%w%"/share/completion.sh "%s%"; return") datadir zone
   in
   def & pep .~ completion_cmd
+      & cmdMode .~ ConsoleMode
 
 genTagsCmd :: Zone -> Turtle.FilePath -> PepCmd
 genTagsCmd (Zone zone) cfdir =
   let nodefile = format fp cfdir <> "/.nodes-" <> zone
   in def & pep .~ "pepper \"*\" test.ping"
-         & jq .~ ("jq '.return[0]' | jq keys | jq -r 'join (\" \")' > " <> pure nodefile)
+         & jq .~ ("jq '.return[0]' | jq keys | jq -r 'join (\" \")' > " <> nodefile)
          & beforeMsg .~ (Just $ CmdMsg False ("Generating " <> nodefile))
 
 genSaltModListCmd :: Text -> PepCmd
 genSaltModListCmd fpath =
   let jsonfile = fpath <> ".json"
   in def & pep .~ "pepper --client=runner doc.execution"
-         & jq .~ ("jq '.return[0] | keys' | tee " <> pure jsonfile <> " | jq -r 'join (\" \")' > " <> pure fpath)
+         & jq .~ ("jq '.return[0] | keys' | tee " <> jsonfile <> " | jq -r 'join (\" \")' > " <>  fpath)
 
 genSaltModjsonCmd :: Text -> PepCmd
 genSaltModjsonCmd fpath =
   def & pep .~ "pepper --client=runner doc.execution"
-      & jq .~ ("jq '.return[0]' > " <> pure (fpath <> ".json"))
+      & jq .~ ("jq '.return[0]' > " <> fpath <> ".json")
 
 statCmd :: PepCmd
 statCmd =
@@ -218,7 +227,7 @@ dataCmd False Nothing target@Target {_node= Nothing} =
       & jq .~ "jq '.return[0]'"
 dataCmd across (Just key) target@Target {_node= Nothing} =
   def & pep .~ "( " <> pepperCompoundTarget across target <> "grains.item fqdn subgroup role ; " <> pepperCompoundTarget across target <> "pillar.item " <> key <> " delimiter='/' )"
-      & jq .~ "jq -s '.[0].return[0] * .[1].return[0]' | jq '.[] | { fqdn, subgroup, role, "<> pure key <> "}'"
+      & jq .~ "jq -s '.[0].return[0] * .[1].return[0]' | jq '.[] | { fqdn, subgroup, role, " <> key <> "}'"
 dataCmd _ (Just key) Target {_node= Just n} =
   def & pep .~ ("pepper " <> n <> " pillar.item " <> key <> " delimiter='/'")
       & jq .~ ("jq '.return[0]'")
@@ -243,5 +252,6 @@ resultCmd pgUrl (Raw raw) (Just jobid) Nothing _ =
                   else .return.stdout + "\n"
                   end)'
         |]
+      & cmdMode .~ RetryMode
 resultCmd _ _ Nothing Nothing _ = panic'
 resultCmd _ _ (Just _) (Just _) _ = panic'

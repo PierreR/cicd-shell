@@ -79,9 +79,6 @@ resultParser
   <$> rawParser
   <*> (ResultNum <$> optRead auto (short 'n' <> help "Number of results to display") <|> ResultJob <$> optText (metavar "JOB" <> short 'j' <> help "Job id"))
 
--- optNatural :: ArgName -> ShortName -> Optional HelpMessage -> Parser Natural
--- optNatural = optRead
-
 serviceParse :: Text -> Maybe ServiceAction
 serviceParse "status"  = Just ServiceStatus
 serviceParse "restart" = Just ServiceRestart

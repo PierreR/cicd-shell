@@ -139,9 +139,13 @@ runCommand z (Verbose verbose) (Raw raw) cmd =  do
   maybe (pure ()) interactWith (cmd ^. beforeMsg)
   nixshell <- nixShellCmd z (cmd^.pep)
   if verbose then putText (cmd^.pep) else pure()
-  case cmd^.jq of
-    Default -> interactiveShell nixshell
-    Specific jq -> do
+  case cmd^.cmdMode of
+    ConsoleMode -> interactiveShell nixshell
+    NormalMode ->
+      if raw
+      then shell nixshell empty
+      else inshell nixshell empty & shell (cmd^.jq)
+    RetryMode -> do
       -- liftIO $ print jq
       e <- loopN 10 $ do
         o0 <- shellStrictWithErr nixshell empty
@@ -157,7 +161,7 @@ runCommand z (Verbose verbose) (Raw raw) cmd =  do
               break
           (ExitSuccess, stdout, _) -> do
             let stdout' = select (textToLines stdout)
-            if raw then procs "jq" [ "."] stdout' else shells jq stdout' -- .[].ret | {id, return}
+            if raw then procs "jq" [ "."] stdout' else shells (cmd^.jq) stdout' -- .[].ret | {id, return}
             break
       case e of
         Just _ -> pure ExitSuccess
