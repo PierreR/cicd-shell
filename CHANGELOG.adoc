@@ -1,8 +1,7 @@
 # Changelog
 
-
 ## v1.4, /05/2017
-- add `cicd ZONE setfacts --subgroup= --role=server --hostgroup=middleware 
+- add `cicd ZONE setfacts --subgroup=SUBGROUP --role=ROLE --hostgroup=HOSTGROUP --zone ZONE
 
 ## v1.3, 08/05/2017
 

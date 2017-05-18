@@ -19,14 +19,12 @@ import qualified System.Process               as Process
 continue :: MonadIO m => MaybeT m ()
 continue = empty
 
--- asum will strive for the first non empty value
--- that's why returning one would break the loop
--- As a note, compare this with forever ... which would have the opposite behavior
--- `runMaybeT . forever` would break whenever empty is encountered.
+-- | Exit point for `loopN`
 break :: MonadIO m => MaybeT m ()
 break = pure ()
 
--- | loop n times with the ability to break the loop
+-- | Loop n times with the ability to `break` the loop
+--   `Data.Foldable.asum` will strive for the first non empty value
 loopN :: MonadIO m => Int -> MaybeT m () -> m (Maybe ())
 loopN n = runMaybeT . asum . replicate n
 
