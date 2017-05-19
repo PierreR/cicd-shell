@@ -58,6 +58,7 @@ data CmdMode
   = NormalMode
   | ConsoleMode
   | RetryMode
+  | ProgressMode Integer
   deriving Show
 
 data PepCmd
@@ -122,7 +123,7 @@ runpuppetCmd = \case
         & jq .~ "jq '.return'"
         & beforeMsg .~ (Just $ CmdMsg True ("Run puppet on " <> Text.intercalate "." (catMaybes [target^.role, target^.subgroup] <> [target^.stack, target^.zone])))
   target@Target {_node = Just n} ->
-    def & pep .~ ( "pepper " <> n <> " -t 240 puppetutils.run_agent zone=" <> target^.zone <> " hostgroup=" <> target^.stack)
+    def & pep .~ ( "pepper " <> n <> " -t 300 puppetutils.run_agent zone=" <> target^.zone <> " hostgroup=" <> target^.stack)
         & jq .~ [r|
                   jq -r '.return[] |
                   to_entries |
@@ -144,6 +145,7 @@ runpuppetCmd = \case
                     .value
                   end )'
                 |]
+        & cmdMode .~ ProgressMode 300
 
 setfactsCmd :: SetfactArg -> PepCmd
 setfactsCmd SetfactArg {..} =

@@ -17,7 +17,7 @@ let
   drv = hlib.dontHaddock(haskellPackages.callPackage ./. {
     dhall = haskellPackages.dhall_;
     protolude = haskellPackages.protolude_git;
-    lens = haskellPackages.lens_git;
+    lens = haskellPackages.lens_;
   });
 
 in

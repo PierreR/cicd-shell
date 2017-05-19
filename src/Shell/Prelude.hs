@@ -2,18 +2,20 @@ module Shell.Prelude (
   module Exports
   , loopN, break, continue
   , interactiveShell
+  , outputConcurrentMsg, shell'
 ) where
 
-import           Control.Lens                 as Exports (makeClassy,
-                                                          makeFieldsNoPrefix,
-                                                          makeLenses, strict,
-                                                          view)
-import           Control.Lens.Operators       as Exports hiding ((<.>))
+import           Control.Lens              as Exports (makeClassy,
+                                                       makeFieldsNoPrefix,
+                                                       makeLenses, strict, view)
+import           Control.Lens.Operators    as Exports hiding ((<.>))
 import           Control.Monad.Trans.Maybe
-import           Numeric.Natural              as Exports
-import           Protolude                    as Exports hiding (break, die,
-                                                          (%))
-import qualified System.Process               as Process
+import           Numeric.Natural           as Exports
+import           Protolude                 as Exports hiding (break, die, (%))
+import           System.Console.Concurrent (createProcessConcurrent,
+                                            outputConcurrent,
+                                            waitForProcessConcurrent)
+import qualified System.Process            as Process
 
 continue :: MonadIO m => MaybeT m ()
 continue = empty
@@ -43,3 +45,40 @@ interactiveShell c = do
             }
     (_, _, _, ph) <- liftIO $ Process.createProcess cp
     liftIO $ Process.waitForProcess ph
+
+
+shell' :: Text -> IO ExitCode
+shell' cmd = do
+  (_, _, _, b) <- createProcessConcurrent $ Process.shell (toS cmd)
+  waitForProcessConcurrent b
+
+
+-- shell' :: Text -> Turtle.Shell(Turtle.Line) -> IO ExitCode
+-- shell' cmd s = do
+--   let open = do
+--         (Just inh, Nothing, Nothing, ph) <- createProcessConcurrent $ (Process.shell (toS cmd))
+--                                                                           { Process.std_in  = Process.CreatePipe
+--                                                                           , Process.std_out = Process.Inherit
+--                                                                           , Process.std_err = Process.Inherit
+--                                                                           }
+--         return (inh, ph)
+--       handle (inh, ph) = do
+--         Text.hPutStrLn inh s
+--         -- Turtle.outhandle inh s
+--         waitForProcessConcurrent ph
+--       close (inh, ph) = do
+--         IO.hClose inh
+--         -- Process.terminateProcess ph
+--   bracket open close handle
+  -- let open = do
+  --       (Nothing, Just south, Nothing, ph) <- createProcessConcurrent $ Process.shell (toS cmd)
+  --       void $ waitForProcessConcurrent ph
+  --       return (south, ph)
+  --     close (south, ph) = do
+  --       IO.hClose south
+  --       -- Process.terminateProcess ph
+  -- bracket open close $ \(south, ph) -> do
+  --   Text.hGetContents south
+
+outputConcurrentMsg :: Text -> IO ()
+outputConcurrentMsg = outputConcurrent

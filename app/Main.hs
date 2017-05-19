@@ -9,9 +9,11 @@ import qualified Data.Text.IO     as Text
 import qualified Data.Text.Lazy   as Text.Lazy
 import qualified Data.Version     (showVersion)
 import qualified Dhall
+import Control.Concurrent
 import qualified Paths_cicd_shell
 import           Turtle           hiding (FilePath, strict, view)
 import qualified Turtle
+import qualified System.Console.AsciiProgress as Progress
 
 import           Shell.Cli
 import           Shell.PepCmd
@@ -137,18 +139,39 @@ runCommand z (Verbose verbose) (Raw raw) cmd =  do
   initTags z
   initHelp
   maybe (pure ()) interactWith (cmd ^. beforeMsg)
-  nixshell <- nixShellCmd z (cmd^.pep)
+  nixcmd <- nixShellCmd z (cmd^.pep)
   if verbose then putText (cmd^.pep) else pure()
   case cmd^.cmdMode of
-    ConsoleMode -> interactiveShell nixshell
+    ConsoleMode -> interactiveShell nixcmd
     NormalMode ->
       if raw
-      then shell nixshell empty
-      else inshell nixshell empty & shell (cmd^.jq)
+      then shell nixcmd empty
+      else inshell nixcmd empty & shell (cmd^.jq)
+    ProgressMode t ->
+      liftIO $ Progress.displayConsoleRegions $ do
+        let loop pg = do
+              b <- Progress.isComplete pg
+              unless b $ do
+                  threadDelay $ 1000 * 1000
+                  Progress.tickN pg 1
+                  loop pg
+            nixcmd' =
+              if raw then nixcmd else nixcmd <> " | " <> (cmd^.jq)
+        pg <- Progress.newProgressBar Progress.def { Progress.pgTotal = t
+                                                   , Progress.pgFormat = "Waiting " <> show (t `div` 60) <> " min [:bar], timeout in :eta sec"
+                                                   , Progress.pgOnCompletion = Just "After :elapsed sec"
+                                                   }
+        race (loop pg) (shell' nixcmd') >>= \case
+          Left () -> do
+            outputConcurrentMsg $ "Timeout: the command has not returned yet (it is probably still running)."
+            pure $ ExitFailure 1
+          Right (code) -> do
+            Progress.complete pg
+            pure $ code
     RetryMode -> do
       -- liftIO $ print jq
       e <- loopN 10 $ do
-        o0 <- shellStrictWithErr nixshell empty
+        o0 <- shellStrictWithErr nixcmd empty
         case o0 of
           (ExitFailure _, _, stderr) ->
             if Text.null stderr
