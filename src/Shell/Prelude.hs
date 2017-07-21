@@ -11,7 +11,7 @@ import           Control.Lens              as Exports (makeClassy,
 import           Control.Lens.Operators    as Exports hiding ((<.>))
 import           Control.Monad.Trans.Maybe
 import           Numeric.Natural           as Exports
-import           Protolude                 as Exports hiding (break, die, (%))
+import           Protolude                 as Exports hiding (break, die, (%), (<&>))
 import           System.Console.Concurrent (createProcessConcurrent,
                                             outputConcurrent,
                                             waitForProcessConcurrent)

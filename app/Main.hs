@@ -1,105 +1,45 @@
-{-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE LambdaCase      #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TemplateHaskell #-}
 module Main where
 
-import qualified Data.Text        as Text
-import qualified Data.Text.IO     as Text
-import qualified Data.Text.Lazy   as Text.Lazy
-import qualified Data.Version     (showVersion)
-import qualified Dhall
-import Control.Concurrent
+import           Control.Concurrent
+import qualified Data.Text                    as Text
+import qualified Data.Text.IO                 as Text
+import qualified Data.Version                 (showVersion)
 import qualified Paths_cicd_shell
-import           Turtle           hiding (FilePath, strict, view)
-import qualified Turtle
 import qualified System.Console.AsciiProgress as Progress
+import           Turtle                       hiding (FilePath, strict, view)
+import qualified Turtle
 
 import           Shell.Cli
+import qualified Shell.Config                 as Config
 import           Shell.PepCmd
 import           Shell.Prelude
 import           Shell.Type
 
-version = Data.Version.showVersion Paths_cicd_shell.version
-
--- ROOT_DIR on the host
--- TODO: remove devbox/vagrant deps
-configFilePath = "/vagrant/config/shell"
-
-data ShellConfig
-  = ShellConfig
-  { _loginId      :: LText
-  , _password     :: LText
-  , _defaultStack :: LText
-  } deriving (Generic, Show)
-
-makeLenses ''ShellConfig
-
-instance Dhall.Interpret ShellConfig
-
-shellConfig :: MonadIO m => m ShellConfig
-shellConfig = do
-  liftIO $ Dhall.input auto (fromStrict configFilePath)
-  where
-    auto ::  Dhall.Interpret a => Dhall.Type a
-    auto = Dhall.autoWith
-      ( Dhall.defaultInterpretOptions { Dhall.fieldModifier = Text.Lazy.dropWhile (== '_') })
-
-userId :: MonadIO io => io Text
-userId = do
-  user_id <- view (loginId.strict) <$> shellConfig
-  if Text.null user_id
-    then die  ("Your loginId is empty. Have you filled in " <> configFilePath <> " ?")
-    else pure user_id
-
-userPwd :: MonadIO io => io Text
-userPwd = do
-  password <- view (password.strict) <$> shellConfig
-  if Text.null password
-    then die  ("Your password is empty. Have you filled in " <> configFilePath <> " ?")
-    else pure password
 
 getStack :: MonadIO io => Maybe Text -> io Text
 getStack s = do
-  def <- view (defaultStack.strict) <$> shellConfig
-  if Text.null def
-    then die  ("The default stack is empty. Have you filled in " <> configFilePath <> " ?")
-    else pure $ fromMaybe def s
+  ds <- Config.userDefaultStack
+  pure $ fromMaybe ds s
 
 getTarget :: Zone -> Arg -> Shell Target
 getTarget (Zone _zone) Arg{..} = do
   _stack <- getStack _stack
-  pure $ Target{..}
-
-pgUrl :: Zone -> Text
-pgUrl (Zone zone) =
-  let
-    pgserver_prod     = "http://pgserver-cicd.prd.srv.cirb.lan/saltstack"
-    pgserver_sandbox = "http://pgserver.sandbox.srv.cirb.lan/saltstack"
-    result_suffix = "/salt_result"
-  in
-  case zone of
-    "sandbox" -> pgserver_sandbox <> result_suffix
-    "prod"    -> pgserver_prod <> result_suffix
-    _         -> pgserver_prod <> "_" <> zone <> result_suffix
-
-puppetdbUrl (Zone zone)
-  | zone == "sandbox" = "http://puppetdb.sandbox.srv.cirb.lan:8080"
-  | otherwise         = "http://puppetdb.prd.srv.cirb.lan:8080"
+  pure Target{..}
 
 -- | localDir sits in user space
 -- It is the location for the gentags generated files that help with completion
 localDir :: Shell Turtle.FilePath
 localDir = (</> ".local/share/cicd") <$> home
 
-dataDir:: Shell FilePath
-dataDir =
-  liftIO Paths_cicd_shell.getDataDir
+dataDir :: Shell FilePath
+dataDir = liftIO Paths_cicd_shell.getDataDir
 
 nixShellCmd :: Zone -> Text -> Shell Text
 nixShellCmd (Zone zone) pep = do
-  userid <- userId
-  userpwd <- userPwd
+  userid <- Config.userId
+  userpwd <- Config.userPwd
   datadir <- dataDir
   let pgr = format ("nix-shell "%w%"/share/"%s%".nix --argstr user_id "%s%" --argstr user_pwd "%s) datadir zone userid userpwd
   if Text.null pep
@@ -163,11 +103,11 @@ runCommand z (Verbose verbose) (Raw raw) cmd =  do
                                                    }
         race (loop pg) (shell' nixcmd') >>= \case
           Left () -> do
-            outputConcurrentMsg $ "Timeout: the command has not returned yet (it is probably still running)."
+            outputConcurrentMsg "Timeout: the command has not returned yet (it is probably still running)."
             pure $ ExitFailure 1
-          Right (code) -> do
+          Right code -> do
             Progress.complete pg
-            pure $ code
+            pure code
     RetryMode -> do
       -- liftIO $ print jq
       e <- loopN 10 $ do
@@ -224,7 +164,7 @@ run = \case
   ZoneCommand zone (Sync (AcrossArg across arg)) ->
     getTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . syncCmd across
   ZoneCommand zone (Facts (FactArg down (AcrossArg across arg))) ->
-    getTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . factCmd (puppetdbUrl zone) across down
+    getTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . factCmd (Config.puppetdbUrl zone) across down
   ZoneCommand _ (Data (DataArg Nothing (AcrossArg False (Arg Nothing Nothing Nothing _ _ )))) ->
     die "Running data on all nodes within a stack without providing a key is currently prohibited"
   ZoneCommand _ (Data (DataArg Nothing (AcrossArg True _))) ->
@@ -238,14 +178,18 @@ run = \case
   ZoneCommand zone (Orchestrate (OrchArg cmd s)) ->
     getStack s >>= runCommand zone (Verbose False) (Raw True) . orchCmd cmd
   ZoneCommand zone (Result (ResultArg raw (ResultNum n))) ->
-    userId >>= runCommand zone (Verbose False) raw . resultCmd (pgUrl zone) raw Nothing (Just n)
+    Config.userId >>= runCommand zone (Verbose False) raw . resultCmd (Config.pgUrl zone) raw Nothing (Just n)
   ZoneCommand zone (Result (ResultArg raw (ResultJob j))) ->
-    userId >>= runCommand zone (Verbose False) raw . resultCmd (pgUrl zone) raw (Just j) Nothing
+    Config.userId >>= runCommand zone (Verbose False) raw . resultCmd (Config.pgUrl zone) raw (Just j) Nothing
   ZoneCommand zone (Setfacts arg) ->
     runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) (setfactsCmd arg)
 
 main :: IO ()
-main = sh $ options (fromString ("CICD - command line utility (v" <> version <> ")")) optionParser >>= run
+main =
+  sh $ options (fromString ("CICD - command line utility (v" <> version <> ")")) optionParser >>= run
+  where
+    version = Data.Version.showVersion Paths_cicd_shell.version
+
 
 interactWith :: CmdMsg -> Shell ()
 interactWith = \case

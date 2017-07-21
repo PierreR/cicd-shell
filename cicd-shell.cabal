@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Shell.Type
                        , Shell.Cli
+                       , Shell.Config
                        , Shell.PepCmd
                        , Shell.Prelude
   other-modules:       Paths_cicd_shell
@@ -28,6 +29,7 @@ library
                        , StrictData
   build-depends:       base
                        , concurrent-output >= 1.7
+                       , dhall >= 1.2
                        , lens >= 4.15.2
                        , optional-args >= 1.0
                        , optparse-applicative >= 0.13
@@ -54,7 +56,6 @@ executable cicd
                        , ascii-progress
                        , async >= 2.1
                        , cicd-shell
-                       , dhall >= 1.2
                        , lens >= 4.15.2
                        , optional-args >= 1.0
                        , text

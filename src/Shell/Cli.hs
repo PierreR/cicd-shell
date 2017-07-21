@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell       #-}
 module Shell.Cli where
 
 import           Shell.Options
@@ -74,6 +73,7 @@ rawParser = Raw <$> switch (long "raw" <> help "Raw output (no jq)")
 verboseParser :: Parser Verbose
 verboseParser = Verbose <$> switch (long "verbose" <> short 'v' <> help "Display the executed command")
 
+resultParser :: Parser ResultArg
 resultParser
   = ResultArg
   <$> rawParser

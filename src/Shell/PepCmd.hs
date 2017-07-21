@@ -185,7 +185,7 @@ serviceCmd ServiceRestart (ServiceName name) Target {_node = Just n} =
   def & pep .~ ("pepper " <> n <> " service.restart " <> name)
       & jq .~ "jq '.return[0]'"
 serviceCmd ServiceRestart _ Target {_node = Nothing} =
-  panic ("To restart a service, you need to specify a node with -n")
+  panic "To restart a service, you need to specify a node with -n"
 
 factCmd :: Text -> Bool -> Bool -> Target -> PepCmd
 factCmd _ across _ target@Target {_node = Nothing} =
@@ -232,12 +232,12 @@ dataCmd across (Just key) target@Target {_node= Nothing} =
       & jq .~ "jq -s '.[0].return[0] * .[1].return[0]' | jq '.[] | { fqdn, subgroup, role, " <> key <> "}'"
 dataCmd _ (Just key) Target {_node= Just n} =
   def & pep .~ ("pepper " <> n <> " pillar.item " <> key <> " delimiter='/'")
-      & jq .~ ("jq '.return[0]'")
+      & jq .~ "jq '.return[0]'"
 
 resultCmd :: Text -> Raw -> Maybe Text -> Maybe Natural -> Text -> PepCmd
 resultCmd _ _ Nothing (Just 0) _ = panic "NUM should be > 0"
 resultCmd pgUrl _ Nothing (Just num) user =
-  def & pep .~ (format ("curl -f -s -H \"Range: 0-"%d%"\" \""%s%"?user=eq."%s%"&order=jid.desc\"") (num - 1) pgUrl user)
+  def & pep .~ format ("curl -f -s -H \"Range: 0-"%d%"\" \""%s%"?user=eq."%s%"&order=jid.desc\"") (num - 1) pgUrl user
       & jq .~ "jq -C '.'"
 resultCmd pgUrl (Raw raw) (Just jobid) Nothing _ =
   def & pep .~ ("curl -s " <> (if raw then mempty else "-f -H \"Accept: application/vnd.pgrst.object+json\" ") <> "\"" <> pgUrl <> "?select=ret&jid=eq." <> jobid <> "\"" )
