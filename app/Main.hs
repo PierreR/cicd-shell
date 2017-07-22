@@ -23,8 +23,8 @@ getStack s = do
   ds <- Config.userDefaultStack
   pure $ fromMaybe ds s
 
-getTarget :: Zone -> Arg -> Shell Target
-getTarget (Zone _zone) Arg{..} = do
+mkTarget :: Zone -> Arg -> Shell Target
+mkTarget (Zone _zone) Arg{..} = do
   _stack <- getStack _stack
   pure Target{..}
 
@@ -158,23 +158,23 @@ run = \case
   ZoneCommand zone GenTags ->
     localDir >>= runCommand zone (Verbose False) (Raw False) . genTagsCmd zone
   ZoneCommand zone (Runpuppet arg) ->
-    getTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . runpuppetCmd
+    mkTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . runpuppetCmd
   ZoneCommand zone (Ping (AcrossArg across arg)) ->
-    getTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . pingCmd across
+    mkTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . pingCmd across
   ZoneCommand zone (Sync (AcrossArg across arg)) ->
-    getTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . syncCmd across
+    mkTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . syncCmd across
   ZoneCommand zone (Facts (FactArg down (AcrossArg across arg))) ->
-    getTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . factCmd (Config.puppetdbUrl zone) across down
+    mkTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . factCmd (Config.puppetdbUrl zone) across down
   ZoneCommand _ (Data (DataArg Nothing (AcrossArg False (Arg Nothing Nothing Nothing _ _ )))) ->
     die "Running data on all nodes within a stack without providing a key is currently prohibited"
   ZoneCommand _ (Data (DataArg Nothing (AcrossArg True _))) ->
     die "Running data across all stacks without providing a key is currently prohibited"
   ZoneCommand zone (Data (DataArg key (AcrossArg across arg))) ->
-    getTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . dataCmd across key
+    mkTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . dataCmd across key
   ZoneCommand zone (Du arg) ->
-    getTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . duCmd
+    mkTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . duCmd
   ZoneCommand zone (Service (action, name, arg)) ->
-    getTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . serviceCmd action name
+    mkTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . serviceCmd action name
   ZoneCommand zone (Orchestrate (OrchArg cmd s)) ->
     getStack s >>= runCommand zone (Verbose False) (Raw True) . orchCmd cmd
   ZoneCommand zone (Result (ResultArg raw (ResultNum n))) ->

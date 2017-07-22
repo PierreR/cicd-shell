@@ -11,6 +11,7 @@ newtype Zone = Zone Text
 newtype ServiceName = ServiceName Text deriving Show
 newtype Verbose = Verbose Bool deriving Show
 newtype Raw = Raw Bool deriving Show
+newtype Down = Down Bool deriving Show
 
 data ServiceAction = ServiceStatus | ServiceRestart deriving (Show)
 

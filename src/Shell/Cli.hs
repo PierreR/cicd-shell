@@ -46,7 +46,7 @@ data DataArg =
   deriving Show
 
 data FactArg
-  = FactArg Bool AcrossArg -- ^ disconnect & across flags
+  = FactArg Down AcrossArg -- ^ disconnect & across flags
   deriving Show
 
 data AcrossArg
@@ -69,6 +69,9 @@ argParser
 
 rawParser :: Parser Raw
 rawParser = Raw <$> switch (long "raw" <> help "Raw output (no jq)")
+
+downParser :: Parser Down
+downParser = Down <$> switch (long "" <> help "Query disconnected node")
 
 verboseParser :: Parser Verbose
 verboseParser = Verbose <$> switch (long "verbose" <> short 'v' <> help "Display the executed command")
@@ -124,7 +127,7 @@ subCommandParser =
   <|> GenTags     <$  subcommand "gentags" "Generate node completion file" (pure ())
   where
     data_parser   = DataArg <$> optional (optText (long "key" <> short 'k' <> metavar "KEY" <> help "Property to look up for" )) <*> across_parser
-    fact_parser   = FactArg <$> switch (long "down" <> help "Query down node") <*> across_parser
+    fact_parser   = FactArg <$> downParser <*> across_parser
     across_parser = AcrossArg <$> switch (long "all" <> help "Target whole the known stacks" ) <*> argParser
     orch_parser   = OrchArg <$> argText (metavar "CMD" <> help "SubCommand to run") <*> optional (optText (short 's' <> help "Target stack/hostgroup" ))
 
