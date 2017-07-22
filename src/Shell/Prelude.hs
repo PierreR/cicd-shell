@@ -7,7 +7,7 @@ module Shell.Prelude (
 
 import           Control.Lens              as Exports (makeClassy,
                                                        makeFieldsNoPrefix,
-                                                       makeLenses, strict, view)
+                                                       makeLenses, strict, view, _1, _2)
 import           Control.Lens.Operators    as Exports hiding ((<.>))
 import           Control.Monad.Trans.Maybe
 import           Numeric.Natural           as Exports

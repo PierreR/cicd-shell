@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.5, /07/2017
+- `cicd` will search its config file both in /vagrant/config/shell and ~/.config/cicd/shell in that order 
+
 ## v1.4, /05/2017
 - add `cicd ZONE setfacts --subgroup=SUBGROUP --role=ROLE --hostgroup=HOSTGROUP --zone ZONE
 

@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -fdefer-type-errors #-}
 module Shell.Config (
     pgUrl
   , puppetdbUrl
@@ -9,17 +10,31 @@ module Shell.Config (
   , HasShellConfig(..)
 ) where
 
-import qualified Data.Text      as Text
+import qualified Data.Text         as Text
 import qualified Data.Text.Lazy as Text.Lazy
 import qualified Dhall
-import Turtle (die)
+import Turtle (home, (</>), format, fp, fromText, die, testfile)
 
 import           Shell.Prelude
 import           Shell.Type
 
--- ROOT_DIR on the host
--- TODO: remove devbox/vagrant deps
-configFilePath = "/vagrant/config/shell"
+-- | return the first found configuration file
+-- both "/vagrant/config/shell and "~/.config/cicd/shell" are tried in that order
+configFilePath :: MonadIO io => io Text
+configFilePath = do
+  _HOME <- home
+  let paths = ["/vagrant/config/shell", format fp (_HOME </> ".config/cicd/shell")]
+  fpath <- asum <$> sequence (foreach paths testfile')
+  case fpath of
+    Nothing -> die $ "No configuration file found in " <> (Text.intercalate " or " paths)
+    Just f -> pure f
+  where
+    -- a version of `testfile` that return the path if it exists.
+    testfile' :: MonadIO io => Text -> io (Maybe Text)
+    testfile' fpath = do
+      found <- testfile (fromText fpath)
+      let path = if found then Just fpath else Nothing
+      pure path
 
 data ShellConfig
   = ShellConfig
@@ -33,30 +48,17 @@ makeClassy ''ShellConfig
 instance Dhall.Interpret ShellConfig
 
 userId :: MonadIO io => io Text
-userId = do
-  user_id <- view (loginId.strict) <$> mkShellConfig
-  if Text.null user_id
-    then die  ("Your loginId is empty. Have you filled in " <> configFilePath <> " ?")
-    else pure user_id
+userId = view (loginId.strict) <$> mkShellConfig
 
 userPwd :: MonadIO io => io Text
-userPwd = do
-  pwd <- view (password.strict) <$> mkShellConfig
-  if Text.null  pwd
-    then die  ("Your password is empty. Have you filled in " <> configFilePath <> " ?")
-    else pure pwd
+userPwd = view (password.strict) <$> mkShellConfig
 
 userDefaultStack :: MonadIO io => io Text
-userDefaultStack = do
-  s <- view (defaultStack.strict) <$> mkShellConfig
-  if Text.null s
-    then die  ("The default stack is empty. Have you filled in " <> configFilePath <> " ?")
-    else pure s
-
+userDefaultStack = view (defaultStack.strict) <$> mkShellConfig
 
 mkShellConfig :: MonadIO m => m ShellConfig
-mkShellConfig = 
-  liftIO $ Dhall.input auto (fromStrict configFilePath)
+mkShellConfig =
+  liftIO $ Dhall.input auto =<< (fromStrict <$> configFilePath)
   where
     auto ::  Dhall.Interpret a => Dhall.Type a
     auto = Dhall.autoWith
