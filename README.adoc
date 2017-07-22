@@ -18,7 +18,8 @@ endif::env-devbox[]
 To use the `cicd shell`, you need to fill in the https://github.com/CIRB/devbox/blob/master/user/config/shell[configuration file] located in `/vagrant/config/shell`.
 
 ifndef::env-devbox[]
-The shell is installed with the devbox. Please read the section __Install_outside_the_devbox__ if you need to install it on a different system.
+The shell is installed with the devbox. Please read the section <<_Install_outside_the_devbox>> if you need to install it on a different system.
+
 endif::env-devbox[]
 
 ## Usage
@@ -309,7 +310,7 @@ These permissions should have been set for you already. If they don't, please co
 ====
 
 ifndef::env-devbox[]
-
+[[_Install_outside_the_devbox]]
 ## Install outside the devbox
 
 Before installing the `cicd-shell` on any linux systemfootnote:[`macos` might also work], you will need:
@@ -323,6 +324,8 @@ You can then proceed to install with:
 nix-env -f ~/.config/nixpkgs/pin.nix -i cicd-shell <1>
 ```
 <1> the `-f` flag ensures that we point to the same nixpkgs version but can be omitted
+
+TIP: You might want to place the configuration file in `~/.config/cicd/shell` instead of `/vagrant/config/shell`.
 
 ====
 If you haven't installed `nix` already, here is the quick how to:
