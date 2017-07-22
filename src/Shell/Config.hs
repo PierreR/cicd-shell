@@ -24,7 +24,7 @@ configFilePath :: MonadIO io => io Text
 configFilePath = do
   _HOME <- home
   let paths = ["/vagrant/config/shell", format fp (_HOME </> ".config/cicd/shell")]
-  fpath <- asum <$> sequence (foreach paths testfile')
+  fpath <- asum <$> for paths testfile'
   case fpath of
     Nothing -> die $ "No configuration file found in " <> (Text.intercalate " or " paths)
     Just f -> pure f
