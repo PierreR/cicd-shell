@@ -119,7 +119,7 @@ orchCmd cmd stack =
 runpuppetCmd :: Target -> PepCmd
 runpuppetCmd = \case
   target@Target {_node = Nothing} ->
-    def & pep .~ ( pepperCompoundTarget False target <> "--client=local_async puppetutils.run_agent zone=" <> target^.zone <> " hostgroup=" <> target^.stack)
+    def & pep .~ ( pepperCompoundTarget False target <> "--client=local_async cicd.run_puppet zone=" <> target^.zone <> " hostgroup=" <> target^.stack)
         & jq .~ "jq '.return'"
         & beforeMsg .~ (Just $ CmdMsg True ("Run puppet on " <> Text.intercalate "." (catMaybes [target^.role, target^.subgroup] <> [target^.stack, target^.zone])))
   target@Target {_node = Just n} ->
