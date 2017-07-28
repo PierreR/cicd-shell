@@ -257,7 +257,7 @@ Another usage of the console is to run specific `salt` commands that are not exp
 ```
 $ pep -G 'hostgroup:iam' file.replace '/etc/resolv.conf' pattern='192.168.34.250' repl='192.168.34.244' <1>
 
-$ pep -L fqdn1,fqdn2 --client=local_async puppetutils.run_agent <2>
+$ pep -L fqdn1,fqdn2 --client=local_async cicd.run_agent <2>
 ```
 <1> #-G# means `grain` target (__grains__ is the salt terminology for facts).
 <2> #-L# means `list` target +

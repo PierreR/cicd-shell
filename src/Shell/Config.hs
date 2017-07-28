@@ -25,7 +25,7 @@ configFilePath = do
   _HOME <- home
   let paths = ["/vagrant/config/shell", format fp (_HOME </> ".config/cicd/shell")]
   findFirstPath paths >>= \case
-    Nothing -> die ("no configuration file found in " <> (Text.intercalate " or " paths))
+    Nothing -> die ("no configuration file found in " <> Text.intercalate " or " paths)
     Just v -> pure v
 
 data ShellConfig

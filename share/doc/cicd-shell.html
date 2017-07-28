@@ -483,9 +483,10 @@ mark {
 </ul>
 </li>
 <li><a href="#_authentication">Authentication</a></li>
-<li><a href="#_install_outside_the_devbox">Install outside the devbox</a></li>
+<li><a href="#_Install_outside_the_devbox">Install outside the devbox</a></li>
 <li><a href="#_changelog">Changelog</a>
 <ul class="sectlevel2">
+<li><a href="#_v1_5_07_2017">v1.5, /07/2017</a></li>
 <li><a href="#_v1_4_05_2017">v1.4, /05/2017</a></li>
 <li><a href="#_v1_3_08_05_2017">v1.3, 08/05/2017</a></li>
 <li><a href="#_v1_2_26_04_2017">v1.2, 26/04/2017</a></li>
@@ -510,7 +511,7 @@ mark {
 <p>To use the <code>cicd shell</code>, you need to fill in the <a href="https://github.com/CIRB/devbox/blob/master/user/config/shell">configuration file</a> located in <code>/vagrant/config/shell</code>.</p>
 </div>
 <div class="paragraph">
-<p>The shell is installed with the devbox. Please read the section <em>Install_outside_the_devbox</em> if you need to install it on a different system.</p>
+<p>The shell is installed with the devbox. Please read the section <a href="#_Install_outside_the_devbox">Install outside the devbox</a> if you need to install it on a different system.</p>
 </div>
 </div>
 </div>
@@ -818,7 +819,7 @@ The pretty printer is tailored to work on jobid coming from <code><span class="i
 <div class="sect2">
 <h3 id="__span_class_icon_i_class_fa_fa_terminal_i_span_setfacts"><span class="icon"><i class="fa fa-terminal"></i></span> setfacts</h3>
 <div class="paragraph">
-<p>To set (or update) the four basic facts on a specific machine:</p>
+<p>To set (or update) the four basic <code>facts</code> on a specific machine:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -865,7 +866,7 @@ the <code>setfacts</code> subcommand always requires a target node (<code>-n</co
 <div class="content">
 <pre class="highlight"><code>$ pep -G 'hostgroup:iam' file.replace '/etc/resolv.conf' pattern='192.168.34.250' repl='192.168.34.244' <i class="conum" data-value="1"></i><b>(1)</b>
 
-$ pep -L fqdn1,fqdn2 --client=local_async puppetutils.run_agent <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+$ pep -L fqdn1,fqdn2 --client=local_async cicd.run_agent <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -963,7 +964,7 @@ As an example to access the machines of the <code>middleware</code> hostgroup, y
 </div>
 </div>
 <div class="sect1">
-<h2 id="_install_outside_the_devbox">Install outside the devbox</h2>
+<h2 id="_Install_outside_the_devbox">Install outside the devbox</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Before installing the <code>cicd-shell</code> on any linux system<sup class="footnote">[<a id="_footnoteref_2" class="footnote" href="#_footnote_2" title="View footnote.">2</a>]</sup>, you will need:</p>
@@ -991,6 +992,18 @@ As an example to access the machines of the <code>middleware</code> hostgroup, y
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
 <td>the <code>-f</code> flag ensures that we point to the same nixpkgs version but can be omitted</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+You might want to place the configuration file in <code>~/.config/cicd/shell</code> instead of <code>/vagrant/config/shell</code>.
+</td>
 </tr>
 </table>
 </div>
@@ -1023,11 +1036,21 @@ As an example to access the machines of the <code>middleware</code> hostgroup, y
 <h2 id="_changelog">Changelog</h2>
 <div class="sectionbody">
 <div class="sect2">
+<h3 id="_v1_5_07_2017">v1.5, /07/2017</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><code>cicd</code> will search its config file both in /vagrant/config/shell and ~/.config/cicd/shell in that order</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
 <h3 id="_v1_4_05_2017">v1.4, /05/2017</h3>
 <div class="ulist">
 <ul>
 <li>
-<p>add `cicd ZONE setfacts --subgroup= --role=server --hostgroup=middleware</p>
+<p>add `cicd ZONE setfacts --subgroup=SUBGROUP --role=ROLE --hostgroup=HOSTGROUP --zone ZONE</p>
 </li>
 </ul>
 </div>
