@@ -111,8 +111,7 @@ runCommand z (Verbose verbose) (Raw raw) cmd =  do
     RetryMode -> do
       -- liftIO $ print jq
       e <- loopN 10 $ do
-        o0 <- shellStrictWithErr nixcmd empty
-        case o0 of
+        shellStrictWithErr nixcmd empty >>= \case
           (ExitFailure _, _, stderr) ->
             if Text.null stderr
             then do
@@ -197,7 +196,6 @@ interactWith = \case
     liftIO $ Text.putStrLn msg
   CmdMsg True msg -> do
     liftIO $ putStrLn (msg <> " ? (Y/N)")
-    r <- readline
-    case r of
-      Just "Y" -> return ()
+    readline >>= \case
+      Just "Y" -> pure ()
       _        -> die "Abort by the user"

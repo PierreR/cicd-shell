@@ -13,7 +13,7 @@ module Shell.Config (
 import qualified Data.Text         as Text
 import qualified Data.Text.Lazy as Text.Lazy
 import qualified Dhall
-import Turtle (home, (</>), format, fp, fromText, die, testfile)
+import Turtle (home, (</>), format, fp, die)
 
 import           Shell.Prelude
 import           Shell.Type
@@ -24,17 +24,9 @@ configFilePath :: MonadIO io => io Text
 configFilePath = do
   _HOME <- home
   let paths = ["/vagrant/config/shell", format fp (_HOME </> ".config/cicd/shell")]
-  fpath <- asum <$> for paths testfile'
-  case fpath of
-    Nothing -> die $ "No configuration file found in " <> (Text.intercalate " or " paths)
-    Just f -> pure f
-  where
-    -- a version of `testfile` that return the path if it exists.
-    testfile' :: MonadIO io => Text -> io (Maybe Text)
-    testfile' fpath = do
-      found <- testfile (fromText fpath)
-      let path = if found then Just fpath else Nothing
-      pure path
+  findFirstPath paths >>= \case
+    Nothing -> die ("no configuration file found in " <> (Text.intercalate " or " paths))
+    Just v -> pure v
 
 data ShellConfig
   = ShellConfig
