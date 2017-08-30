@@ -1,6 +1,6 @@
 module Shell.Prelude (
   module Exports
-  , loopN, break, continue
+  , loopN, break, continue, whileM_
   , findFirstPath
   , interactiveShell
   , outputConcurrentMsg, shell'
@@ -27,6 +27,11 @@ findFirstPath paths =
     found <- Turtle.testfile (Turtle.fromText p)
     let path = if found then Just p else Nothing
     pure path)
+
+whileM_ :: (Monad m) => m Bool -> m a -> m ()
+whileM_ p f = go
+  where
+    go = ifM p (f >> go) (return ())
 
 -- | Loop n times with the ability to `break` the loop
 --   `Data.Foldable.asum` will strive for the first non empty value
@@ -58,38 +63,11 @@ interactiveShell c = do
     liftIO $ Process.waitForProcess ph
 
 
+-- | Run a shell process within an interactive console
 shell' :: Text -> IO ExitCode
 shell' cmd = do
   (_, _, _, b) <- createProcessConcurrent $ Process.shell (toS cmd)
   waitForProcessConcurrent b
-
-
--- shell' :: Text -> Turtle.Shell(Turtle.Line) -> IO ExitCode
--- shell' cmd s = do
---   let open = do
---         (Just inh, Nothing, Nothing, ph) <- createProcessConcurrent $ (Process.shell (toS cmd))
---                                                                           { Process.std_in  = Process.CreatePipe
---                                                                           , Process.std_out = Process.Inherit
---                                                                           , Process.std_err = Process.Inherit
---                                                                           }
---         return (inh, ph)
---       handle (inh, ph) = do
---         Text.hPutStrLn inh s
---         -- Turtle.outhandle inh s
---         waitForProcessConcurrent ph
---       close (inh, ph) = do
---         IO.hClose inh
---         -- Process.terminateProcess ph
---   bracket open close handle
-  -- let open = do
-  --       (Nothing, Just south, Nothing, ph) <- createProcessConcurrent $ Process.shell (toS cmd)
-  --       void $ waitForProcessConcurrent ph
-  --       return (south, ph)
-  --     close (south, ph) = do
-  --       IO.hClose south
-  --       -- Process.terminateProcess ph
-  -- bracket open close $ \(south, ph) -> do
-  --   Text.hGetContents south
 
 outputConcurrentMsg :: Text -> IO ()
 outputConcurrentMsg = outputConcurrent

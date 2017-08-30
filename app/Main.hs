@@ -89,19 +89,18 @@ runCommand z (Verbose verbose) (Raw raw) cmd =  do
       else inshell nixcmd empty & shell (cmd^.jq)
     ProgressMode t ->
       liftIO $ Progress.displayConsoleRegions $ do
-        let loop pg = do
-              b <- Progress.isComplete pg
-              unless b $ do
-                  threadDelay $ 1000 * 1000
-                  Progress.tickN pg 1
-                  loop pg
-            nixcmd' =
-              if raw then nixcmd else nixcmd <> " | " <> (cmd^.jq)
+        let ticking pg =
+              whileM_ (Progress.isComplete pg) $ do
+                threadDelay $ 1000 * 1000
+                Progress.tickN pg 1
+            nixcmd' = if raw
+                      then nixcmd
+                      else nixcmd <> " | " <> (cmd^.jq)
         pg <- Progress.newProgressBar Progress.def { Progress.pgTotal = t
                                                    , Progress.pgFormat = "Waiting " <> show (t `div` 60) <> " min [:bar], timeout in :eta sec"
                                                    , Progress.pgOnCompletion = Just "After :elapsed sec"
                                                    }
-        race (loop pg) (shell' nixcmd') >>= \case
+        race (ticking pg) (shell' nixcmd') >>= \case
           Left () -> do
             outputConcurrentMsg "Timeout: the command has not returned yet (it is probably still running)."
             pure $ ExitFailure 1
