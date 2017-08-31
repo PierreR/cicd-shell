@@ -15,9 +15,7 @@ let
                        then pkgs.haskellPackages
                        else pkgs.haskell.packages.${compiler};
   drv = hlib.dontHaddock(haskellPackages.callPackage ./. {
-    dhall = haskellPackages.dhall_;
-    protolude = haskellPackages.protolude_git;
-    lens = haskellPackages.lens_;
+    protolude = haskellPackages.protolude_0_2;
   });
 
 in
