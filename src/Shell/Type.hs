@@ -9,8 +9,6 @@ import           Shell.Prelude
 
 newtype Zone = Zone Text
 newtype ServiceName = ServiceName Text deriving Show
-newtype Verbose = Verbose Bool deriving Show
-newtype Raw = Raw Bool deriving Show
 newtype Down = Down Bool deriving Show
 
 data ServiceAction = ServiceStatus | ServiceRestart deriving (Show)
@@ -27,8 +25,8 @@ makeFieldsNoPrefix ''Target
 
 data ExtraFlag
   = ExtraFlag
-  { _raw     :: Raw
-  , _verbose :: Verbose
+  { _raw     :: Bool -- ^ Display the result with no `jq` pretty printer
+  , _verbose :: Bool -- ^ Print the `pepper` command to stdout
   } deriving Show
 
 makeLenses ''ExtraFlag

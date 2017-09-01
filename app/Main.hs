@@ -7,7 +7,6 @@ import qualified Data.Text                    as Text
 import qualified Data.Text.IO                 as Text
 import qualified System.Console.AsciiProgress as Progress
 import           Turtle                       hiding (FilePath, strict, view)
-import qualified Turtle
 
 import           Shell.Cli
 import qualified Shell.Config                 as Config
@@ -25,12 +24,13 @@ mkTarget (Zone _zone) Arg{..} = do
   _stack <- getStack _stack
   pure Target{..}
 
-nixShellCmd :: Zone -> Text -> Shell Text
-nixShellCmd (Zone zone) pep = do
+shellCmdLine :: Zone -> Text -> Shell Text
+shellCmdLine z@(Zone zone) pep = do
   userid <- Config.userId
   userpwd <- Config.userPwd
   datadir <- Config.dataDir
-  let pgr = format ("nix-shell "%w%"/share/"%s%".nix --argstr user_id "%s%" --argstr user_pwd "%s) datadir zone userid userpwd
+  let pgr = format ("nix-shell "%w%"/share/default.nix --argstr zone "%s%" --argstr salt-user "%s%" --argstr salt-pass "%s%" --argstr salt-url "%s)
+                    datadir zone userid userpwd (Config.saltUrl z)
   if Text.null pep
     then pure pgr
     else pure $ pgr <> " --command '" <> pep <> "'"
@@ -43,7 +43,7 @@ initTags z@(Zone zone) = do
   unless found $ do
     mktree localdir
     touch tagfile -- avoid the infine loop ...
-    runCommand z (Verbose False) (Raw False) (genTagsCmd z localdir) >>= \case
+    runCommand z (ExtraFlag False False) (genTagsCmd z localdir) >>= \case
       ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") zone
       ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
 
@@ -58,33 +58,33 @@ initHelp = do
       found <- testfile fpath
       unless found $ do
         touch fpath -- avoid the infine loop ...
-        runCommand (Zone "dev") (Verbose False) (Raw False) (cmd (format fp fpath)) >>= \case
+        runCommand (Zone "dev") (ExtraFlag False False) (cmd (format fp fpath)) >>= \case
           ExitSuccess -> printf (fp%" generated successfully.\n") fpath
           ExitFailure _ -> printf ("WARNING: cannot generate '"%fp%"' (completion).\n") fpath
 
-runCommand :: Zone -> Verbose -> Raw -> PepCmd -> Shell ExitCode
-runCommand z (Verbose verbose) (Raw raw) cmd =  do
+runCommand :: Zone -> ExtraFlag -> PepCmd -> Shell ExitCode
+runCommand z flag cmd =  do
   void $ shell "ping -c1 stash.cirb.lan > /dev/null 2>&1" empty .||. die "cannot connect to stash.cirb.lan, check your connection"
   initTags z
   initHelp
   maybe (pure ()) interactWith (cmd ^. beforeMsg)
-  nixcmd <- nixShellCmd z (cmd^.pep)
-  if verbose then putText (cmd^.pep) else pure()
+  cmdline <- shellCmdLine z (cmd^.pep)
+  if (flag^.verbose) then putText (cmd^.pep) else pure()
   case cmd^.cmdMode of
-    ConsoleMode -> interactiveShell nixcmd
+    ConsoleMode -> interactiveShell cmdline
     NormalMode ->
-      if raw
-      then shell nixcmd empty
-      else inshell nixcmd empty & shell (cmd^.jq)
+      if (flag^.raw)
+      then shell cmdline empty
+      else inshell cmdline empty & shell (cmd^.jq)
     ProgressMode t ->
       liftIO $ Progress.displayConsoleRegions $ do
         let ticking pg =
               whileM_ (Progress.isComplete pg) $ do
                 threadDelay $ 1000 * 1000
                 Progress.tickN pg 1
-            nixcmd' = if raw
-                      then nixcmd
-                      else nixcmd <> " | " <> (cmd^.jq)
+            nixcmd' = if (flag^.raw)
+                      then cmdline
+                      else cmdline <> " | " <> (cmd^.jq)
         pg <- Progress.newProgressBar Progress.def { Progress.pgTotal = t
                                                    , Progress.pgFormat = "Waiting " <> show (t `div` 60) <> " min [:bar], timeout in :eta sec"
                                                    , Progress.pgOnCompletion = Just "After :elapsed sec"
@@ -99,7 +99,7 @@ runCommand z (Verbose verbose) (Raw raw) cmd =  do
     RetryMode -> do
       -- liftIO $ print jq
       e <- loopN 10 $ do
-        shellStrictWithErr nixcmd empty >>= \case
+        shellStrictWithErr cmdline empty >>= \case
           (ExitFailure _, _, stderr) ->
             if Text.null stderr
             then do
@@ -111,7 +111,7 @@ runCommand z (Verbose verbose) (Raw raw) cmd =  do
               break
           (ExitSuccess, stdout, _) -> do
             let stdout' = select (textToLines stdout)
-            if raw then procs "jq" [ "."] stdout' else shells (cmd^.jq) stdout' -- .[].ret | {id, return}
+            if (flag^.raw) then procs "jq" [ "."] stdout' else shells (cmd^.jq) stdout' -- .[].ret | {id, return}
             break
       case e of
         Just _ -> pure ExitSuccess
@@ -139,37 +139,37 @@ run = \case
     proc "jq" [ "-r", (".[\"" <> mod <> "\"]"), fpath ] empty
 
   ZoneCommand zone Stats ->
-    runCommand zone (Verbose False) (Raw False) statCmd
+    runCommand zone (ExtraFlag False False) statCmd
   ZoneCommand zone Console ->
-    Config.dataDir >>= runCommand zone (Verbose False) (Raw True) . consoleCmd zone
+    Config.dataDir >>= runCommand zone ExtraFlag{_raw = True, _verbose = False} . consoleCmd zone
   ZoneCommand zone GenTags ->
-    Config.localDir >>= runCommand zone (Verbose False) (Raw False) . genTagsCmd zone
+    Config.localDir >>= runCommand zone (ExtraFlag False False) . genTagsCmd zone
   ZoneCommand zone (Runpuppet arg) ->
-    mkTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . runpuppetCmd
+    mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . runpuppetCmd
   ZoneCommand zone (Ping (AcrossArg across arg)) ->
-    mkTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . pingCmd across
+    mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . pingCmd across
   ZoneCommand zone (Sync (AcrossArg across arg)) ->
-    mkTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . syncCmd across
+    mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . syncCmd across
   ZoneCommand zone (Facts (FactArg down (AcrossArg across arg))) ->
-    mkTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . factCmd (Config.puppetdbUrl zone) across down
+    mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . factCmd (Config.puppetdbUrl zone) across down
   ZoneCommand _ (Data (DataArg Nothing (AcrossArg False (Arg Nothing Nothing Nothing _ _ )))) ->
     die "Running data on all nodes within a stack without providing a key is currently prohibited"
   ZoneCommand _ (Data (DataArg Nothing (AcrossArg True _))) ->
     die "Running data across all stacks without providing a key is currently prohibited"
   ZoneCommand zone (Data (DataArg key (AcrossArg across arg))) ->
-    mkTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . dataCmd across key
+    mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . dataCmd across key
   ZoneCommand zone (Du arg) ->
-    mkTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . duCmd
+    mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . duCmd
   ZoneCommand zone (Service (action, name, arg)) ->
-    mkTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . serviceCmd action name
-  ZoneCommand zone (Orchestrate (OrchArg cmd s)) ->
-    getStack s >>= runCommand zone (Verbose False) (Raw True) . orchCmd cmd
-  ZoneCommand zone (Result (ResultArg raw (ResultNum n))) ->
-    Config.userId >>= runCommand zone (Verbose False) raw . resultCmd (Config.pgUrl zone) raw Nothing (Just n)
-  ZoneCommand zone (Result (ResultArg raw (ResultJob j))) ->
-    Config.userId >>= runCommand zone (Verbose False) raw . resultCmd (Config.pgUrl zone) raw (Just j) Nothing
+    mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . serviceCmd action name
+  ZoneCommand zone (Orchestrate (OrchArg cmd s flag)) ->
+    getStack s >>= runCommand zone flag . orchCmd cmd
+  ZoneCommand zone (Result (ResultArg flag (ResultNum n))) ->
+    Config.userId >>= runCommand zone flag . resultCmd (Config.pgUrl zone) (flag^.raw) Nothing (Just n)
+  ZoneCommand zone (Result (ResultArg flag (ResultJob j))) ->
+    Config.userId >>= runCommand zone flag . resultCmd (Config.pgUrl zone) (flag^.raw) (Just j) Nothing
   ZoneCommand zone (Setfacts arg) ->
-    runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) (setfactsCmd arg)
+    runCommand zone (arg^.extraFlag) (setfactsCmd arg)
 
 main :: IO ()
 main =

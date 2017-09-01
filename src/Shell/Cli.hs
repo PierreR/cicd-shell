@@ -1,11 +1,22 @@
 -- | Parse command line arguments
-module Shell.Cli where
+module Shell.Cli (
+  optionParser
+  , AcrossArg(..)
+  , DataArg(..)
+  , FactArg(..)
+  , ResultArg(..)
+  , ResultType(..)
+  , OrchArg(..)
+  , DocType(..)
+  , Options(..)
+  , SubCommand(..)
+  ) where
 
 import           Shell.Options
 import           Shell.Prelude
 import           Shell.Type
 
-data ResultArg = ResultArg Raw ResultType deriving Show
+data ResultArg = ResultArg ExtraFlag ResultType deriving Show
 
 data ResultType
   = ResultJob Text
@@ -37,9 +48,9 @@ data SubCommand
   | Service (ServiceAction, ServiceName, Arg)
   deriving (Show)
 
-
+-- | Orchestrate command with an optional stack.
 data OrchArg =
-  OrchArg Text (Maybe Text) -- ^ Orchestrate a command optionally with a stack
+  OrchArg Text (Maybe Text) ExtraFlag
   deriving Show
 
 data DataArg =
@@ -57,7 +68,7 @@ data AcrossArg
 
 extraFlagParser :: Parser ExtraFlag
 extraFlagParser
-  = ExtraFlag <$> rawParser <*> verboseParser
+  = ExtraFlag <$> rawParser <*> verboseParser 
 
 argParser :: Parser Arg
 argParser
@@ -68,19 +79,26 @@ argParser
   <*> optional (optText (metavar "STACK" <> short 's' <> help "Target stack/hostgroup"))
   <*> extraFlagParser
 
-rawParser :: Parser Raw
-rawParser = Raw <$> switch (long "raw" <> help "Raw output (no jq)")
+orchParser :: Parser OrchArg
+orchParser
+  = OrchArg
+  <$> argText (metavar "CMD" <> help "SubCommand to run")
+  <*> optional (optText (short 's' <> help "Target stack/hostgroup" ))
+  <*> extraFlagParser
+
+rawParser :: Parser Bool
+rawParser = switch (long "raw" <> help "Raw output (no jq)")
 
 downParser :: Parser Down
-downParser = Down <$> switch (long "" <> help "Query disconnected node")
+downParser = Down <$> switch (long "down" <> help "Query disconnected node")
 
-verboseParser :: Parser Verbose
-verboseParser = Verbose <$> switch (long "verbose" <> short 'v' <> help "Display the executed command")
+verboseParser :: Parser Bool
+verboseParser = switch (long "verbose" <> short 'v' <> help "Display the executed command")
 
 resultParser :: Parser ResultArg
 resultParser
   = ResultArg
-  <$> rawParser
+  <$> extraFlagParser
   <*> (ResultNum <$> optRead auto (short 'n' <> help "Number of results to display") <|> ResultJob <$> optText (metavar "JOB" <> short 'j' <> help "Job id"))
 
 serviceParse :: Text -> Maybe ServiceAction
@@ -116,7 +134,7 @@ subCommandParser =
       Console     <$  subcommand "console" "Open the cicd console" (pure ())
   <|> Stats       <$  subcommand "stats" "Stats (special permission required)" (pure ())
   <|> Data        <$> subcommand "data" "Return configuration data for a specific property" data_parser
-  <|> Orchestrate <$> subcommand "orch" "Run an orchestration command on the infrastructure" orch_parser
+  <|> Orchestrate <$> subcommand "orch" "Run an orchestration command on the infrastructure" orchParser
   <|> Facts       <$> subcommand "facts" "Return essential facts about nodes" fact_parser
   <|> Ping        <$> subcommand "ping" "Ping nodes" across_parser
   <|> Du          <$> subcommand "du" "Return disk usage" argParser
@@ -130,7 +148,6 @@ subCommandParser =
     data_parser   = DataArg <$> optional (optText (long "key" <> short 'k' <> metavar "KEY" <> help "Property to look up for" )) <*> across_parser
     fact_parser   = FactArg <$> downParser <*> across_parser
     across_parser = AcrossArg <$> switch (long "all" <> help "Target whole the known stacks" ) <*> argParser
-    orch_parser   = OrchArg <$> argText (metavar "CMD" <> help "SubCommand to run") <*> optional (optText (short 's' <> help "Target stack/hostgroup" ))
 
 optionParser :: Parser Options
 optionParser =

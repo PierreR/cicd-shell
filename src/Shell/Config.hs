@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE LambdaCase      #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedLists #-}
 
 -- | Configuration data are either static or read from file.
 --
@@ -11,6 +12,7 @@ module Shell.Config (
   , localDir
   , pgUrl
   , puppetdbUrl
+  , saltUrl
   , userId
   , userPwd
   , userDefaultStack
@@ -96,3 +98,13 @@ puppetdbUrl :: Zone -> Text
 puppetdbUrl (Zone z)
   | z == "sandbox" = "http://puppetdb.sandbox.srv.cirb.lan:8080"
   | otherwise      = "http://puppetdb.prd.srv.cirb.lan:8080"
+
+saltUrl :: Zone -> Text
+saltUrl (Zone z) =
+  case z of
+    "prod" -> "https://salt.prd.srv.cirb.lan:8000"
+    "staging" -> "https://salt.sta.srv.cirb.lan:8000"
+    "testing" -> "https://salt.sta.srv.cirb.lan:8000"
+    "dev" -> "https://salt.dev.srv.cirb.lan:8000"
+    "sandbox" -> "https://saltmaster.sandbox.srv.cirb.lan:8000"
+    _ -> panic $ "Unrecognized zone " <> z

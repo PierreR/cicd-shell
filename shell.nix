@@ -14,13 +14,13 @@ let
   haskellPackages = if compiler == "default"
                        then pkgs.haskellPackages
                        else pkgs.haskell.packages.${compiler};
-  drv = hlib.overrideCabal
-  ( hlib.dontHaddock (hlib.justStaticExecutables (haskellPackages.callPackage ./. {
-    protolude = haskellPackages.protolude_0_2;
-  })))
-  ( oldDerivation: {
-    executableSystemDepends = [ pkgs.bash] ;
-  });
+  drv = hlib.dontHaddock
+    ( hlib.justStaticExecutables
+      ( haskellPackages.callPackage ./. {
+        protolude = haskellPackages.protolude_0_2;
+        }
+      )
+    );
 
 in
 

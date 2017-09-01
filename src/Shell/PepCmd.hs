@@ -256,12 +256,12 @@ dataCmd _ (Just key) Target {_node= Just n} =
       & jq .~ "jq '.return[0]'"
 
 -- | Fetch the result of previous commands from the pgserver.
-resultCmd :: Text -> Raw -> Maybe Text -> Maybe Natural -> Text -> PepCmd
+resultCmd :: Text -> Bool -> Maybe Text -> Maybe Natural -> Text -> PepCmd
 resultCmd _ _ Nothing (Just 0) _ = panic "NUM should be > 0"
 resultCmd pgUrl _ Nothing (Just num) user =
   def & pep .~ format ("curl -f -s -H \"Range: 0-"%d%"\" \""%s%"?user=eq."%s%"&order=jid.desc\"") (num - 1) pgUrl user
       & jq .~ "jq -C '.'"
-resultCmd pgUrl (Raw raw) (Just jobid) Nothing _ =
+resultCmd pgUrl raw (Just jobid) Nothing _ =
   def & pep .~ ("curl -s " <> (if raw then mempty else "-f -H \"Accept: application/vnd.pgrst.object+json\" ") <> "\"" <> pgUrl <> "?select=ret&jid=eq." <> jobid <> "\"" )
       & jq .~
         [r|
