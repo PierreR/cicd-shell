@@ -5,8 +5,6 @@ module Main where
 import           Control.Concurrent
 import qualified Data.Text                    as Text
 import qualified Data.Text.IO                 as Text
-import qualified Data.Version                 (showVersion)
-import qualified Paths_cicd_shell
 import qualified System.Console.AsciiProgress as Progress
 import           Turtle                       hiding (FilePath, strict, view)
 import qualified Turtle
@@ -16,7 +14,6 @@ import qualified Shell.Config                 as Config
 import           Shell.PepCmd
 import           Shell.Prelude
 import           Shell.Type
-
 
 getStack :: MonadIO io => Maybe Text -> io Text
 getStack s = do
@@ -28,19 +25,11 @@ mkTarget (Zone _zone) Arg{..} = do
   _stack <- getStack _stack
   pure Target{..}
 
--- | localDir sits in user space
--- It is the location for the gentags generated files that help with completion
-localDir :: Shell Turtle.FilePath
-localDir = (</> ".local/share/cicd") <$> home
-
-dataDir :: Shell FilePath
-dataDir = liftIO Paths_cicd_shell.getDataDir
-
 nixShellCmd :: Zone -> Text -> Shell Text
 nixShellCmd (Zone zone) pep = do
   userid <- Config.userId
   userpwd <- Config.userPwd
-  datadir <- dataDir
+  datadir <- Config.dataDir
   let pgr = format ("nix-shell "%w%"/share/"%s%".nix --argstr user_id "%s%" --argstr user_pwd "%s) datadir zone userid userpwd
   if Text.null pep
     then pure pgr
@@ -48,7 +37,7 @@ nixShellCmd (Zone zone) pep = do
 
 initTags :: Zone -> Shell ()
 initTags z@(Zone zone) = do
-  localdir <- localDir
+  localdir <- Config.localDir
   let tagfile = localdir </> fromText (".nodes-" <> zone)
   found <- testfile tagfile
   unless found $ do
@@ -64,7 +53,7 @@ initHelp = do
   gen_help genSaltModjsonCmd "modhelp"
   where
     gen_help cmd tag = do
-      localdir <- localDir
+      localdir <- Config.localDir
       let fpath = localdir </> fromText ("." <> tag)
       found <- testfile fpath
       unless found $ do
@@ -135,26 +124,26 @@ run :: Options -> Shell ExitCode
 run = \case
 
   DocCommand HtmlDoc -> do
-    datadir <- dataDir
+    datadir <- Config.dataDir
     browser <- fromMaybe "firefox" <$> need "BROWSER"
     let help_fp = Text.pack (datadir <> "/share/doc/cicd-shell.html")
     proc browser
          [help_fp] empty
   DocCommand ModListDoc -> do
-    localdir <- localDir
+    localdir <- Config.localDir
     let fpath = format (fp%"/.modlist.json") localdir
     proc "jq" [ ".", fpath ] empty
   DocCommand (ModDoc mod) -> do
-    localdir <- localDir
+    localdir <- Config.localDir
     let fpath = format (fp%"/.modhelp.json") localdir
     proc "jq" [ "-r", (".[\"" <> mod <> "\"]"), fpath ] empty
 
   ZoneCommand zone Stats ->
     runCommand zone (Verbose False) (Raw False) statCmd
   ZoneCommand zone Console ->
-    dataDir >>= runCommand zone (Verbose False) (Raw True) . consoleCmd zone
+    Config.dataDir >>= runCommand zone (Verbose False) (Raw True) . consoleCmd zone
   ZoneCommand zone GenTags ->
-    localDir >>= runCommand zone (Verbose False) (Raw False) . genTagsCmd zone
+    Config.localDir >>= runCommand zone (Verbose False) (Raw False) . genTagsCmd zone
   ZoneCommand zone (Runpuppet arg) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag.verbose) (arg^.extraFlag.raw) . runpuppetCmd
   ZoneCommand zone (Ping (AcrossArg across arg)) ->
@@ -184,9 +173,8 @@ run = \case
 
 main :: IO ()
 main =
-  sh $ options (fromString ("CICD - command line utility (v" <> version <> ")")) optionParser >>= run
+  sh $ options (fromString ("CICD - command line utility (v" <> Config.version <> ")")) optionParser >>= run
   where
-    version = Data.Version.showVersion Paths_cicd_shell.version
 
 
 interactWith :: CmdMsg -> Shell ()

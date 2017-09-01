@@ -44,7 +44,6 @@ library
 executable cicd
   hs-source-dirs:      app
   main-is:             Main.hs
-  other-modules:       Paths_cicd_shell
   default-extensions:    FlexibleContexts
                        , LambdaCase
                        , NoImplicitPrelude

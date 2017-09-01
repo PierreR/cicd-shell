@@ -1,3 +1,4 @@
+-- | General project specific utilities.
 module Shell.Prelude (
   module Exports
   , loopN, break, continue, whileM_
@@ -20,7 +21,7 @@ import qualified System.Process            as Process
 import qualified Turtle
 
 
--- | Give a list of file paths, find the first existing file
+-- | Given a list of file paths, find the first existing file.
 findFirstPath :: MonadIO io => [Text] -> io (Maybe Text)
 findFirstPath paths =
   asum <$> for paths (\p -> do
@@ -33,8 +34,9 @@ whileM_ p f = go
   where
     go = ifM p (f >> go) (return ())
 
--- | Loop n times with the ability to `break` the loop
---   `Data.Foldable.asum` will strive for the first non empty value
+-- | Loop n times with the ability to `break` the loop.
+--
+--   `Data.Foldable.asum` will strive for the first non empty value.
 loopN :: MonadIO m => Int -> MaybeT m () -> m (Maybe ())
 loopN n = runMaybeT . asum . replicate n
 
@@ -45,8 +47,7 @@ break = pure ()
 continue :: MonadIO m => MaybeT m ()
 continue = empty
 
--- | Run a command in the shell for interactive console processes
---   Used when running 'cicd console'
+-- | Wrap the opening of a interactive console (`cicd ZONE console`).
 interactiveShell :: MonadIO io
             => Text
             -- ^ Command

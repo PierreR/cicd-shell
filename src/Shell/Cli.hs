@@ -1,3 +1,4 @@
+-- | Parse command line arguments
 module Shell.Cli where
 
 import           Shell.Options
@@ -135,8 +136,3 @@ optionParser :: Parser Options
 optionParser =
       DocCommand <$> subcommand "doc" "Documentation utilities" docTypeParser
   <|> ZoneCommand . Zone <$> argText (metavar "ZONE" <> help "ZONE (dev|testing|staging|prod)") <*> subCommandParser
-
--- -- | One or none.
-  -- let nix_file = format (s%"/"%s%".nix") projectDir zone
--- optional' :: Alternative f => f a -> f (Optional a)
--- optional' v = Optional.Specific <$> v <|> pure Optional.Default

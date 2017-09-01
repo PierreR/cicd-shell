@@ -1,25 +1,44 @@
 {-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE LambdaCase      #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# OPTIONS_GHC -fdefer-type-errors #-}
+
+-- | Configuration data are either static or read from file.
+--
+-- The user config file is mandatory and expected to sit in
+-- `/vagrant/config/shell` or `~/.config/cicd/shell` (in that order).
 module Shell.Config (
-    pgUrl
+    dataDir
+  , localDir
+  , pgUrl
   , puppetdbUrl
   , userId
   , userPwd
   , userDefaultStack
+  , version
   , HasShellConfig(..)
 ) where
 
-import qualified Data.Text         as Text
-import qualified Data.Text.Lazy as Text.Lazy
+import qualified Data.Text        as Text
+import qualified Data.Text.Lazy   as Text.Lazy
+import qualified Data.Version     (showVersion)
 import qualified Dhall
-import Turtle (home, (</>), format, fp, die)
+import qualified Paths_cicd_shell
+import           Turtle           (Shell, die, format, fp, home, (</>))
+import qualified Turtle
 
 import           Shell.Prelude
 import           Shell.Type
 
--- | return the first found configuration file
--- both "/vagrant/config/shell and "~/.config/cicd/shell" are tried in that order
+dataDir :: Shell FilePath
+dataDir = liftIO Paths_cicd_shell.getDataDir
+
+version = Data.Version.showVersion Paths_cicd_shell.version
+
+-- | Directories where gentags & genhelp files are stored.
+localDir :: Shell Turtle.FilePath
+localDir = (</> ".local/share/cicd") <$> home
+
+-- return the first found configuration file
 configFilePath :: MonadIO io => io Text
 configFilePath = do
   _HOME <- home
@@ -39,12 +58,15 @@ makeClassy ''ShellConfig
 
 instance Dhall.Interpret ShellConfig
 
+-- | User AD login id
 userId :: MonadIO io => io Text
 userId = view (loginId.strict) <$> mkShellConfig
 
+-- | User AD password
 userPwd :: MonadIO io => io Text
 userPwd = view (password.strict) <$> mkShellConfig
 
+-- | User default puppet stack
 userDefaultStack :: MonadIO io => io Text
 userDefaultStack = view (defaultStack.strict) <$> mkShellConfig
 
@@ -56,6 +78,7 @@ mkShellConfig =
     auto = Dhall.autoWith
       ( Dhall.defaultInterpretOptions { Dhall.fieldModifier = Text.Lazy.dropWhile (== '_') })
 
+-- | Pgserver url
 pgUrl :: Zone -> Text
 pgUrl (Zone z) =
   let
@@ -68,6 +91,7 @@ pgUrl (Zone z) =
     "prod"    -> pgserver_prod <> result_suffix
     _         -> pgserver_prod <> "_" <> z <> result_suffix
 
+-- | Puppetdb url
 puppetdbUrl :: Zone -> Text
 puppetdbUrl (Zone z)
   | z == "sandbox" = "http://puppetdb.sandbox.srv.cirb.lan:8080"
