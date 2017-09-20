@@ -44,7 +44,7 @@ localDir = (</> ".local/share/cicd") <$> home
 configFilePath :: MonadIO io => io Text
 configFilePath = do
   _HOME <- home
-  let paths = ["/vagrant/config/shell", format fp (_HOME </> ".config/cicd/shell")]
+  let paths = ["/vagrant/config/shell.dhall", format fp (_HOME </> ".config/cicd/shell.dhall")]
   findFirstPath paths >>= \case
     Nothing -> die ("no configuration file found in " <> Text.intercalate " or " paths)
     Just v -> pure v
