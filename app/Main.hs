@@ -79,7 +79,7 @@ runCommand z flag cmd =  do
     ProgressMode t ->
       liftIO $ Progress.displayConsoleRegions $ do
         let ticking pg =
-              whileM_ (Progress.isComplete pg) $ do
+              whileM_ (not <$> Progress.isComplete pg) $ do
                 threadDelay $ 1000 * 1000
                 Progress.tickN pg 1
             nixcmd' = if (flag^.raw)
