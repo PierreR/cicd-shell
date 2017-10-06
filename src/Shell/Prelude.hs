@@ -29,10 +29,11 @@ findFirstPath paths =
     let path = if found then Just p else Nothing
     pure path)
 
+-- | Play a computation for its side-effect as long as a predate holds
 whileM_ :: (Monad m) => m Bool -> m a -> m ()
 whileM_ p f = go
   where
-    go = ifM p (f >> go) (return ())
+    go = ifM p (f *> go) (pure ())
 
 -- | Loop n times with the ability to `break` the loop.
 --
