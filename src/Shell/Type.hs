@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields  #-}
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
@@ -27,7 +28,11 @@ data ExtraFlag
   = ExtraFlag
   { _raw     :: Bool -- ^ Display the result with no `jq` pretty printer
   , _verbose :: Bool -- ^ Print the `pepper` command to stdout
-  } deriving Show
+  , _dry     :: Bool -- ^ Print the command and exit
+  } deriving (Show, Generic)
+
+instance Default ExtraFlag where
+  def = ExtraFlag False False False
 
 makeLenses ''ExtraFlag
 

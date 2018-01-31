@@ -7,6 +7,7 @@ module Shell.Cli (
   , ResultArg(..)
   , ResultType(..)
   , OrchArg(..)
+  , StateArg(..)
   , DocType(..)
   , Options(..)
   , SubCommand(..)
@@ -36,6 +37,7 @@ data SubCommand
   = Console
   | Data DataArg
   | Facts FactArg
+  | State StateArg
   | Orchestrate OrchArg
   | Stats
   | Du Arg
@@ -53,8 +55,13 @@ data OrchArg =
   OrchArg Text (Maybe Text) ExtraFlag
   deriving Show
 
+
 data DataArg =
   DataArg (Maybe Text) AcrossArg -- ^ Query config data optionally with a key
+  deriving Show
+
+data StateArg =
+  StateArg Text Text ExtraFlag
   deriving Show
 
 data FactArg
@@ -68,7 +75,7 @@ data AcrossArg
 
 extraFlagParser :: Parser ExtraFlag
 extraFlagParser
-  = ExtraFlag <$> rawParser <*> verboseParser 
+  = ExtraFlag <$> rawParser <*> verboseParser <*> dryParser
 
 argParser :: Parser Arg
 argParser
@@ -79,9 +86,17 @@ argParser
   <*> optional (optText (metavar "STACK" <> short 's' <> help "Target stack/hostgroup"))
   <*> extraFlagParser
 
+
+stateParser :: Parser StateArg
+stateParser =
+  StateArg
+  <$> argText (metavar "CMD" <> help "SubCommand to run")
+  <*> optText (metavar "NODE" <> short 'n' <> help "Target node")
+  <*> extraFlagParser
+
 orchParser :: Parser OrchArg
-orchParser
-  = OrchArg
+orchParser =
+  OrchArg
   <$> argText (metavar "CMD" <> help "SubCommand to run")
   <*> optional (optText (short 's' <> help "Target stack/hostgroup" ))
   <*> extraFlagParser
@@ -94,6 +109,9 @@ downParser = Down <$> switch (long "down" <> help "Query disconnected node")
 
 verboseParser :: Parser Bool
 verboseParser = switch (long "verbose" <> short 'v' <> help "Display the executed command")
+
+dryParser :: Parser Bool
+dryParser = switch (long "dry" <> help "Display the command without execution")
 
 resultParser :: Parser ResultArg
 resultParser
@@ -138,6 +156,7 @@ subCommandParser =
   <|> Facts       <$> subcommand "facts" "Return essential facts about nodes" fact_parser
   <|> Ping        <$> subcommand "ping" "Ping nodes" across_parser
   <|> Du          <$> subcommand "du" "Return disk usage" argParser
+  <|> State       <$> subcommand "state" "Apply a specific configuration" stateParser
   <|> Service     <$> subcommand "service" "Service management for a specific node" statusParser
   <|> Runpuppet   <$> subcommand "runpuppet" "Apply puppet configuration" argParser
   <|> Sync        <$> subcommand "sync" "Syncmetavar  data from master to nodes" across_parser

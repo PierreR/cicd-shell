@@ -5,6 +5,8 @@
 WARNING: the configuration file is now prefixed with the `dhall` extension
 
 - `orch` and `result` subcommands now accept the `--verbose` flag
+- add a `--dry` flag
+- add the `state` subcommand to apply configuration on a node
 
 ## v1.5, 28/07/2017
 - `cicd` will search its config file both in /vagrant/config/shell.dhall and ~/.config/cicd/shell.dhall in that order

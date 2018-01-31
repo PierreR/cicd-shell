@@ -43,7 +43,7 @@ initTags z@(Zone zone) = do
   unless found $ do
     mktree localdir
     touch tagfile -- avoid the infine loop ...
-    runCommand z (ExtraFlag False False) (genTagsCmd z localdir) >>= \case
+    runCommand z def (genTagsCmd z localdir) >>= \case
       ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") zone
       ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
 
@@ -58,7 +58,7 @@ initHelp = do
       found <- testfile fpath
       unless found $ do
         touch fpath -- avoid the infine loop ...
-        runCommand (Zone "dev") (ExtraFlag False False) (cmd (format fp fpath)) >>= \case
+        runCommand (Zone "dev") def (cmd (format fp fpath)) >>= \case
           ExitSuccess -> printf (fp%" generated successfully.\n") fpath
           ExitFailure _ -> printf ("WARNING: cannot generate '"%fp%"' (completion).\n") fpath
 
@@ -70,6 +70,7 @@ runCommand z flag cmd =  do
   maybe (pure ()) interactWith (cmd ^. beforeMsg)
   cmdline <- shellCmdLine z (cmd^.pep)
   if (flag^.verbose) then putText (cmd^.pep) else pure()
+  if (flag^.dry) then putText (cmd^.pep) *> liftIO exitSuccess else pure()
   case cmd^.cmdMode of
     ConsoleMode -> interactiveShell cmdline
     NormalMode ->
@@ -137,13 +138,12 @@ run = \case
     localdir <- Config.localDir
     let fpath = format (fp%"/.modhelp.json") localdir
     proc "jq" [ "-r", (".[\"" <> mod <> "\"]"), fpath ] empty
-
   ZoneCommand zone Stats ->
-    runCommand zone (ExtraFlag False False) statCmd
+    runCommand zone def statCmd
   ZoneCommand zone Console ->
-    Config.dataDir >>= runCommand zone ExtraFlag{_raw = True, _verbose = False} . consoleCmd zone
+    Config.dataDir >>= runCommand zone ExtraFlag{_raw = True, _verbose = False, _dry = False} . consoleCmd zone
   ZoneCommand zone GenTags ->
-    Config.localDir >>= runCommand zone (ExtraFlag False False) . genTagsCmd zone
+    Config.localDir >>= runCommand zone def . genTagsCmd zone
   ZoneCommand zone (Runpuppet arg) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . runpuppetCmd
   ZoneCommand zone (Ping (AcrossArg across arg)) ->
@@ -160,6 +160,8 @@ run = \case
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . dataCmd across key
   ZoneCommand zone (Du arg) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . duCmd
+  ZoneCommand zone (State (StateArg cmd node xflag)) ->
+    runCommand zone xflag (stateCmd cmd node)
   ZoneCommand zone (Service (action, name, arg)) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . serviceCmd action name
   ZoneCommand zone (Orchestrate (OrchArg cmd s flag)) ->

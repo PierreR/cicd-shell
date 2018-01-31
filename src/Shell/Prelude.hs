@@ -7,13 +7,16 @@ module Shell.Prelude (
   , outputConcurrentMsg, shell'
 ) where
 
-import           Control.Lens              as Exports (makeClassy,
+import           Control.Lens              as Exports (at, makeClassy,
                                                        makeFieldsNoPrefix,
-                                                       makeLenses, strict, view, at, _Just, _1, _2)
+                                                       makeLenses, strict, view,
+                                                       _1, _2, _Just)
 import           Control.Lens.Operators    as Exports hiding ((<.>))
 import           Control.Monad.Trans.Maybe
+import           Data.Default              as Exports
 import           Numeric.Natural           as Exports
-import           Protolude                 as Exports hiding (break, die, (%), (<&>), Down)
+import           Protolude                 as Exports hiding (Down, break, die,
+                                                       (%), (<&>))
 import           System.Console.Concurrent (createProcessConcurrent,
                                             outputConcurrent,
                                             waitForProcessConcurrent)

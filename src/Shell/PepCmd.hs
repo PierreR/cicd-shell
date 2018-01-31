@@ -23,6 +23,7 @@ module Shell.PepCmd (
   , serviceCmd
   , setfactsCmd
   , statCmd
+  , stateCmd
   , syncCmd
 ) where
 
@@ -74,8 +75,8 @@ data PepCmd
   , _cmdMode :: CmdMode -- ^ Command mode
   } deriving Show
 
-def :: PepCmd
-def = PepCmd mempty "jq ." empty NormalMode
+instance Default PepCmd where
+  def = PepCmd mempty "jq ." empty NormalMode
 
 -- | A message to be displayed to the user.
 -- Ask for confirmation if 'Bool' is set to True.
@@ -182,6 +183,12 @@ syncCmd across target@Target { _node = Nothing} =
   def & pep .~ (pepperCompoundTarget across target <> "saltutil.sync_all")
 syncCmd _ Target {_node = Just n} =
   def & pep .~ ("pepper '" <> n <> "' saltutil.sync_all")
+
+-- | Apply a configuration with state.
+stateCmd :: Text -> Text -> PepCmd
+stateCmd  cmd n =
+  def & pep .~ ("pepper " <> n <> " state.apply " <> cmd)
+      & jq .~ "jq '.return[0]'"
 
 -- | Disk usage
 duCmd :: Target -> PepCmd

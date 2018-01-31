@@ -64,6 +64,7 @@ Available commands:
   ping                     Ping nodes
   du                       Return disk usage
   service                  Service management for a specific node
+  state                    Apply a specific configuration
   runpuppet                Apply puppet configuration
   sync                     Syncmetavar  data from master to nodes
   setfacts                 Set/update the 4 base machine facts
@@ -75,7 +76,7 @@ Available commands:
 ```
 → cicd staging facts -h
 Usage: cicd facts [--down] [--all] [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-                  [--raw] [-v|--verbose]
+                  [--raw] [-v|--verbose] [--dry]
   Return essential facts about nodes
 
 Available options:
@@ -87,6 +88,7 @@ Available options:
   --all                    Target whole the known stacks
   --raw                    Raw output (no jq)
   -v,--verbose             Display the executed command
+  --dry                    Display the command without execution
   -h,--help                Show this help text
 ```
 
@@ -268,6 +270,20 @@ $ pep -L fqdn1,fqdn2 --client=local_async cicd.run_agent <2>
 - Have a look at the saltstack documentation to learn more about https://docs.saltstack.com/en/latest/topics/targeting/#targeting-minions[targeting minions].
 - Take a look https://docs.saltstack.com/en/latest/ref/index.html#salt-module-reference[here] for a list of possible commands.
 ====
+
+### icon:terminal[] state
+
+Apply a configuration (called 'state' in Salt) on one machine.
+
+```
+→ cicd dev state CMD -n NODE
+```
+
+This command target one single node for safety reasons. If you wish to target multiple nodes, use the equivalent `pep` command within the console:
+
+```
+[cicd dev]$ pep -C "G@subgroup:puppet and G@hostgroup:cicd" state.apply puppet4-agent
+```
 
 ### icon:terminal[] orch
 
