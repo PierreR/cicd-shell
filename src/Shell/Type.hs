@@ -31,8 +31,7 @@ data ExtraFlag
   , _dry     :: Bool -- ^ Print the command and exit
   } deriving (Show, Generic)
 
-instance Default ExtraFlag where
-  def = ExtraFlag False False False
+defExtraFlag = ExtraFlag False False False
 
 makeLenses ''ExtraFlag
 

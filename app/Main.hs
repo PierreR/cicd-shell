@@ -43,7 +43,7 @@ initTags z@(Zone zone) = do
   unless found $ do
     mktree localdir
     touch tagfile -- avoid the infine loop ...
-    runCommand z def (genTagsCmd z localdir) >>= \case
+    runCommand z defExtraFlag (genTagsCmd z localdir) >>= \case
       ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") zone
       ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
 
@@ -58,7 +58,7 @@ initHelp = do
       found <- testfile fpath
       unless found $ do
         touch fpath -- avoid the infine loop ...
-        runCommand (Zone "dev") def (cmd (format fp fpath)) >>= \case
+        runCommand (Zone "dev") defExtraFlag (cmd (format fp fpath)) >>= \case
           ExitSuccess -> printf (fp%" generated successfully.\n") fpath
           ExitFailure _ -> printf ("WARNING: cannot generate '"%fp%"' (completion).\n") fpath
 
@@ -139,11 +139,11 @@ run = \case
     let fpath = format (fp%"/.modhelp.json") localdir
     proc "jq" [ "-r", (".[\"" <> mod <> "\"]"), fpath ] empty
   ZoneCommand zone Stats ->
-    runCommand zone def statCmd
+    runCommand zone defExtraFlag statCmd
   ZoneCommand zone Console ->
     Config.dataDir >>= runCommand zone ExtraFlag{_raw = True, _verbose = False, _dry = False} . consoleCmd zone
   ZoneCommand zone GenTags ->
-    Config.localDir >>= runCommand zone def . genTagsCmd zone
+    Config.localDir >>= runCommand zone defExtraFlag . genTagsCmd zone
   ZoneCommand zone (Runpuppet arg) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . runpuppetCmd
   ZoneCommand zone (Ping (AcrossArg across arg)) ->

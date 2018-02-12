@@ -17,7 +17,6 @@ let
   drv = hlib.dontHaddock
     ( hlib.justStaticExecutables
       ( haskellPackages.callPackage ./. {
-        protolude = haskellPackages.protolude_0_2;
         }
       )
     );
