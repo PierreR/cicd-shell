@@ -6,12 +6,14 @@ import           Control.Concurrent
 import qualified Data.Text                    as Text
 import qualified Data.Text.IO                 as Text
 import qualified System.Console.AsciiProgress as Progress
-import           Turtle                       hiding (FilePath, strict, view)
+import qualified System.Directory             as Directory
+import           Turtle                       hiding (FilePath, strict, view,
+                                               (</>))
 
 import           Shell.Cli
 import qualified Shell.Config                 as Config
 import           Shell.PepCmd
-import           Shell.Prelude
+import           Shell.Prelude                hiding (appendFile, die)
 import           Shell.Type
 
 getStack :: MonadIO io => Maybe Text -> io Text
@@ -28,7 +30,7 @@ shellCmdLine :: Zone -> Text -> Shell Text
 shellCmdLine z@(Zone zone) pep = do
   userid <- Config.userId
   userpwd <- Config.userPwd
-  datadir <- Config.dataDir
+  datadir <- liftIO $ Config.dataDir
   let pgr = format ("nix-shell "%w%"/share/default.nix --argstr zone "%s%" --argstr salt-user "%s%" --argstr salt-pass "%s%" --argstr salt-url "%s)
                     datadir zone userid userpwd (Config.saltUrl z)
   if Text.null pep
@@ -37,13 +39,13 @@ shellCmdLine z@(Zone zone) pep = do
 
 initTags :: Zone -> Shell ()
 initTags z@(Zone zone) = do
-  localdir <- Config.localDir
-  let tagfile = localdir </> fromText (".nodes-" <> zone)
-  found <- testfile tagfile
+  localdir <- liftIO Config.localDir
+  let tagfile = localdir </> ".nodes-" <> toS zone
+  found <- liftIO $ Directory.doesFileExist tagfile
   unless found $ do
-    mktree localdir
-    touch tagfile -- avoid the infine loop ...
-    runCommand z defExtraFlag (genTagsCmd z localdir) >>= \case
+    liftIO $ Directory.createDirectoryIfMissing True localdir
+    liftIO $ touchFile tagfile -- avoid the infine loop ...
+    runCommand z defExtraFlag (genTagsCmd z (toS localdir)) >>= \case
       ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") zone
       ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
 
@@ -53,14 +55,14 @@ initHelp = do
   gen_help genSaltModjsonCmd "modhelp"
   where
     gen_help cmd tag = do
-      localdir <- Config.localDir
-      let fpath = localdir </> fromText ("." <> tag)
-      found <- testfile fpath
+      localdir <- liftIO Config.localDir
+      let fpath = localdir </> "." <> tag
+      found <- liftIO $ Directory.doesFileExist fpath
       unless found $ do
-        touch fpath -- avoid the infine loop ...
-        runCommand (Zone "dev") defExtraFlag (cmd (format fp fpath)) >>= \case
-          ExitSuccess -> printf (fp%" generated successfully.\n") fpath
-          ExitFailure _ -> printf ("WARNING: cannot generate '"%fp%"' (completion).\n") fpath
+        liftIO $ touchFile fpath -- avoid the infine loop ...
+        runCommand (Zone "dev") defExtraFlag (cmd (toS fpath)) >>= \case
+          ExitSuccess -> putStrLn (fpath <> " generated successfully.\n")
+          ExitFailure _ -> putStrLn ("WARNING: cannot generate '" <> fpath <> "' (completion).\n")
 
 runCommand :: Zone -> ExtraFlag -> PepCmd -> Shell ExitCode
 runCommand z flag cmd =  do
@@ -125,25 +127,25 @@ run :: Options -> Shell ExitCode
 run = \case
 
   DocCommand HtmlDoc -> do
-    datadir <- Config.dataDir
+    datadir <- liftIO Config.dataDir
     browser <- fromMaybe "firefox" <$> need "BROWSER"
     let help_fp = Text.pack (datadir <> "/share/doc/cicd-shell.html")
     proc browser
          [help_fp] empty
   DocCommand ModListDoc -> do
-    localdir <- Config.localDir
-    let fpath = format (fp%"/.modlist.json") localdir
-    proc "jq" [ ".", fpath ] empty
+    localdir <- liftIO Config.localDir
+    let fpath = localdir </> ".modlist.json"
+    proc "jq" [ ".", toS fpath ] empty
   DocCommand (ModDoc mod) -> do
-    localdir <- Config.localDir
-    let fpath = format (fp%"/.modhelp.json") localdir
-    proc "jq" [ "-r", (".[\"" <> mod <> "\"]"), fpath ] empty
+    localdir <- liftIO $ Config.localDir
+    let fpath = localdir </> ".modhelp.json"
+    proc "jq" [ "-r", (".[\"" <> mod <> "\"]"), toS fpath ] empty
   ZoneCommand zone Stats ->
     runCommand zone defExtraFlag statCmd
   ZoneCommand zone Console ->
-    Config.dataDir >>= runCommand zone ExtraFlag{_raw = True, _verbose = False, _dry = False} . consoleCmd zone
+    liftIO Config.dataDir >>= runCommand zone ExtraFlag{_raw = True, _verbose = False, _dry = False} . consoleCmd zone
   ZoneCommand zone GenTags ->
-    Config.localDir >>= runCommand zone defExtraFlag . genTagsCmd zone
+    liftIO Config.localDir >>= runCommand zone defExtraFlag . genTagsCmd zone
   ZoneCommand zone (Runpuppet arg) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . runpuppetCmd
   ZoneCommand zone (Ping (AcrossArg across arg)) ->

@@ -20,33 +20,32 @@ module Shell.Config (
   , HasShellConfig(..)
 ) where
 
-import qualified Data.Text        as Text
+import qualified Data.List        as List
 import qualified Data.Text.Lazy   as Text.Lazy
 import qualified Data.Version     (showVersion)
 import qualified Dhall
+import qualified System.Directory          as Directory
 import qualified Paths_cicd_shell
-import           Turtle           (Shell, die, format, fp, home, (</>))
-import qualified Turtle
 
 import           Shell.Prelude
 import           Shell.Type
 
-dataDir :: Shell FilePath
-dataDir = liftIO Paths_cicd_shell.getDataDir
+dataDir :: IO FilePath
+dataDir = Paths_cicd_shell.getDataDir
 
 version = Data.Version.showVersion Paths_cicd_shell.version
 
 -- | Directories where gentags & genhelp files are stored.
-localDir :: Shell Turtle.FilePath
-localDir = (</> ".local/share/cicd") <$> home
+localDir :: IO FilePath
+localDir = (</> ".local/share/cicd") <$> Directory.getHomeDirectory
 
 -- return the first found configuration file
-configFilePath :: MonadIO io => io Text
+configFilePath :: IO FilePath
 configFilePath = do
-  _HOME <- home
-  let paths = ["/vagrant/config/shell.dhall", format fp (_HOME </> ".config/cicd/shell.dhall")]
+  _HOME <- liftIO $ Directory.getHomeDirectory
+  let paths = ["/vagrant/config/shell.dhall", _HOME </> ".config/cicd/shell.dhall"]
   findFirstPath paths >>= \case
-    Nothing -> die ("no configuration file found in " <> Text.intercalate " or " paths)
+    Nothing -> die ("no configuration file found in " <> toS (List.intercalate " or " paths))
     Just v -> pure v
 
 data ShellConfig
@@ -74,7 +73,7 @@ userDefaultStack = view (defaultStack.strict) <$> mkShellConfig
 
 mkShellConfig :: MonadIO m => m ShellConfig
 mkShellConfig =
-  liftIO $ Dhall.input auto =<< (fromStrict <$> configFilePath)
+  liftIO $ Dhall.input auto =<< (toS <$> configFilePath)
   where
     auto ::  Dhall.Interpret a => Dhall.Type a
     auto = Dhall.autoWith

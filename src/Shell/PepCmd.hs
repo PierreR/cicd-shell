@@ -29,8 +29,6 @@ module Shell.PepCmd (
 
 import qualified Data.Text         as Text
 import           Text.RawString.QQ
-import qualified Turtle
-import           Turtle.Format
 
 import           Shell.Prelude
 import           Shell.Type
@@ -89,18 +87,18 @@ makeClassy ''PepCmd
 consoleCmd :: Zone -> FilePath -> PepCmd
 consoleCmd (Zone zone) datadir =
   let
-    completion_cmd = format ("source "%w%"/share/completion.sh "%s%"; return") datadir zone
+    completion_cmd = "source " <> toS (datadir </> "share/completion.sh ") <> zone <> "; return"
   in
   defCmd & pep .~ completion_cmd
          & cmdMode .~ ConsoleMode
 
 -- | Regenerate the list of nodes cached for the auto-completion feature.
-genTagsCmd :: Zone -> Turtle.FilePath -> PepCmd
+genTagsCmd :: Zone -> FilePath -> PepCmd
 genTagsCmd (Zone zone) cfdir =
-  let nodefile = format fp cfdir <> "/.nodes-" <> zone
+  let nodefile = cfdir <> "/.nodes-" <> toS zone
   in defCmd & pep .~ "pepper \"*\" test.ping"
-            & jq .~ ("jq '.return[0]' | jq keys | jq -r 'join (\" \")' > " <> nodefile)
-            & beforeMsg .~ (Just $ CmdMsg False ("Generating " <> nodefile))
+            & jq .~ ("jq '.return[0]' | jq keys | jq -r 'join (\" \")' > " <> toS nodefile)
+            & beforeMsg .~ (Just $ CmdMsg False ("Generating " <> toS nodefile))
 
 -- | Regenerate the salt module list used for auto-completion
 genSaltModListCmd :: Text -> PepCmd
@@ -265,7 +263,7 @@ dataCmd _ (Just key) Target {_node= Just n} =
 resultCmd :: Text -> Bool -> Maybe Text -> Maybe Natural -> Text -> PepCmd
 resultCmd _ _ Nothing (Just 0) _ = panic "NUM should be > 0"
 resultCmd pgUrl _ Nothing (Just num) user =
-  defCmd & pep .~ format ("curl -f -s -H \"Range: 0-"%d%"\" \""%s%"?user=eq."%s%"&order=jid.desc\"") (num - 1) pgUrl user
+  defCmd & pep .~ "curl -f -s -H \"Range: 0-" <> show (num - 1) <> "\" \"" <> pgUrl <> "?user=eq." <> user <> "&order=jid.desc\""
          & jq .~ "jq -C '.'"
 resultCmd pgUrl raw (Just jobid) Nothing _ =
   defCmd & pep .~ ("curl -s " <> (if raw then mempty else "-f -H \"Accept: application/vnd.pgrst.object+json\" ") <> "\"" <> pgUrl <> "?select=ret&jid=eq." <> jobid <> "\"" )

@@ -6,8 +6,6 @@ module Shell.Options (
   , argText
   , arg
   , optRead
-
-  -- * re-export from Turtle.Options
   , subcommand
 
   -- * re-export from Options.Applicative

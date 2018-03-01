@@ -65,6 +65,10 @@ _cmdalias () {
             COMPREPLY=( $(compgen -W "-n" -- $cur ) )
             return 0
             ;;
+        state)
+            COMPREPLY=( $(compgen -W "-n" -- "$cur" ) )
+            return 0
+            ;;
         "-n")
             local nodes=$(cat "$HOME/.local/share/cicd/.nodes-${zone}")
             COMPREPLY=( $(compgen -W "$nodes" -- $cur ) )

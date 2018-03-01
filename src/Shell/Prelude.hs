@@ -5,6 +5,7 @@ module Shell.Prelude (
   , findFirstPath
   , interactiveShell
   , outputConcurrentMsg, shell'
+  , touchFile
 ) where
 
 import           Control.Lens              as Exports (at, makeClassy,
@@ -13,21 +14,26 @@ import           Control.Lens              as Exports (at, makeClassy,
                                                        _1, _2, _Just)
 import           Control.Lens.Operators    as Exports hiding ((<.>))
 import           Control.Monad.Trans.Maybe
+import           System.FilePath           as Exports ((</>))
 import           Numeric.Natural           as Exports
-import           Protolude                 as Exports hiding (Down, break, die,
+import           Protolude                 as Exports hiding (Down, break,
                                                        (%), (<&>))
+
 import           System.Console.Concurrent (createProcessConcurrent,
                                             outputConcurrent,
                                             waitForProcessConcurrent)
 import qualified System.Process            as Process
-import qualified Turtle
+import qualified System.Directory          as Directory
+import qualified System.IO
 
+
+touchFile = System.IO.appendFile ""
 
 -- | Given a list of file paths, find the first existing file.
-findFirstPath :: MonadIO io => [Text] -> io (Maybe Text)
+findFirstPath :: MonadIO io => [FilePath] -> io (Maybe FilePath)
 findFirstPath paths =
   asum <$> for paths (\p -> do
-    found <- Turtle.testfile (Turtle.fromText p)
+    found <- liftIO $ Directory.doesFileExist p
     let path = if found then Just p else Nothing
     pure path)
 
