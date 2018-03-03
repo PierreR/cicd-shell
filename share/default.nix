@@ -25,6 +25,7 @@ pkgs.stdenv.mkDerivation {
   alias result="cicd ${zone} result"
   alias gentags="cicd ${zone} gentags"
   alias service="cicd ${zone} service"
+  alias state="cicd ${zone} state"
   alias setfacts="cicd ${zone} setfacts"
   alias doc="cicd doc"
   alias pep="pepper"
