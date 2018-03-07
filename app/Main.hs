@@ -44,8 +44,9 @@ initTags z@(Zone zone) = do
   found <- liftIO $ Directory.doesFileExist tagfile
   unless found $ do
     liftIO $ Directory.createDirectoryIfMissing True localdir
-    liftIO $ touchFile tagfile -- avoid the infine loop ...
-    runCommand z defExtraFlag (genTagsCmd z (toS localdir)) >>= \case
+    let cmd = genTagsCmd z (toS localdir)
+    cmdline <- shellCmdLine z (cmd^.pep)
+    inshell cmdline empty & shell (cmd^.jq) >>= \case
       ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") zone
       ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
 
