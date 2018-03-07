@@ -66,6 +66,7 @@ _cmdalias () {
             return 0
             ;;
         state)
+            COMPREPLY=( $(compgen -W "puppet4.agent" -- "$cur" ) )
             COMPREPLY=( $(compgen -W "-n" -- "$cur" ) )
             return 0
             ;;
@@ -75,7 +76,7 @@ _cmdalias () {
             return 0
             ;;
         "-s")
-            COMPREPLY=( $(compgen -W "bas bos brucat fidus fmx genericservices gis hms iam irisbox nova middleware plone smartcity tms urbisaddress" -- "$cur" ) )
+            COMPREPLY=( $(compgen -W "bas bos brucat fidus fmx genericservices gis hms iam irisbox nova middleware plone smartcity tms urbisaddress editoria blockchain klimcicc" -- "$cur" ) )
             return 0
             ;;
     esac
@@ -85,11 +86,11 @@ _cmdalias () {
     fi
 
     if [[ "$cur" == --* ]]; then
-        COMPREPLY=( $( compgen -W "--raw --verbose --all --down --subgroup --role --hostgroup --zone" -- $cur ) )
+        COMPREPLY=( $( compgen -W "--raw --verbose --all --down --subgroup --role --hostgroup --zone --dry" -- $cur ) )
     fi
     ret=0;
 } &&
-complete -F _cmdalias data runpuppet du facts result service sync ping doc setfacts
+complete -F _cmdalias data runpuppet du facts result service sync ping doc setfacts state
 complete -F _pep pep
 
 # end

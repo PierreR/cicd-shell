@@ -57,10 +57,11 @@ initHelp = do
     gen_help cmd tag = do
       localdir <- liftIO Config.localDir
       let fpath = localdir </> "." <> tag
-      found <- liftIO $ Directory.doesFileExist fpath
+      found <- liftIO $ Directory.doesFileExist (fpath <> ".json")
       unless found $ do
-        liftIO $ touchFile fpath -- avoid the infine loop ...
-        runCommand (Zone "dev") defExtraFlag (cmd (toS fpath)) >>= \case
+        let cmd' = cmd (toS fpath)
+        cmdline <- shellCmdLine (Zone "dev") (cmd'^.pep)
+        inshell cmdline empty & shell (cmd'^.jq) >>= \case
           ExitSuccess -> putStrLn (fpath <> " generated successfully.\n")
           ExitFailure _ -> putStrLn ("WARNING: cannot generate '" <> fpath <> "' (completion).\n")
 
@@ -135,10 +136,14 @@ run = \case
   DocCommand ModListDoc -> do
     localdir <- liftIO Config.localDir
     let fpath = localdir </> ".modlist.json"
+    found <- liftIO $ Directory.doesFileExist fpath
+    unless found $ initHelp
     proc "jq" [ ".", toS fpath ] empty
   DocCommand (ModDoc mod) -> do
     localdir <- liftIO $ Config.localDir
     let fpath = localdir </> ".modhelp.json"
+    found <- liftIO $ Directory.doesFileExist fpath
+    unless found $ initHelp
     proc "jq" [ "-r", (".[\"" <> mod <> "\"]"), toS fpath ] empty
   ZoneCommand zone Stats ->
     runCommand zone defExtraFlag statCmd
