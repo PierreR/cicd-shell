@@ -67,7 +67,6 @@ _cmdalias () {
             ;;
         state)
             COMPREPLY=( $(compgen -W "puppet4.agent" -- "$cur" ) )
-            COMPREPLY=( $(compgen -W "-n" -- "$cur" ) )
             return 0
             ;;
         "-n")
