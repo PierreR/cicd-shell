@@ -1,0 +1,5 @@
+name: shell
+title: Shell
+version: master
+nav:
+- modules/ROOT/nav.adoc
