@@ -75,7 +75,7 @@ _cmdalias () {
             return 0
             ;;
         "-s")
-            COMPREPLY=( $(compgen -W "bas bos brucat fidus fmx genericservices gis hms iam irisbox nova middleware plone smartcity tms urbisaddress editoria blockchain klimcicc" -- "$cur" ) )
+            COMPREPLY=( $(compgen -W "bas bos editoria brucat fidus fmx genericservices gis hms iam irisbox nova middleware plone smartcity tms urbisaddress editoria blockchain klimcicc" -- "$cur" ) )
             return 0
             ;;
     esac
