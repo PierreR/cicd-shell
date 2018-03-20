@@ -66,7 +66,7 @@ _cmdalias () {
             return 0
             ;;
         state)
-            COMPREPLY=( $(compgen -W "puppet4.agent" -- "$cur" ) )
+            COMPREPLY=( $(compgen -W "puppet4.agent" -- $cur ) )
             return 0
             ;;
         "-n")
@@ -81,7 +81,7 @@ _cmdalias () {
     esac
 
     if [[ "$cur" == -* ]]; then
-        COMPREPLY=( $( compgen -W "-g -s -v -h" -- $cur ) )
+        COMPREPLY=( $( compgen -W "-g -s -v -h -n" -- $cur ) )
     fi
 
     if [[ "$cur" == --* ]]; then
