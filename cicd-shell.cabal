@@ -1,5 +1,5 @@
 name:                cicd-shell
-version:             1.6.5
+version:             1.6.6
 homepage:            ssh://git@stash.cirb.lan:7999/cicd/salt-shell.git
 license:             BSD3
 build-type:          Simple
@@ -29,7 +29,7 @@ library
                        , StrictData
   build-depends:       base
                        , concurrent-output >= 1.9
-                       , dhall >= 1.5
+                       , dhall >= 1.8
                        , directory >= 1.3
                        , filepath >= 1.4
                        , lens >= 4.15.2
