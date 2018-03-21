@@ -79,31 +79,24 @@ mkShellConfig =
     auto = Dhall.autoWith
       ( Dhall.defaultInterpretOptions { Dhall.fieldModifier = Text.Lazy.dropWhile (== '_') })
 
+
+infraPrefix = \case
+  "prod" -> "prd"
+  "staging" -> "sta"
+  "testing" -> "sta"
+  "dev" -> "dev"
+  _ -> panic $ "Unrecognized zone"
+
 -- | Pgserver url
 pgUrl :: Zone -> Text
 pgUrl (Zone z) =
-  let
-    pgserver_prod     = "http://pgserver-cicd.prd.srv.cirb.lan/saltstack"
-    pgserver_sandbox = "http://pgserver.sandbox.srv.cirb.lan/saltstack"
-    result_suffix = "/salt_result"
-  in
-  case z of
-    "sandbox" -> pgserver_sandbox <> result_suffix
-    "prod"    -> pgserver_prod <> result_suffix
-    _         -> pgserver_prod <> "_" <> z <> result_suffix
+  "http://pgserver-cicd." <> infraPrefix z <> ".srv.cirb.lan/saltstack/salt_result"
 
 -- | Puppetdb url
-puppetdbUrl :: Zone -> Text
-puppetdbUrl (Zone z)
-  | z == "sandbox" = "http://puppetdb.sandbox.srv.cirb.lan:8080"
-  | otherwise      = "http://puppetdb.prd.srv.cirb.lan:8080"
+puppetdbUrl :: Text
+puppetdbUrl =
+  "http://puppetdb.prd.srv.cirb.lan:8080"
 
 saltUrl :: Zone -> Text
 saltUrl (Zone z) =
-  case z of
-    "prod" -> "https://salt.prd.srv.cirb.lan:8000"
-    "staging" -> "https://salt.sta.srv.cirb.lan:8000"
-    "testing" -> "https://salt.sta.srv.cirb.lan:8000"
-    "dev" -> "https://salt.dev.srv.cirb.lan:8000"
-    "sandbox" -> "https://saltmaster.sandbox.srv.cirb.lan:8000"
-    _ -> panic $ "Unrecognized zone " <> z
+  "https://salt." <> infraPrefix z <> ".srv.cirb.lan:8000"

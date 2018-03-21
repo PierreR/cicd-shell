@@ -68,13 +68,13 @@ initHelp = do
 
 runCommand :: Zone -> ExtraFlag -> PepCmd -> Shell ExitCode
 runCommand z flag cmd =  do
+  maybe (pure ()) interactWith (cmd ^. beforeMsg)
+  cmdline <- shellCmdLine z (cmd^.pep)
+  when (flag^.verbose) $ putText (cmd^.pep)
+  when (flag^.dry) $ putText (cmd^.pep) *> liftIO exitSuccess
   void $ shell "ping -c1 stash.cirb.lan > /dev/null 2>&1" empty .||. die "cannot connect to stash.cirb.lan, check your connection"
   initTags z
   initHelp
-  maybe (pure ()) interactWith (cmd ^. beforeMsg)
-  cmdline <- shellCmdLine z (cmd^.pep)
-  if (flag^.verbose) then putText (cmd^.pep) else pure()
-  if (flag^.dry) then putText (cmd^.pep) *> liftIO exitSuccess else pure()
   case cmd^.cmdMode of
     ConsoleMode -> interactiveShell cmdline
     NormalMode ->
@@ -159,7 +159,7 @@ run = \case
   ZoneCommand zone (Sync (AcrossArg across arg)) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . syncCmd across
   ZoneCommand zone (Facts (FactArg down (AcrossArg across arg))) ->
-    mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . factCmd (Config.puppetdbUrl zone) across down
+    mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . factCmd Config.puppetdbUrl across down
   ZoneCommand _ (Data (DataArg Nothing (AcrossArg False (Arg Nothing Nothing Nothing _ _ )))) ->
     die "Running data on all nodes within a stack without providing a key is currently prohibited"
   ZoneCommand _ (Data (DataArg Nothing (AcrossArg True _))) ->
