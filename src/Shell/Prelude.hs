@@ -17,8 +17,9 @@ import           Control.Monad.Trans.Maybe
 import           System.FilePath           as Exports ((</>))
 import           Numeric.Natural           as Exports
 import           Protolude                 as Exports hiding (Down, break,
+                                                       getLast, getFirst, (<>), Last(..), First(..),
                                                        (%), (<&>))
-
+import           Data.Semigroup            as Exports hiding (Arg(..))
 import           System.Console.Concurrent (createProcessConcurrent,
                                             outputConcurrent,
                                             waitForProcessConcurrent)

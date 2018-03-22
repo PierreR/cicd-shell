@@ -9,6 +9,7 @@
 -- `/vagrant/config/shell` or `~/.config/cicd/shell` (in that order).
 module Shell.Config (
     dataDir
+  , foremanUrl
   , localDir
   , pgUrl
   , puppetdbUrl
@@ -100,3 +101,6 @@ puppetdbUrl =
 saltUrl :: Zone -> Text
 saltUrl (Zone z) =
   "https://salt." <> infraPrefix z <> ".srv.cirb.lan:8000"
+
+foremanUrl :: Text
+foremanUrl = "http://foreman.prd.srv.cirb.lan"

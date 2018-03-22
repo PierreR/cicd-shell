@@ -13,6 +13,7 @@ module Shell.PepCmd (
   , dataCmd
   , duCmd
   , factCmd
+  , foremanCmd
   , genTagsCmd
   , genSaltModListCmd
   , genSaltModjsonCmd
@@ -44,16 +45,23 @@ pepperCompoundTarget across t
                    <> "\" "
   where
     compound_target z s g r =
-      let join_target = Text.intercalate " and " . catMaybes
-          role_target [g', r'] = "G@subgroup:" <> g' <> " and G@role:" <> r'
-          role_target [r'] = "G@role:" <> r'
-          role_target _ = panic "Role should follow the pattern 'subgroup.role' where subgroup is optional" -- TODO replace this with an exceptT
-      in join_target
+      let role_target (Role (Just (Subgroup g')) r') = "G@subgroup:" <> g' <> " and G@role:" <> r'
+          role_target (Role Nothing r') = "G@role:" <> r'
+      in joinTargetWith " and "
            [ Just ("G@zone:" <> z)
            , ("G@hostgroup:" <>) <$> s
            , ("G@subgroup:" <>) <$> g
-           , (role_target . Text.splitOn ".") <$> r
+           , role_target <$> r
            ]
+
+joinTargetWith x = Text.intercalate x . catMaybes
+
+-- parseTargetRole :: Text -> (Maybe Text,Text)
+-- parseTargetRole = parse_role . Text.splitOn "."
+--   where parse_role [g, r] = (Just g, r)
+--         parse_role [r] =  (Nothing, r)
+--         parse_role _ = panic "Role should be a tuple of (maybe subgroup, role) to prevent this error from happening"
+
 
 -- | Each command determines an appropriate mode to be run with.
 data CmdMode
@@ -133,7 +141,8 @@ runpuppetCmd = \case
   target@Target {_node = Nothing} ->
     defCmd & pep .~ ( pepperCompoundTarget False target <> "--client=local_async cicd.run_puppet zone=" <> target^.zone <> " hostgroup=" <> target^.stack)
            & jq .~ "jq '.return'"
-           & beforeMsg .~ (Just $ CmdMsg True ("Run puppet on " <> Text.intercalate "." (catMaybes [target^.role, target^.subgroup] <> [target^.stack, target^.zone])))
+           & beforeMsg .~ (Just $ CmdMsg True ("Run puppet on " <> Text.intercalate "." (catMaybes [fmap toS (target^.role), target^.subgroup] <> [target^.stack, target^.zone])))
+
   target@Target {_node = Just n} ->
     defCmd & pep .~ ( "pepper " <> n <> " -t 300 cicd.run_puppet zone=" <> target^.zone <> " hostgroup=" <> target^.stack)
            & jq .~ [r|
@@ -283,3 +292,18 @@ resultCmd pgUrl raw (Just jobid) Nothing _ =
          & cmdMode .~ RetryMode
 resultCmd _ _ Nothing Nothing _ = panic'
 resultCmd _ _ (Just _) (Just _) _ = panic'
+
+foremanCmd :: Text -> Target -> PepCmd
+foremanCmd foremanUrl target =
+  let role_facts (Role Nothing r) = "facts.role=" <> r
+      role_facts (Role (Just (Subgroup g)) r) = "facts.subgroup=" <> g <> "+and+" <> "facts.role=" <> r
+      url = case target of
+        Target{_node = Just n} -> "/hosts/" <>  n <> "/config_reports"
+        target@Target{_node = Nothing} -> "?search=" <> joinTargetWith "+and+"
+                                                          [ Just ("facts.zone=" <> target^.zone)
+                                                          , Just ("facts.hostgroup=" <> target^.stack)
+                                                          , ("facts.subgroup=" <>) <$> target^.subgroup
+                                                          , role_facts <$> target^.role
+                                                          ]
+  in
+  defCmd & pep .~ "xdg-open " <> foremanUrl <> url <> " &> /dev/null"

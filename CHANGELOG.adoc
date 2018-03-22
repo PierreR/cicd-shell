@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.7, 26/03/2018
+
+- add the `foreman` subcommand
+
 ## v1.6, 25/09/2017
 
 WARNING: the configuration file is now prefixed with the `dhall` extension

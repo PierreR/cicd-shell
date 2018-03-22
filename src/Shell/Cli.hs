@@ -13,6 +13,8 @@ module Shell.Cli (
   , SubCommand(..)
   ) where
 
+import qualified Data.Text     as Text
+
 import           Shell.Options
 import           Shell.Prelude
 import           Shell.Type
@@ -37,6 +39,7 @@ data SubCommand
   = Console
   | Data DataArg
   | Facts FactArg
+  | Foreman Arg
   | State StateArg
   | Orchestrate OrchArg
   | Stats
@@ -64,6 +67,10 @@ data StateArg =
   StateArg Text Text ExtraFlag
   deriving Show
 
+data ForemanArg =
+  ForemanArg Text ExtraFlag
+  deriving Show
+
 data FactArg
   = FactArg Down AcrossArg -- ^ disconnect & across flags
   deriving Show
@@ -80,7 +87,7 @@ extraFlagParser
 argParser :: Parser Arg
 argParser
   = Arg
-  <$> optional (argText (metavar "ROLE" <> help "Role name maybe prefixed by a subgroup ('subgroup.role')"))
+  <$> optional (arg roleParse (metavar "ROLE" <> help "Role name maybe prefixed by a subgroup ('subgroup.role')"))
   <*> optional (optText (metavar "NODE" <> short 'n' <> help "Target node"))
   <*> optional (optText (metavar "GROUP" <> short 'g' <> help "Target subgroup"))
   <*> optional (optText (metavar "STACK" <> short 's' <> help "Target stack/hostgroup"))
@@ -118,6 +125,12 @@ resultParser
   = ResultArg
   <$> extraFlagParser
   <*> (ResultNum <$> optRead auto (short 'n' <> help "Number of results to display") <|> ResultJob <$> optText (metavar "JOB" <> short 'j' <> help "Job id"))
+
+roleParse :: Text -> Maybe Role
+roleParse = parse_role . Text.splitOn "."
+  where parse_role [g, r] = Just $ Role (Just (Subgroup g)) r
+        parse_role [r] =  Just $ Role Nothing r
+        parse_role _ = Nothing
 
 serviceParse :: Text -> Maybe ServiceAction
 serviceParse "status"  = Just ServiceStatus
@@ -158,6 +171,7 @@ subCommandParser =
   <|> Du          <$> subcommand "du" "Return disk usage" argParser
   <|> State       <$> subcommand "state" "Apply a specific configuration" stateParser
   <|> Service     <$> subcommand "service" "Service management for a specific node" statusParser
+  <|> Foreman     <$> subcommand "foreman" "Display the foreman report in a browser for the specific node" argParser
   <|> Runpuppet   <$> subcommand "runpuppet" "Apply puppet configuration" argParser
   <|> Sync        <$> subcommand "sync" "Syncmetavar  data from master to nodes" across_parser
   <|> Setfacts    <$> subcommand "setfacts" "Set/update the 4 base machine facts" setfactParser

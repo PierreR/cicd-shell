@@ -8,7 +8,7 @@ import qualified Data.Text.IO                 as Text
 import qualified System.Console.AsciiProgress as Progress
 import qualified System.Directory             as Directory
 import           Turtle                       hiding (FilePath, strict, view,
-                                               (</>))
+                                               (</>), (<>))
 
 import           Shell.Cli
 import qualified Shell.Config                 as Config
@@ -125,6 +125,12 @@ runCommand z flag cmd =  do
           pure $ ExitFailure 1
 
 
+runForeman :: ExtraFlag -> PepCmd -> Shell ExitCode
+runForeman extraflag cmd = do
+  when (extraflag^.verbose) $ putText (cmd^.pep)
+  when (extraflag^.dry) $ putText (cmd^.pep) *> liftIO exitSuccess
+  shell (cmd^.pep) empty
+
 run :: Options -> Shell ExitCode
 run = \case
 
@@ -180,12 +186,13 @@ run = \case
     Config.userId >>= runCommand zone flag . resultCmd (Config.pgUrl zone) (flag^.raw) (Just j) Nothing
   ZoneCommand zone (Setfacts arg) ->
     runCommand zone (arg^.extraFlag) (setfactsCmd arg)
+  ZoneCommand zone (Foreman arg) -> do
+    mkTarget zone arg >>= runForeman (arg^.extraFlag) . foremanCmd Config.foremanUrl
 
 main :: IO ()
 main =
   sh $ options (fromString ("CICD - command line utility (v" <> Config.version <> ")")) optionParser >>= run
   where
-
 
 interactWith :: CmdMsg -> Shell ()
 interactWith = \case
