@@ -28,6 +28,7 @@ pkgs.stdenv.mkDerivation {
   alias state="cicd ${zone} state"
   alias setfacts="cicd ${zone} setfacts"
   alias doc="cicd doc"
+  alias foreman="cicd ${zone} foreman"
   alias pep="pepper"
   '';
 }

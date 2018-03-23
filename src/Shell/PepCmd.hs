@@ -56,13 +56,6 @@ pepperCompoundTarget across t
 
 joinTargetWith x = Text.intercalate x . catMaybes
 
--- parseTargetRole :: Text -> (Maybe Text,Text)
--- parseTargetRole = parse_role . Text.splitOn "."
---   where parse_role [g, r] = (Just g, r)
---         parse_role [r] =  (Nothing, r)
---         parse_role _ = panic "Role should be a tuple of (maybe subgroup, role) to prevent this error from happening"
-
-
 -- | Each command determines an appropriate mode to be run with.
 data CmdMode
   = NormalMode

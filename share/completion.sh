@@ -35,15 +35,11 @@ _cmdalias () {
             COMPREPLY=( $(compgen -W "html mod modules" -- "$cur" ) )
             return 0
             ;;
-        facts)
+        sync|ping|facts)
             COMPREPLY=( $(compgen -W "-n" -- "$cur" ) )
             return 0
             ;;
-        sync|ping)
-            COMPREPLY=( $(compgen -W "-n" -- "$cur" ) )
-            return 0
-            ;;
-        runpuppet|du)
+        runpuppet|du|foreman)
             COMPREPLY=( $(compgen -W "-n" -- "$cur" ) )
             return 0
             ;;
@@ -61,7 +57,6 @@ _cmdalias () {
             return 0
             ;;
         setfacts)
-            local mods=$(cat "$HOME/.local/share/cicd/.modlist")
             COMPREPLY=( $(compgen -W "-n" -- $cur ) )
             return 0
             ;;
@@ -75,7 +70,7 @@ _cmdalias () {
             return 0
             ;;
         "-s")
-            COMPREPLY=( $(compgen -W "bas bos editoria brucat fidus fmx genericservices gis hms iam irisbox nova middleware plone smartcity tms urbisaddress editoria blockchain klimcicc" -- "$cur" ) )
+            COMPREPLY=( $(compgen -W "bas bos editoria brucat fidus fmx genericservices gis hms iam irisbox nova middleware plone smartcity tms urbisaddress editoria blockchain klimcicc jenkins cicd" -- "$cur" ) )
             return 0
             ;;
     esac
@@ -89,7 +84,7 @@ _cmdalias () {
     fi
     ret=0;
 } &&
-complete -F _cmdalias data runpuppet du facts result service sync ping doc setfacts state
+complete -F _cmdalias data runpuppet du facts result service sync ping doc setfacts state foreman
 complete -F _pep pep
 
 # end
