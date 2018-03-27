@@ -67,10 +67,6 @@ data StateArg =
   StateArg Text Text ExtraFlag
   deriving Show
 
-data ForemanArg =
-  ForemanArg Text ExtraFlag
-  deriving Show
-
 data FactArg
   = FactArg Down AcrossArg -- ^ disconnect & across flags
   deriving Show
@@ -171,7 +167,7 @@ subCommandParser =
   <|> Du          <$> subcommand "du" "Return disk usage" argParser
   <|> State       <$> subcommand "state" "Apply a specific configuration" stateParser
   <|> Service     <$> subcommand "service" "Service management for a specific node" statusParser
-  <|> Foreman     <$> subcommand "foreman" "Display the foreman report in a browser for the specific node" argParser
+  <|> Foreman     <$> subcommand "foreman" "Display the foreman report in a browser" argParser
   <|> Runpuppet   <$> subcommand "runpuppet" "Apply puppet configuration" argParser
   <|> Sync        <$> subcommand "sync" "Syncmetavar  data from master to nodes" across_parser
   <|> Setfacts    <$> subcommand "setfacts" "Set/update the 4 base machine facts" setfactParser
