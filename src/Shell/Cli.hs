@@ -68,7 +68,7 @@ data StateArg =
   deriving Show
 
 data FactArg
-  = FactArg Down AcrossArg -- ^ disconnect & across flags
+  = FactArg Refresh Down AcrossArg -- ^ disconnect & across flags
   deriving Show
 
 data AcrossArg
@@ -109,6 +109,7 @@ rawParser = switch (long "raw" <> help "Raw output (no jq)")
 
 downParser :: Parser Down
 downParser = Down <$> switch (long "down" <> help "Query disconnected node")
+refreshParser = Refresh <$> switch (long "refresh" <> help "Refresh the cache")
 
 verboseParser :: Parser Bool
 verboseParser = switch (long "verbose" <> short 'v' <> help "Display the executed command")
@@ -169,13 +170,13 @@ subCommandParser =
   <|> Service     <$> subcommand "service" "Service management for a specific node" statusParser
   <|> Foreman     <$> subcommand "foreman" "Display the foreman report in a browser" argParser
   <|> Runpuppet   <$> subcommand "runpuppet" "Apply puppet configuration" argParser
-  <|> Sync        <$> subcommand "sync" "Syncmetavar  data from master to nodes" across_parser
+  <|> Sync        <$> subcommand "sync" "Sync metavar  data from master to nodes" across_parser
   <|> Setfacts    <$> subcommand "setfacts" "Set/update the 4 base machine facts" setfactParser
   <|> Result      <$> subcommand "result" "Display the results of the most recent jobs executed by the user or for a specific id" resultParser
   <|> GenTags     <$  subcommand "gentags" "Generate node completion file" (pure ())
   where
     data_parser   = DataArg <$> optional (optText (long "key" <> short 'k' <> metavar "KEY" <> help "Property to look up for" )) <*> across_parser
-    fact_parser   = FactArg <$> downParser <*> across_parser
+    fact_parser   = FactArg <$> refreshParser <*> downParser <*> across_parser
     across_parser = AcrossArg <$> switch (long "all" <> help "Target whole the known stacks" ) <*> argParser
 
 optionParser :: Parser Options

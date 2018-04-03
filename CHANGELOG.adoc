@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.8, 08/04/2018
+
+- The result of any `facts` command is cached when first invoked.
+You can use the `--refresh` flag to force the facts to be remotely fetched again.
+
 ## v1.7, 26/03/2018
 
 - add the `foreman` subcommand

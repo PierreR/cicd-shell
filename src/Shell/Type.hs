@@ -3,29 +3,28 @@
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE RecordWildCards        #-}
 {-# LANGUAGE TemplateHaskell        #-}
 module Shell.Type where
 
+import qualified Data.Text                 as Text
+import           GHC.Show                  (Show (..))
 import           Shell.Prelude
-import GHC.Show (Show(..))
 
 newtype Zone = Zone Text deriving Show
 newtype Subgroup = Subgroup Text deriving Show
 
 newtype ServiceName = ServiceName Text deriving Show
 newtype Down = Down Bool deriving Show
+newtype Refresh = Refresh Bool deriving Show
 
 data ServiceAction = ServiceStatus | ServiceRestart deriving (Show)
 
 data Role = Role (Maybe Subgroup) Text deriving Show
 
 instance StringConv Role Text  where
-  strConv _ (Role Nothing r) = r
+  strConv _ (Role Nothing r)             = r
   strConv _ (Role (Just (Subgroup g)) r) = g <> "." <> r
-
--- instance Show Role where
---   show (Role Nothing r) = r
---   show (Role (Just (Subgroup g)) r) = g <> "." <> r
 
 data Target = Target
   { _node     :: Maybe Text
@@ -36,6 +35,11 @@ data Target = Target
   } deriving Show
 
 makeFieldsNoPrefix ''Target
+
+instance StringConv Target Text  where
+  strConv _ (Target node subgroup role stack zone) =
+    let s = catMaybes [node] <> [stack] <> catMaybes [subgroup, toS <$> role] <> [zone]
+    in Text.intercalate "-" s
 
 data ExtraFlag
   = ExtraFlag

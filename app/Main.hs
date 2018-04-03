@@ -169,8 +169,18 @@ run = \case
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . pingCmd across
   ZoneCommand zone (Sync (AcrossArg across arg)) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . syncCmd across
-  ZoneCommand zone (Facts (FactArg down (AcrossArg across arg))) ->
-    mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . factCmd Config.puppetdbUrl across down
+  ZoneCommand zone (Facts (FactArg (Refresh refresh) down (AcrossArg across arg))) -> do
+    localdir <- liftIO $ Config.localDir
+    target <- mkTarget zone arg
+    let fname = ".facts-" <> toS target <> ".json"
+        fpath = localdir </> Text.unpack fname
+        cmd = factCmd fpath Config.puppetdbUrl across down target
+    found <- liftIO $ Directory.doesFileExist fpath
+    if (found && not refresh)
+    then do
+      proc "jq" [ ".", toS fpath ] empty
+    else
+      runCommand zone (arg^.extraFlag) cmd
   ZoneCommand _ (Data (DataArg Nothing (AcrossArg False (Arg Nothing Nothing Nothing _ _ )))) ->
     die "Running data on all nodes within a stack without providing a key is currently prohibited"
   ZoneCommand _ (Data (DataArg Nothing (AcrossArg True _))) ->
