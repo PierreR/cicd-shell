@@ -178,7 +178,9 @@ run = \case
     found <- liftIO $ Directory.doesFileExist fpath
     if (found && not refresh)
     then do
-      proc "jq" [ ".", toS fpath ] empty
+      exitCode <- proc "jq" [ ".", toS fpath ] empty
+      when (exitCode == ExitSuccess) $ putText "\n↳ These facts are cached. Use --refresh for updated information."
+      pure exitCode
     else
       runCommand zone (arg^.extraFlag) cmd
   ZoneCommand _ (Data (DataArg Nothing (AcrossArg False (Arg Nothing Nothing Nothing _ _ )))) ->
