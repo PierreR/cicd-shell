@@ -137,7 +137,7 @@ runpuppetCmd = \case
            & beforeMsg .~ (Just $ CmdMsg True ("Run puppet on " <> Text.intercalate "." (catMaybes [fmap toS (target^.role), target^.subgroup] <> [target^.stack, target^.zone])))
 
   target@Target {_node = Just n} ->
-    defCmd & pep .~ ( "pepper " <> n <> " -t 300 cicd.run_puppet zone=" <> target^.zone <> " hostgroup=" <> target^.stack)
+    defCmd & pep .~ ( "pepper " <> n <> " -t 300 cicd.run_puppet zone=" <> target^.zone)
            & jq .~ [r|
                      jq -r '.return[] |
                      to_entries |
