@@ -4,6 +4,7 @@
 
 - The result of any `facts` command is cached when first invoked.
 You can use the `--refresh` flag to force the facts to be remotely fetched again.
+- When running `runpuppet -n`, the command won't pass the hostgroup anymore.
 
 ## v1.7, 26/03/2018
 
