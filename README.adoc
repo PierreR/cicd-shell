@@ -279,10 +279,15 @@ Apply a configuration (called 'state' in Salt) on one machine.
 → cicd dev state CMD -n NODE
 ```
 
+Some examples of CMD are:
+
+- #puppet4.agent# to migrate a node to puppet 4.
+- #verify.host# to verify machine specifications.
+
 This command target one single node for safety reasons. If you wish to target multiple nodes, use the equivalent `pep` command within the console:
 
 ```
-[cicd dev]$ pep -C "G@subgroup:puppet and G@hostgroup:cicd" state.apply puppet4-agent
+[cicd dev]$ pep -C "G@subgroup:puppet and G@hostgroup:cicd" state.apply puppet4.agent
 ```
 
 ### icon:terminal[] orch
