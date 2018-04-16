@@ -215,10 +215,10 @@ serviceCmd ServiceRestart _ Target {_node = Nothing} =
 -- | Display a set of interesting facts such as fqdn, ip, role, ...
 factCmd :: FilePath -> Text -> Bool -> Down -> Target -> PepCmd
 factCmd fpath _ across _ target@Target {_node = Nothing} =
-  defCmd & pep .~ (pepperCompoundTarget across target <> "grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role puppetmaster_timestamp puppetmaster_jenkins_job")
+  defCmd & pep .~ (pepperCompoundTarget across target <> "grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role instance puppetmaster_timestamp puppetmaster_jenkins_job")
          & jq .~
            [r|
-             jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[0], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}' \
+             jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[0], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, instance, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}' \
            |] <> " | tee " <> toS fpath <> " | jq ."
 factCmd _ pdbUrl _ (Down True) Target {_node = Just n} =
   defCmd & pep .~ ("pdbquery -t remote  -l " <> pdbUrl <> " facts " <> Text.toLower n)
@@ -229,12 +229,12 @@ factCmd _ pdbUrl _ (Down True) Target {_node = Just n} =
              {hostgroup, subgroup, role, "os": "\(.operatingsystem) \(.operatingsystemrelease)", "ip": .ipaddress, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}'
            |]
 factCmd fpath _ _ (Down False) Target {_node = Just n} =
-  defCmd & pep .~ ("pepper " <> n <> " grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role puppetmaster_timestamp puppetmaster_jenkins_job")
+  defCmd & pep .~ ("pepper " <> n <> " grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role instance puppetmaster_timestamp puppetmaster_jenkins_job")
          & jq .~
            [r|
               jq '.return[0] |
               .[] |
-              { fqdn, ip: .fqdn_ip4[0], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job }' \
+              { fqdn, ip: .fqdn_ip4[0], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, instance, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job }' \
            |] <> " | tee " <> toS fpath <> " | jq ."
 
 pingCmd :: Bool -> Target -> PepCmd
