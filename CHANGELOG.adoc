@@ -3,6 +3,8 @@
 ## v1.9, not yet released
 
 - `defaultStack` has been renamed to `defaultStacks`. It is now a list.
++
+WARNING: you will need to change your https://github.com/CIRB/devbox/blob/master/user/config/shell.dhall[box.dhall] configuration file to match the change.
 
 ## v1.8, 08/04/2018
 
