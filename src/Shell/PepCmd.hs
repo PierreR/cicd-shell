@@ -49,7 +49,7 @@ pepperCompoundTarget across t
     compound_target z sx g r =
       let role_target (Role (Just (Subgroup g')) r') = "G@subgroup:" <> g' <> " and G@role:" <> r'
           role_target (Role Nothing r') = "G@role:" <> r'
-          foldmap_hostgroup = foldr1 (\a b -> a <> " and " <> b) . map ("G@hostgroup:"<>)
+          foldmap_hostgroup = foldr1 (\a b -> a <> " or " <> b) . map ("G@hostgroup:"<>)
       in joinTargetWith " and "
            [ Just ("G@zone:" <> z)
            , foldmap_hostgroup <$> sx
