@@ -29,16 +29,18 @@ instance StringConv Role Text  where
 
 data Target = Target
   { _node     :: Maybe Text
+  , _stacks   :: NonEmpty Text
   , _subgroup :: Maybe Text
   , _role     :: Maybe Role
-  , _stacks   :: NonEmpty Text
   , _zone     :: Text
   } deriving Show
 
 makeFieldsNoPrefix ''Target
 
+defTarget s = Target Nothing s Nothing Nothing mempty
+
 instance StringConv Target Text  where
-  strConv _ (Target node subgroup role stacks zone) =
+  strConv _ (Target node stacks subgroup role zone) =
     let s = catMaybes [node] <> toList stacks <> catMaybes [subgroup, toS <$> role] <> [zone]
     in Text.intercalate "-" s
 

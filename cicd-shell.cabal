@@ -4,7 +4,7 @@ homepage:            ssh://git@stash.cirb.lan:7999/cicd/salt-shell.git
 license:             BSD3
 build-type:          Simple
 extra-source-files:  README.adoc
-cabal-version:       >=1.10
+cabal-version:       >=1.12
 
 
 Data-Files:
@@ -20,6 +20,7 @@ library
                        , Shell.Config
                        , Shell.PepCmd
                        , Shell.Prelude
+                       , Shell.PepCmd.Utils
   other-modules:       Paths_cicd_shell
                        , Shell.Options
   default-extensions:    FlexibleContexts
@@ -41,6 +42,21 @@ library
                        , text
   default-language:    Haskell2010
   ghc-options: -Wall -Wno-name-shadowing -Wno-missing-signatures
+
+test-suite test
+  type: exitcode-stdio-1.0
+  main-is: Driver.hs
+  hs-source-dirs: tests
+  default-extensions:    FlexibleContexts
+                       , LambdaCase
+                       , NoImplicitPrelude
+                       , OverloadedStrings
+                       , StrictData
+  build-depends: base
+                 , cicd-shell
+                 , tasty
+                 , tasty-hunit
+  other-modules: Shell.PepCmdTest
 
 executable cicd
   hs-source-dirs:      app
