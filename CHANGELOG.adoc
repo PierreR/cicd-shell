@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.9, not yet released
+
+- `defaultStack` has been renamed to `defaultStacks`. It is now a list.
+
 ## v1.8, 08/04/2018
 
 - The result of any `facts` command is cached when first invoked.

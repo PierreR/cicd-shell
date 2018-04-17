@@ -30,6 +30,7 @@ module Shell.PepCmd (
 
 import qualified Data.Text         as Text
 import           Text.RawString.QQ
+import qualified Data.List.NonEmpty as NonEmpty
 
 import           Shell.Prelude
 import           Shell.Type
@@ -39,20 +40,23 @@ panic' = panic "The impossible happened. The option parser should void the case"
 pepperCompoundTarget :: Bool -> Target -> Text
 pepperCompoundTarget across t
   = "pepper -C \"" <> compound_target (t^.zone)
-                                      (if across then Nothing else Just $ t^.stack)
+                                      (if across then Nothing else Just (t^.stacks))
                                       (t^.subgroup)
                                       (t^.role)
                    <> "\" "
   where
-    compound_target z s g r =
+    compound_target :: Text -> Maybe (NonEmpty Text) -> Maybe Text -> Maybe Role -> Text
+    compound_target z sx g r =
       let role_target (Role (Just (Subgroup g')) r') = "G@subgroup:" <> g' <> " and G@role:" <> r'
           role_target (Role Nothing r') = "G@role:" <> r'
+          foldmap_hostgroup = foldr1 (\a b -> a <> " and " <> b) . map ("G@hostgroup:"<>)
       in joinTargetWith " and "
            [ Just ("G@zone:" <> z)
-           , ("G@hostgroup:" <>) <$> s
+           , foldmap_hostgroup <$> sx
            , ("G@subgroup:" <>) <$> g
            , role_target <$> r
            ]
+
 
 joinTargetWith x = Text.intercalate x . catMaybes
 
@@ -99,7 +103,7 @@ genTagsCmd (Zone zone) cfdir =
   let nodefile = cfdir <> "/.nodes-" <> toS zone
   in defCmd & pep .~ "pepper \"*\" test.ping"
             & jq .~ ("jq '.return[0]' | jq keys | jq -r 'join (\" \")' > " <> toS nodefile)
-            & beforeMsg .~ (Just $ CmdMsg False ("Generating " <> toS nodefile))
+            & (beforeMsg ?~ CmdMsg False ("Generating " <> toS nodefile))
 
 -- | Regenerate the salt module list used for auto-completion
 genSaltModListCmd :: Text -> PepCmd
@@ -132,9 +136,9 @@ orchCmd cmd stack =
 runpuppetCmd :: Target -> PepCmd
 runpuppetCmd = \case
   target@Target {_node = Nothing} ->
-    defCmd & pep .~ ( pepperCompoundTarget False target <> "--client=local_async cicd.run_puppet zone=" <> target^.zone <> " hostgroup=" <> target^.stack)
+    defCmd & pep .~ ( pepperCompoundTarget False target <> "--client=local_async cicd.run_puppet zone=" <> target^.zone <> " hostgroup=" <> NonEmpty.head(target^.stacks))
            & jq .~ "jq '.return'"
-           & beforeMsg .~ (Just $ CmdMsg True ("Run puppet on " <> Text.intercalate "." (catMaybes [fmap toS (target^.role), target^.subgroup] <> [target^.stack, target^.zone])))
+           & (beforeMsg ?~ CmdMsg True ("Run puppet on " <> Text.intercalate "." (catMaybes [fmap toS (target^.role), target^.subgroup] <> [NonEmpty.head(target^.stacks), target^.zone])))
 
   target@Target {_node = Just n} ->
     defCmd & pep .~ ( "pepper " <> n <> " -t 300 cicd.run_puppet zone=" <> target^.zone)
@@ -294,7 +298,7 @@ foremanCmd foremanUrl target =
         Target{_node = Just n} -> "/hosts/" <>  n <> "/config_reports"
         target@Target{_node = Nothing} -> "?search=" <> joinTargetWith "+and+"
                                                           [ Just ("facts.zone=" <> target^.zone)
-                                                          , Just ("facts.hostgroup=" <> target^.stack)
+                                                          , Just ("facts.hostgroup=" <> NonEmpty.head(target^.stacks))
                                                           , ("facts.subgroup=" <>) <$> target^.subgroup
                                                           , role_facts <$> target^.role
                                                           ]

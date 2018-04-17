@@ -5,6 +5,7 @@
 {-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE RecordWildCards        #-}
 {-# LANGUAGE TemplateHaskell        #-}
+
 module Shell.Type where
 
 import qualified Data.Text                 as Text
@@ -30,15 +31,15 @@ data Target = Target
   { _node     :: Maybe Text
   , _subgroup :: Maybe Text
   , _role     :: Maybe Role
-  , _stack    :: Text
+  , _stacks   :: NonEmpty Text
   , _zone     :: Text
   } deriving Show
 
 makeFieldsNoPrefix ''Target
 
 instance StringConv Target Text  where
-  strConv _ (Target node subgroup role stack zone) =
-    let s = catMaybes [node] <> [stack] <> catMaybes [subgroup, toS <$> role] <> [zone]
+  strConv _ (Target node subgroup role stacks zone) =
+    let s = catMaybes [node] <> toList stacks <> catMaybes [subgroup, toS <$> role] <> [zone]
     in Text.intercalate "-" s
 
 data ExtraFlag

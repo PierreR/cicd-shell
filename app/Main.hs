@@ -7,6 +7,7 @@ import qualified Data.Text                    as Text
 import qualified Data.Text.IO                 as Text
 import qualified System.Console.AsciiProgress as Progress
 import qualified System.Directory             as Directory
+import qualified Data.List.NonEmpty as NonEmpty
 import           Turtle                       hiding (FilePath, strict, view,
                                                (</>), (<>))
 
@@ -16,14 +17,14 @@ import           Shell.PepCmd
 import           Shell.Prelude                hiding (appendFile, die)
 import           Shell.Type
 
-getStack :: MonadIO io => Maybe Text -> io Text
-getStack s = do
-  ds <- Config.userDefaultStack
-  pure $ fromMaybe ds s
+getStacks :: MonadIO io => Maybe Text -> io (NonEmpty Text)
+getStacks s = do
+  ds <- Config.userDefaultStacks
+  pure $ fromList $ maybe ds (:ds) s
 
 mkTarget :: Zone -> Arg -> Shell Target
 mkTarget (Zone _zone) Arg{..} = do
-  _stack <- getStack _stack
+  _stacks <- getStacks _stack
   pure Target{..}
 
 shellCmdLine :: Zone -> Text -> Shell Text
@@ -196,7 +197,7 @@ run = \case
   ZoneCommand zone (Service (action, name, arg)) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . serviceCmd action name
   ZoneCommand zone (Orchestrate (OrchArg cmd s flag)) ->
-    getStack s >>= runCommand zone flag . orchCmd cmd
+    NonEmpty.head <$> (getStacks s) >>= runCommand zone flag . orchCmd cmd
   ZoneCommand zone (Result (ResultArg flag (ResultNum n))) ->
     Config.userId >>= runCommand zone flag . resultCmd (Config.pgUrl zone) (flag^.raw) Nothing (Just n)
   ZoneCommand zone (Result (ResultArg flag (ResultJob j))) ->

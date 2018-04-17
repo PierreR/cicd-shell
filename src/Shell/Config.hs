@@ -16,7 +16,7 @@ module Shell.Config (
   , saltUrl
   , userId
   , userPwd
-  , userDefaultStack
+  , userDefaultStacks
   , version
   , HasShellConfig(..)
 ) where
@@ -51,9 +51,9 @@ configFilePath = do
 
 data ShellConfig
   = ShellConfig
-  { _loginId      :: LText
-  , _password     :: LText
-  , _defaultStack :: LText
+  { _loginId       :: LText
+  , _password      :: LText
+  , _defaultStacks :: [LText]
   } deriving (Generic, Show)
 
 makeClassy ''ShellConfig
@@ -69,8 +69,8 @@ userPwd :: MonadIO io => io Text
 userPwd = view (password.strict) <$> mkShellConfig
 
 -- | User default puppet stack
-userDefaultStack :: MonadIO io => io Text
-userDefaultStack = view (defaultStack.strict) <$> mkShellConfig
+userDefaultStacks :: MonadIO io => io [Text]
+userDefaultStacks = toListOf (defaultStacks.traverse.strict) <$> mkShellConfig
 
 mkShellConfig :: MonadIO m => m ShellConfig
 mkShellConfig =
