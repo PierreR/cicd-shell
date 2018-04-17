@@ -174,9 +174,10 @@ setfactsCmd SetfactArg {..} =
     join_facts =
       let join_values = Text.intercalate " " . catMaybes
       in join_values
-           [ ("subgroup=" <>) <$> _subgroup
+           [ ("hostgroup=" <>) <$> _hostgroup
+           , ("subgroup=" <>) <$> _subgroup
            , ("role=" <>) <$> _role
-           , ("hostgroup=" <>) <$> _hostgroup
+           , ("instance=" <>) <$> _inst
            , ("zone=" <>) <$> _zone
            ]
 

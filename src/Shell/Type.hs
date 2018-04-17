@@ -67,9 +67,10 @@ makeFieldsNoPrefix ''Arg
 data SetfactArg
   = SetfactArg
   { _node      :: Text
+  , _hostgroup :: Maybe Text
   , _subgroup  :: Maybe Text
   , _role      :: Maybe Text
-  , _hostgroup :: Maybe Text
+  , _inst      :: Maybe Text
   , _zone      :: Maybe Text
   , _extraFlag :: ExtraFlag
   } deriving Show

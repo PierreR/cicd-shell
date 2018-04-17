@@ -144,9 +144,10 @@ setfactParser :: Parser SetfactArg
 setfactParser
   = SetfactArg
   <$> optText  (short 'n' <> metavar "NODE" <> help "Target node")
+  <*> optional (optText (long "hostgroup" <> metavar "HOSTGROUP" <> help "Set hostgroup fact"))
   <*> optional (optText (long "subgroup" <> metavar "SUBGROUP" <> help "set subgroup fact"))
   <*> optional (optText (long "role" <> metavar "ROLE" <> help "Set role fact"))
-  <*> optional (optText (long "hostgroup" <> metavar "HOSTGROUP" <> help "Set hostgroup fact"))
+  <*> optional (optText (long "instance" <> metavar "INSTANCE" <> help "Set instance fact"))
   <*> optional (optText (long "zone" <> metavar "ZONE" <> help "Set zone fact"))
   <*> extraFlagParser
 
