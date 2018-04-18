@@ -9,8 +9,10 @@
 module Shell.Type where
 
 import qualified Data.Text                 as Text
+import qualified Data.List.NonEmpty        as NonEmpty
 import           GHC.Show                  (Show (..))
 import           Shell.Prelude
+import           Data.Text.Prettyprint.Doc
 
 newtype Zone = Zone Text deriving Show
 newtype Subgroup = Subgroup Text deriving Show
@@ -36,6 +38,9 @@ data Target = Target
   } deriving Show
 
 makeFieldsNoPrefix ''Target
+
+instance Pretty Target where
+  pretty t = pretty $ Text.intercalate "." (NonEmpty.head (t^.stacks) : (catMaybes [fmap toS (t^.role), t^.subgroup]) <> [ t^.zone])
 
 defTarget s = Target Nothing s Nothing Nothing mempty
 

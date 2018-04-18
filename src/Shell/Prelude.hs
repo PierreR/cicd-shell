@@ -8,29 +8,29 @@ module Shell.Prelude (
   , touchFile
 ) where
 
-import           Control.Lens              as Exports (at, makeClassy,
-                                                       makeFieldsNoPrefix,
-                                                       makeLenses, strict,
-                                                       toListOf, view, _1, _2,
-                                                       _Just)
-import           Control.Lens.Operators    as Exports hiding ((<.>))
+import           Control.Lens                              as Exports (at, makeClassy,
+                                                                       makeFieldsNoPrefix,
+                                                                       makeLenses, strict, toListOf,
+                                                                       view, _1, _2, _Just)
+import           Control.Lens.Operators                    as Exports hiding ((<.>))
 import           Control.Monad.Trans.Maybe
-import           Data.Semigroup            as Exports hiding (Arg (..))
-import           GHC.Exts                  as Exports (fromList)
-import           Data.List.NonEmpty        as Exports (cons)
-import           Numeric.Natural           as Exports
-import           Data.Foldable             as Exports (foldr1)
-import           Protolude                 as Exports hiding (Down, First (..),
-                                                       Last (..), break,
-                                                       getFirst, getLast, (%),
-                                                       (<&>), (<>))
-import           System.Console.Concurrent (createProcessConcurrent,
-                                            outputConcurrent,
-                                            waitForProcessConcurrent)
-import qualified System.Directory          as Directory
-import           System.FilePath           as Exports ((</>))
+import           Data.Foldable                             as Exports (foldr1)
+import           Data.List.NonEmpty                        as Exports (cons)
+import           Data.Semigroup                            as Exports hiding (Arg (..))
+import           Data.Text.Prettyprint.Doc                 as Exports (Doc, pretty, line)
+import           Data.Text.Prettyprint.Doc.Render.Terminal as Exports (AnsiStyle, putDoc)
+import           GHC.Exts                                  as Exports (fromList)
+import           Numeric.Natural                           as Exports
+import           Protolude                                 as Exports hiding (Down, First (..),
+                                                                       Last (..), break, getFirst,
+                                                                       getLast, (%), (<&>), (<>))
+import           System.Console.Concurrent                 (createProcessConcurrent,
+                                                            outputConcurrent,
+                                                            waitForProcessConcurrent)
+import qualified System.Directory                          as Directory
+import           System.FilePath                           as Exports ((</>))
 import qualified System.IO
-import qualified System.Process            as Process
+import qualified System.Process                            as Process
 
 
 touchFile = System.IO.appendFile ""

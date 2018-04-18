@@ -4,7 +4,6 @@ module Main where
 
 import           Control.Concurrent
 import qualified Data.Text                    as Text
-import qualified Data.Text.IO                 as Text
 import qualified System.Console.AsciiProgress as Progress
 import qualified System.Directory             as Directory
 import qualified Data.List.NonEmpty as NonEmpty
@@ -208,16 +207,16 @@ run = \case
     mkTarget zone arg >>= runForeman (arg^.extraFlag) . foremanCmd Config.foremanUrl
 
 main :: IO ()
-main =
+main = do
   sh $ options (fromString ("CICD - command line utility (v" <> Config.version <> ")")) optionParser >>= run
   where
 
 interactWith :: CmdMsg -> Shell ()
 interactWith = \case
   CmdMsg False msg ->
-    liftIO $ Text.putStrLn msg
+    liftIO $ putDoc msg
   CmdMsg True msg -> do
-    liftIO $ putStrLn (msg <> " ? (Y/N)")
+    liftIO $ putDoc (msg <> " ? (Y/N)" <> line)
     readline >>= \case
       Just "Y" -> pure ()
       _        -> die "Abort by the user"

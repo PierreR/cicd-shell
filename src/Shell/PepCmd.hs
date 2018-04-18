@@ -61,7 +61,7 @@ defCmd = PepCmd mempty "jq ." empty NormalMode
 -- | A message to be displayed to the user.
 -- Ask for confirmation if 'Bool' is set to True.
 data CmdMsg =
-  CmdMsg Bool Text
+  CmdMsg Bool (Doc AnsiStyle)
   deriving Show
 
 makeClassy ''PepCmd
@@ -81,7 +81,7 @@ genTagsCmd (Zone zone) cfdir =
   let nodefile = cfdir <> "/.nodes-" <> toS zone
   in defCmd & pep .~ "pepper \"*\" test.ping"
             & jq .~ ("jq '.return[0]' | jq keys | jq -r 'join (\" \")' > " <> toS nodefile)
-            & (beforeMsg ?~ CmdMsg False ("Generating " <> toS nodefile))
+            & (beforeMsg ?~ CmdMsg False ("Generating " <> pretty nodefile))
 
 -- | Regenerate the salt module list used for auto-completion
 genSaltModListCmd :: Text -> PepCmd
@@ -116,7 +116,7 @@ runpuppetCmd = \case
   target@Target {_node = Nothing} ->
     defCmd & pep .~ ( pepperCompoundTarget False target <> "--client=local_async cicd.run_puppet zone=" <> target^.zone <> " hostgroup=" <> NonEmpty.head(target^.stacks))
            & jq .~ "jq '.return'"
-           & (beforeMsg ?~ CmdMsg True ("Run puppet on " <> Text.intercalate "." (catMaybes [fmap toS (target^.role), target^.subgroup] <> [NonEmpty.head(target^.stacks), target^.zone])))
+           & (beforeMsg ?~ CmdMsg True ("Run puppet on " <> pretty target))
 
   target@Target {_node = Just n} ->
     defCmd & pep .~ ( "pepper " <> n <> " -t 300 cicd.run_puppet zone=" <> target^.zone)
