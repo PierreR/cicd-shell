@@ -3,16 +3,17 @@
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE OverloadedLists        #-}
 {-# LANGUAGE RecordWildCards        #-}
 {-# LANGUAGE TemplateHaskell        #-}
 
 module Shell.Type where
 
-import qualified Data.Text                 as Text
 import qualified Data.List.NonEmpty        as NonEmpty
+import qualified Data.Text                 as Text
+import           Data.Text.Prettyprint.Doc
 import           GHC.Show                  (Show (..))
 import           Shell.Prelude
-import           Data.Text.Prettyprint.Doc
 
 newtype Zone = Zone Text deriving Show
 newtype Subgroup = Subgroup Text deriving Show
@@ -42,7 +43,16 @@ makeFieldsNoPrefix ''Target
 instance Pretty Target where
   pretty t = pretty $ Text.intercalate "." (NonEmpty.head (t^.stacks) : (catMaybes [fmap toS (t^.role), t^.subgroup]) <> [ t^.zone])
 
-defTarget s = Target Nothing s Nothing Nothing mempty
+-- | Text reader for Target
+-- Expect the following pattern:
+-- $hostgroup.$subgroup.$role.$zone
+-- $hostgroup.$role.$zone
+readTarget :: Text -> Maybe Target
+readTarget s =
+  case Text.splitOn "." s of
+    [s,g,r,z] -> Just $ Target Nothing [s] Nothing (Just (Role (Just (Subgroup g)) r)) z
+    [s,r,z]   -> Just $ Target Nothing [s] Nothing (Just (Role Nothing r)) z
+    _         -> Nothing
 
 instance StringConv Target Text  where
   strConv _ (Target node stacks subgroup role zone) =
