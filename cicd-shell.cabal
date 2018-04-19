@@ -57,7 +57,8 @@ test-suite test
   build-depends: base
                  , cicd-shell
                  , tasty
-                 , tasty-hunit
+                 , tasty-golden
+                 , text
   other-modules: Shell.PepCmdTest
 
 executable cicd

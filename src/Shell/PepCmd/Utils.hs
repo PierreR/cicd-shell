@@ -11,7 +11,7 @@ pepperCompoundTarget across t
                                       (if across then Nothing else Just (t^.stacks))
                                       (t^.subgroup)
                                       (t^.role)
-                   <> "\" "
+                   <> "\""
   where
     compound_target :: Text -> Maybe (NonEmpty Text) -> Maybe Text -> Maybe Role -> Text
     compound_target z sx g r =
