@@ -56,6 +56,7 @@ test-suite test
                        , StrictData
   build-depends: base
                  , cicd-shell
+                 , filepath
                  , tasty
                  , tasty-golden
                  , text
