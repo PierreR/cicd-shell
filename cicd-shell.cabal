@@ -59,6 +59,7 @@ test-suite test
                  , filepath
                  , tasty
                  , tasty-golden
+                 , tasty-hunit
                  , text
   other-modules: Shell.PepCmdTest
 

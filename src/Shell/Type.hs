@@ -16,7 +16,7 @@ import           GHC.Show                  (Show (..))
 import           Shell.Prelude
 
 newtype Zone = Zone Text deriving Show
-newtype Subgroup = Subgroup Text deriving Show
+newtype Subgroup = Subgroup Text deriving (Show,Eq)
 
 newtype ServiceName = ServiceName Text deriving Show
 newtype Down = Down Bool deriving Show
@@ -24,7 +24,7 @@ newtype Refresh = Refresh Bool deriving Show
 
 data ServiceAction = ServiceStatus | ServiceRestart deriving (Show)
 
-data Role = Role (Maybe Subgroup) Text deriving Show
+data Role = Role (Maybe Subgroup) Text deriving (Show, Eq)
 
 instance StringConv Role Text  where
   strConv _ (Role Nothing r)             = r
@@ -36,7 +36,7 @@ data Target = Target
   , _subgroup :: Maybe Text
   , _role     :: Maybe Role
   , _zone     :: Text
-  } deriving Show
+  } deriving (Show,Eq)
 
 makeFieldsNoPrefix ''Target
 
@@ -50,9 +50,24 @@ instance Pretty Target where
 readTarget :: Text -> Maybe Target
 readTarget s =
   case Text.splitOn "." s of
-    [s,g,r,z] -> Just $ Target Nothing [s] Nothing (Just (Role (Just (Subgroup g)) r)) z
-    [s,r,z]   -> Just $ Target Nothing [s] Nothing (Just (Role Nothing r)) z
+    [h,g,r,z] ->
+      mk_target (Just g) (Just r) z <$> read_hostgroup h
+    [h,r,z]   ->
+      mk_target Nothing (Just r) z <$> read_hostgroup h
+    [h,z]   ->
+      mk_target Nothing Nothing z <$> read_hostgroup h
     _         -> Nothing
+  where
+    mk_target (Just g) (Just r) z h = Target Nothing h Nothing (Just (Role (Just (Subgroup g)) r)) z
+    mk_target Nothing (Just r) z h = Target Nothing h Nothing (Just (Role Nothing r)) z
+    mk_target Nothing Nothing z h = Target Nothing h Nothing Nothing z
+    mk_target (Just _) Nothing _ _ = panic "Can't pass a subgroup without a role in this (local) context"
+
+    read_hostgroup :: Text -> Maybe (NonEmpty Text)
+    read_hostgroup s = do
+      s' <- Text.stripPrefix "[" s
+      s'' <- Text.stripSuffix "]" s'
+      pure $ NonEmpty.fromList $ Text.splitOn "," s''
 
 instance StringConv Target Text  where
   strConv _ (Target node stacks subgroup role zone) =
