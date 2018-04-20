@@ -114,7 +114,7 @@ orchCmd cmd stack =
 runpuppetCmd :: Target -> PepCmd
 runpuppetCmd = \case
   target@Target {_node = Nothing} ->
-    defCmd & pep .~ ( pepperCompoundTarget False target <> "--client=local_async cicd.run_puppet zone=" <> target^.zone <> " hostgroup=" <> NonEmpty.head(target^.stacks))
+    defCmd & pep .~ ( pepperCompoundTarget False target <> " --client=local_async cicd.run_puppet zone=" <> target^.zone <> " hostgroup=" <> NonEmpty.head(target^.stacks))
            & jq .~ "jq '.return'"
            & (beforeMsg ?~ CmdMsg True ("Run puppet on " <> pretty target))
 
@@ -162,7 +162,7 @@ setfactsCmd SetfactArg {..} =
 -- | Sync minion with the saltmaster
 syncCmd :: Bool -> Target -> PepCmd
 syncCmd across target@Target { _node = Nothing} =
-  defCmd & pep .~ (pepperCompoundTarget across target <> "saltutil.sync_all")
+  defCmd & pep .~ (pepperCompoundTarget across target <> " saltutil.sync_all")
 syncCmd _ Target {_node = Just n} =
   defCmd & pep .~ ("pepper '" <> n <> "' saltutil.sync_all")
 
@@ -198,7 +198,7 @@ serviceCmd ServiceRestart _ Target {_node = Nothing} =
 -- | Display a set of interesting facts such as fqdn, ip, role, ...
 factCmd :: FilePath -> Text -> Bool -> Down -> Target -> PepCmd
 factCmd fpath _ across _ target@Target {_node = Nothing} =
-  defCmd & pep .~ (pepperCompoundTarget across target <> "grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role instance puppetmaster_timestamp puppetmaster_jenkins_job")
+  defCmd & pep .~ (pepperCompoundTarget across target <> " grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role instance puppetmaster_timestamp puppetmaster_jenkins_job")
          & jq .~
            [r|
              jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[0], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, instance, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}' \
@@ -222,7 +222,7 @@ factCmd fpath _ _ (Down False) Target {_node = Just n} =
 
 pingCmd :: Bool -> Target -> PepCmd
 pingCmd across target@Target {_node = Nothing} =
-  defCmd & pep .~ ( pepperCompoundTarget across target <> "test.ping")
+  defCmd & pep .~ ( pepperCompoundTarget across target <> " test.ping")
       & jq .~ "jq '.return[0]'"
 pingCmd _ Target {_node = Just n} =
   defCmd & pep .~ ( "pepper '" <> n <> "' test.ping")
@@ -238,7 +238,7 @@ dataCmd False Nothing target@Target {_node= Nothing} =
   defCmd & pep .~ (pepperCompoundTarget False target  <> " pillar.items delimiter='/'")
          & jq .~ "jq '.return[0]'"
 dataCmd across (Just key) target@Target {_node= Nothing} =
-  defCmd & pep .~ "( " <> pepperCompoundTarget across target <> "grains.item fqdn subgroup role ; " <> pepperCompoundTarget across target <> "pillar.item " <> key <> " delimiter='/' )"
+  defCmd & pep .~ "( " <> pepperCompoundTarget across target <> " grains.item fqdn subgroup role ; " <> pepperCompoundTarget across target <> " pillar.item " <> key <> " delimiter='/' )"
          & jq .~ "jq -s '.[0].return[0] * .[1].return[0]' | jq '.[] | { fqdn, subgroup, role, " <> key <> "}'"
 dataCmd _ (Just key) Target {_node= Just n} =
   defCmd & pep .~ ("pepper " <> n <> " pillar.item " <> key <> " delimiter='/'")
