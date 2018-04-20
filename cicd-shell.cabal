@@ -58,6 +58,7 @@ test-suite test
                  , cicd-shell
                  , filepath
                  , tasty
+                 , tasty-discover >= 4.2
                  , tasty-golden
                  , tasty-hunit
                  , text
