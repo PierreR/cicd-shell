@@ -4,6 +4,7 @@ homepage:            ssh://git@stash.cirb.lan:7999/cicd/salt-shell.git
 license:             BSD3
 build-type:          Simple
 extra-source-files:  README.adoc
+                     , tests/Shell/*.golden
 cabal-version:       >=1.12
 
 
