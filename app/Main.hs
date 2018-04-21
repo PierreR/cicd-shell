@@ -29,7 +29,7 @@ mkTarget (Zone _zone) Arg{..} = do
 shellCmdLine :: Zone -> Text -> Shell Text
 shellCmdLine z@(Zone zone) pep = do
   userid <- Config.userId
-  userpwd <- Config.userPwd
+  userpwd <- liftIO $ Config.userPwd
   datadir <- liftIO $ Config.dataDir
   let pgr = format ("nix-shell "%w%"/share/default.nix --argstr zone "%s%" --argstr salt-user "%s%" --argstr salt-pass "%s%" --argstr salt-url "%s)
                     datadir zone userid userpwd (Config.saltUrl z)

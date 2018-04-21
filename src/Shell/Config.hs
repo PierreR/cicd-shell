@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE LambdaCase      #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | Configuration data are either static or read from file.
 --
@@ -22,11 +22,12 @@ module Shell.Config (
 ) where
 
 import qualified Data.List        as List
+import qualified Data.Text.IO     as Text
 import qualified Data.Text.Lazy   as Text.Lazy
 import qualified Data.Version     (showVersion)
 import qualified Dhall
-import qualified System.Directory          as Directory
 import qualified Paths_cicd_shell
+import qualified System.Directory as Directory
 
 import           Shell.Prelude
 import           Shell.Type
@@ -52,7 +53,6 @@ configFilePath = do
 data ShellConfig
   = ShellConfig
   { _loginId       :: LText
-  , _password      :: LText
   , _defaultStacks :: [LText]
   } deriving (Generic, Show)
 
@@ -65,8 +65,20 @@ userId :: MonadIO io => io Text
 userId = view (loginId.strict) <$> mkShellConfig
 
 -- | User AD password
-userPwd :: MonadIO io => io Text
-userPwd = view (password.strict) <$> mkShellConfig
+userPwd :: IO Text
+userPwd = do
+  localdir <- localDir
+  let pwd_file = localdir </> ".pwd"
+  ifM (Directory.doesFileExist pwd_file)
+    (withFile pwd_file ReadMode $ \h ->
+      Text.hGetLine h)
+    (wizard pwd_file)
+  where
+    wizard fname = do
+      putText "What's your AD password ?"
+      pwd <- Text.getLine
+      Text.writeFile fname pwd
+      pure pwd
 
 -- | User default puppet stack
 userDefaultStacks :: MonadIO io => io [Text]
