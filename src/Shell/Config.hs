@@ -28,6 +28,7 @@ import qualified Data.Version     (showVersion)
 import qualified Dhall
 import qualified Paths_cicd_shell
 import qualified System.Directory as Directory
+import qualified System.IO
 
 import           Shell.Prelude
 import           Shell.Type
@@ -75,10 +76,16 @@ userPwd = do
     (wizard pwd_file)
   where
     wizard fname = do
-      putText "What's your AD password ?"
-      pwd <- Text.getLine
+      putText "Enter your AD password and press Enter ?"
+      System.IO.hFlush stdout
+      pwd <- withEcho False getLine
+      putText "Waiting ..."
       Text.writeFile fname pwd
       pure pwd
+    withEcho :: Bool -> IO a -> IO a
+    withEcho echo action = do
+      old <- System.IO.hGetEcho stdin
+      bracket_ (System.IO.hSetEcho stdin echo) (System.IO.hSetEcho stdin old) action
 
 -- | User default puppet stack
 userDefaultStacks :: MonadIO io => io [Text]
