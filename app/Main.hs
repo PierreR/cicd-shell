@@ -70,7 +70,7 @@ runCommand :: (MonadIO m , MonadReader Config.ShellConfig m) => Zone -> ExtraFla
 runCommand z flag cmd =  do
   maybe (pure ()) (liftIO . interactWith) (cmd ^. beforeMsg)
   cmdline <- shellCmdLine z (cmd^.pep)
-  when (flag^.verbose) $ putText (cmd^.pep)
+  unless (flag^.quiet) $ putText "Waiting for the following command to compute:" *> putText (cmd^.pep)
   when (flag^.dry) $ putText (cmd^.pep) *> liftIO exitSuccess
   void $ shell "ping -c1 stash.cirb.lan > /dev/null 2>&1" empty .||. die "cannot connect to stash.cirb.lan, check your connection"
   initTags z
@@ -127,7 +127,7 @@ runCommand z flag cmd =  do
 
 runForeman :: (MonadIO m) => ExtraFlag -> Text -> m ExitCode
 runForeman extraflag pep = do
-  when (extraflag^.verbose) $ putText pep
+  unless (extraflag^.quiet) $ putText pep
   when (extraflag^.dry) $ putText pep *> liftIO exitSuccess
   shell pep empty
 
@@ -155,7 +155,7 @@ run = \case
   ZoneCommand zone Stats ->
     runCommand zone defExtraFlag statCmd
   ZoneCommand zone Console ->
-    liftIO Config.dataDir >>= runCommand zone ExtraFlag{_raw = True, _verbose = False, _dry = False} . consoleCmd zone
+    liftIO Config.dataDir >>= runCommand zone ExtraFlag{_raw = True, _quiet = True, _dry = False} . consoleCmd zone
   ZoneCommand zone GenTags ->
     liftIO Config.localDir >>= runCommand zone defExtraFlag . genTagsCmd zone
   ZoneCommand zone (Runpuppet arg) -> do

@@ -76,9 +76,9 @@ instance StringConv Target Text  where
 
 data ExtraFlag
   = ExtraFlag
-  { _raw     :: Bool -- ^ Display the result with no `jq` pretty printer
-  , _verbose :: Bool -- ^ Print the `pepper` command to stdout
-  , _dry     :: Bool -- ^ Print the command and exit
+  { _raw   :: Bool -- ^ Display the result with no `jq` pretty printer
+  , _quiet :: Bool -- ^ Print the `pepper` command to stdout
+  , _dry   :: Bool -- ^ Print the command and exit
   } deriving (Show, Generic)
 
 defExtraFlag = ExtraFlag False False False

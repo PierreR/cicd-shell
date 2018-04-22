@@ -92,13 +92,14 @@ passwordWizard = do
       putText "Enter your AD password and press Enter ?"
       System.IO.hFlush stdout
       pwd <- withEcho False getLine
-      putText "Do you want to store the password locally ? Y/N"
+      putText "You password will be saved locally in the devbox."
+      putText "Press enter to continue or 'N' if you want to prevent your password from being stored."
       getLine >>= \case
-        "Y" -> do
+        "N" -> pure pwd
+        _ -> do
           Text.writeFile fname pwd
           putText "Your passport has been saved. To change it, use 'cicd pass'"
           pure pwd
-        _ -> pure pwd
     withEcho :: Bool -> IO a -> IO a
     withEcho echo action = do
       old <- System.IO.hGetEcho stdin

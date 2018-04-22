@@ -78,7 +78,7 @@ data AcrossArg
 
 extraFlagParser :: Parser ExtraFlag
 extraFlagParser
-  = ExtraFlag <$> rawParser <*> verboseParser <*> dryParser
+  = ExtraFlag <$> rawParser <*> quietParser <*> dryParser
 
 argParser :: Parser Arg
 argParser
@@ -111,8 +111,8 @@ downParser :: Parser Down
 downParser = Down <$> switch (long "down" <> help "Query disconnected node")
 refreshParser = Refresh <$> switch (long "refresh" <> help "Refresh the cache")
 
-verboseParser :: Parser Bool
-verboseParser = switch (long "verbose" <> short 'v' <> help "Display the executed command")
+quietParser :: Parser Bool
+quietParser = switch (long "quiet" <> help "Quieter output. Won't display the command.")
 
 dryParser :: Parser Bool
 dryParser = switch (long "dry" <> help "Display the command without execution")
