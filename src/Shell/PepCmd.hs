@@ -269,7 +269,7 @@ resultCmd pgUrl raw (Just jobid) Nothing _ =
 resultCmd _ _ Nothing Nothing _ = panic'
 resultCmd _ _ (Just _) (Just _) _ = panic'
 
-foremanCmd :: Text -> Target -> PepCmd
+foremanCmd :: Text -> Target -> Text
 foremanCmd foremanUrl target =
   let role_facts (Role Nothing r) = "facts.role=" <> r
       role_facts (Role (Just (Subgroup g)) r) = "facts.subgroup=" <> g <> "+and+" <> "facts.role=" <> r
@@ -282,4 +282,4 @@ foremanCmd foremanUrl target =
                                                           , role_facts <$> target^.role
                                                           ]
   in
-  defCmd & pep .~ "xdg-open " <> foremanUrl <> url <> " &> /dev/null"
+  "xdg-open " <> foremanUrl <> url <> " &> /dev/null"

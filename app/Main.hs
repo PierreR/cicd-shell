@@ -16,17 +16,17 @@ import           Shell.PepCmd
 import           Shell.Prelude                hiding (appendFile, die)
 import           Shell.Type
 
-getStacks :: MonadIO io => Maybe Text -> io (NonEmpty Text)
+getStacks :: (MonadIO m , MonadReader Config.ShellConfig m) => Maybe Text -> m (NonEmpty Text)
 getStacks s = do
   ds <- Config.userDefaultStacks
   pure $ fromList $ maybe ds (:ds) s
 
-mkTarget :: Zone -> Arg -> Shell Target
+mkTarget :: (MonadIO m , MonadReader Config.ShellConfig m) => Zone -> Arg -> m Target
 mkTarget (Zone _zone) Arg{..} = do
   _stacks <- getStacks _stack
   pure Target{..}
 
-shellCmdLine :: Zone -> Text -> Shell Text
+shellCmdLine :: (MonadIO m, MonadReader Config.ShellConfig m) => Zone -> Text -> m Text
 shellCmdLine z@(Zone zone) pep = do
   userid <- Config.userId
   userpwd <- liftIO $ Config.userPwd
@@ -37,7 +37,7 @@ shellCmdLine z@(Zone zone) pep = do
     then pure pgr
     else pure $ pgr <> " --command '" <> pep <> "'"
 
-initTags :: Zone -> Shell ()
+initTags :: (MonadIO m, MonadReader Config.ShellConfig m) => Zone -> m ()
 initTags z@(Zone zone) = do
   localdir <- liftIO Config.localDir
   let tagfile = localdir </> ".nodes-" <> toS zone
@@ -50,7 +50,7 @@ initTags z@(Zone zone) = do
       ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") zone
       ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
 
-initHelp :: Shell ()
+initHelp :: (MonadIO m, MonadReader Config.ShellConfig m) => m ()
 initHelp = do
   gen_help genSaltModListCmd "modlist"
   gen_help genSaltModjsonCmd "modhelp"
@@ -66,9 +66,9 @@ initHelp = do
           ExitSuccess -> putStrLn (fpath <> " generated successfully.\n")
           ExitFailure _ -> putStrLn ("WARNING: cannot generate '" <> fpath <> "' (completion).\n")
 
-runCommand :: Zone -> ExtraFlag -> PepCmd -> Shell ExitCode
+runCommand :: (MonadIO m , MonadReader Config.ShellConfig m) => Zone -> ExtraFlag -> PepCmd -> m ExitCode
 runCommand z flag cmd =  do
-  maybe (pure ()) interactWith (cmd ^. beforeMsg)
+  maybe (pure ()) (liftIO . interactWith) (cmd ^. beforeMsg)
   cmdline <- shellCmdLine z (cmd^.pep)
   when (flag^.verbose) $ putText (cmd^.pep)
   when (flag^.dry) $ putText (cmd^.pep) *> liftIO exitSuccess
@@ -125,13 +125,13 @@ runCommand z flag cmd =  do
           pure $ ExitFailure 1
 
 
-runForeman :: ExtraFlag -> PepCmd -> Shell ExitCode
-runForeman extraflag cmd = do
-  when (extraflag^.verbose) $ putText (cmd^.pep)
-  when (extraflag^.dry) $ putText (cmd^.pep) *> liftIO exitSuccess
-  shell (cmd^.pep) empty
+runForeman :: (MonadIO m) => ExtraFlag -> Text -> m ExitCode
+runForeman extraflag pep = do
+  when (extraflag^.verbose) $ putText pep
+  when (extraflag^.dry) $ putText pep *> liftIO exitSuccess
+  shell pep empty
 
-run :: Options -> Shell ExitCode
+run :: (MonadIO m, MonadReader Config.ShellConfig m) => Options -> m ExitCode
 run = \case
 
   DocCommand HtmlDoc -> do
@@ -208,15 +208,16 @@ run = \case
 
 main :: IO ()
 main = do
-  sh $ options (fromString ("CICD - command line utility (v" <> Config.version <> ")")) optionParser >>= run
-  where
+  cmd_options <- options (fromString ("CICD - command line utility (v" <> Config.version <> ")")) optionParser
+  exit_code <- runReaderT (run cmd_options) =<< Config.mkShellConfig
+  exitWith exit_code
 
-interactWith :: CmdMsg -> Shell ()
+interactWith :: CmdMsg -> IO ()
 interactWith = \case
   CmdMsg False msg ->
-    liftIO $ putDoc msg
+    putDoc msg
   CmdMsg True msg -> do
-    liftIO $ putDoc (msg <> " ? (Y/N)" <> line)
+    putDoc (msg <> " ? (Y/N)" <> line)
     readline >>= \case
       Just "Y" -> pure ()
       _        -> die "Abort by the user"

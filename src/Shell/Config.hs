@@ -14,11 +14,13 @@ module Shell.Config (
   , pgUrl
   , puppetdbUrl
   , saltUrl
+  , mkShellConfig
   , userId
   , userPwd
   , userDefaultStacks
   , version
   , HasShellConfig(..)
+  , ShellConfig(..)
 ) where
 
 import qualified Data.List        as List
@@ -62,8 +64,8 @@ makeClassy ''ShellConfig
 instance Dhall.Interpret ShellConfig
 
 -- | User AD login id
-userId :: MonadIO io => io Text
-userId = view (loginId.strict) <$> mkShellConfig
+userId :: (MonadIO m, MonadReader ShellConfig m) => m Text
+userId = asks (view (loginId.strict))
 
 -- | User AD password
 userPwd :: IO Text
@@ -88,8 +90,9 @@ userPwd = do
       bracket_ (System.IO.hSetEcho stdin echo) (System.IO.hSetEcho stdin old) action
 
 -- | User default puppet stack
-userDefaultStacks :: MonadIO io => io [Text]
-userDefaultStacks = toListOf (defaultStacks.traverse.strict) <$> mkShellConfig
+userDefaultStacks ::(MonadIO io, MonadReader ShellConfig io) => io [Text]
+userDefaultStacks = do
+  asks (toListOf (defaultStacks.traverse.strict))
 
 mkShellConfig :: MonadIO m => m ShellConfig
 mkShellConfig =
