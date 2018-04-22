@@ -29,6 +29,7 @@ data ResultType
 data Options
   = ZoneCommand Zone SubCommand
   | DocCommand DocType
+  | Password
 
 data DocType
   = HtmlDoc
@@ -134,7 +135,6 @@ serviceParse "status"  = Just ServiceStatus
 serviceParse "restart" = Just ServiceRestart
 serviceParse _         = Nothing
 
-docTypeParser :: Parser DocType
 docTypeParser =
       HtmlDoc <$ subcommand "html" "Open the documentation in a browser" (pure ())
   <|> ModListDoc <$ subcommand "modules" "Output all possible salt execution modules" (pure ())
@@ -182,5 +182,6 @@ subCommandParser =
 
 optionParser :: Parser Options
 optionParser =
-      DocCommand <$> subcommand "doc" "Documentation utilities" docTypeParser
+      Password <$ subcommand "pass" "Change password" (pure ())
+  <|> DocCommand <$> subcommand "doc" "Documentation utilities" docTypeParser
   <|> ZoneCommand . Zone <$> argText (metavar "ZONE" <> help "ZONE (dev|testing|staging|prod)") <*> subCommandParser

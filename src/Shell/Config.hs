@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE LambdaCase      #-}
 {-# LANGUAGE OverloadedLists #-}
@@ -12,6 +13,8 @@ module Shell.Config (
   , foremanUrl
   , localDir
   , pgUrl
+  , promptPassword
+  , writePassword
   , puppetdbUrl
   , saltUrl
   , mkShellConfig
@@ -40,10 +43,6 @@ dataDir = Paths_cicd_shell.getDataDir
 
 version = Data.Version.showVersion Paths_cicd_shell.version
 
--- | Directories where gentags & genhelp files are stored.
-localDir :: IO FilePath
-localDir = (</> ".local/share/cicd") <$> Directory.getHomeDirectory
-
 -- return the first found configuration file
 configFilePath :: IO FilePath
 configFilePath = do
@@ -61,13 +60,13 @@ data DhallConfig
 
 data ShellConfig
   = ShellConfig
-  { _dhall :: DhallConfig
+  { _localdir :: FilePath
+  , _dhall :: DhallConfig
   , _password :: Text
   }
 
 makeClassy ''DhallConfig
 makeClassy ''ShellConfig
-
 
 instance Dhall.Interpret DhallConfig
 
@@ -75,31 +74,42 @@ instance Dhall.Interpret DhallConfig
 userId :: (MonadIO m, MonadReader ShellConfig m) => m Text
 userId = asks (view (dhall.loginId.strict))
 
+-- | Directories where gentags & genhelp files are stored.
+localDir :: (MonadIO m, MonadReader ShellConfig m) => m FilePath
+localDir = asks (view localdir)
+
 -- | User AD password
 userPwd :: (MonadIO m, MonadReader ShellConfig m) => m Text
 userPwd = asks (view password)
 
-passwordWizard :: IO Text
-passwordWizard = do
-  localdir <- localDir
+wizard :: FilePath -> IO Text
+wizard localdir = do
   let pwd_file = localdir </> ".pwd"
   ifM (Directory.doesFileExist pwd_file)
     (withFile pwd_file ReadMode $ \h ->
       Text.hGetLine h)
-    (wizard pwd_file)
+    (passwordWizard pwd_file)
+
+passwordWizard :: FilePath -> IO Text
+passwordWizard fname = do
+  pwd <- promptPassword
+  putText "You password will be saved locally in the devbox."
+  putText "Press enter to continue or 'N' if you want to prevent your password from being stored."
+  getLine >>= \case
+    "N" -> pure pwd
+    _ -> writePassword fname pwd *> pure pwd
+
+writePassword :: FilePath-> Text -> IO ()
+writePassword fname pwd = do
+  Text.writeFile fname pwd
+  putText "Your passport has been saved. To change it, use 'cicd pass'"
+
+promptPassword :: IO Text
+promptPassword = do
+  putText "Enter your AD password and press Enter"
+  System.IO.hFlush stdout
+  withEcho False getLine
   where
-    wizard fname = do
-      putText "Enter your AD password and press Enter ?"
-      System.IO.hFlush stdout
-      pwd <- withEcho False getLine
-      putText "You password will be saved locally in the devbox."
-      putText "Press enter to continue or 'N' if you want to prevent your password from being stored."
-      getLine >>= \case
-        "N" -> pure pwd
-        _ -> do
-          Text.writeFile fname pwd
-          putText "Your passport has been saved. To change it, use 'cicd pass'"
-          pure pwd
     withEcho :: Bool -> IO a -> IO a
     withEcho echo action = do
       old <- System.IO.hGetEcho stdin
@@ -112,7 +122,11 @@ userDefaultStacks = do
 
 mkShellConfig :: IO ShellConfig
 mkShellConfig = do
-  ShellConfig <$> mkDhallConfig <*> passwordWizard
+  home <- Directory.getHomeDirectory
+  let _localdir = home </> ".local/share/cicd"
+  _dhall <- mkDhallConfig
+  _password <- wizard _localdir
+  pure $ ShellConfig {..}
 
 mkDhallConfig :: MonadIO m => m DhallConfig
 mkDhallConfig =

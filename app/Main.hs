@@ -39,7 +39,7 @@ shellCmdLine z@(Zone zone) pep = do
 
 initTags :: (MonadIO m, MonadReader Config.ShellConfig m) => Zone -> m ()
 initTags z@(Zone zone) = do
-  localdir <- liftIO Config.localDir
+  localdir <- Config.localDir
   let tagfile = localdir </> ".nodes-" <> toS zone
   found <- liftIO $ Directory.doesFileExist tagfile
   unless found $ do
@@ -56,7 +56,7 @@ initHelp = do
   gen_help genSaltModjsonCmd "modhelp"
   where
     gen_help cmd tag = do
-      localdir <- liftIO Config.localDir
+      localdir <- Config.localDir
       let fpath = localdir </> "." <> tag
       found <- liftIO $ Directory.doesFileExist (fpath <> ".json")
       unless found $ do
@@ -133,7 +133,10 @@ runForeman extraflag pep = do
 
 run :: (MonadIO m, MonadReader Config.ShellConfig m) => Options -> m ExitCode
 run = \case
-
+  Password -> do
+    pwd <- liftIO $ Config.promptPassword
+    file <- (</> ".pwd") <$> Config.localDir
+    liftIO $ Config.writePassword file pwd *> exitSuccess
   DocCommand HtmlDoc -> do
     datadir <- liftIO Config.dataDir
     browser <- fromMaybe "firefox" <$> need "BROWSER"
@@ -141,13 +144,13 @@ run = \case
     proc browser
          [help_fp] empty
   DocCommand ModListDoc -> do
-    localdir <- liftIO Config.localDir
+    localdir <- Config.localDir
     let fpath = localdir </> ".modlist.json"
     found <- liftIO $ Directory.doesFileExist fpath
     unless found $ initHelp
     proc "jq" [ ".", toS fpath ] empty
   DocCommand (ModDoc mod) -> do
-    localdir <- liftIO $ Config.localDir
+    localdir <- Config.localDir
     let fpath = localdir </> ".modhelp.json"
     found <- liftIO $ Directory.doesFileExist fpath
     unless found $ initHelp
@@ -157,7 +160,7 @@ run = \case
   ZoneCommand zone Console ->
     liftIO Config.dataDir >>= runCommand zone ExtraFlag{_raw = True, _quiet = True, _dry = False} . consoleCmd zone
   ZoneCommand zone GenTags ->
-    liftIO Config.localDir >>= runCommand zone defExtraFlag . genTagsCmd zone
+    Config.localDir >>= runCommand zone defExtraFlag . genTagsCmd zone
   ZoneCommand zone (Runpuppet arg) -> do
     target <- mkTarget zone arg
     let cmd = runpuppetCmd target
@@ -170,7 +173,7 @@ run = \case
   ZoneCommand zone (Sync (AcrossArg across arg)) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . syncCmd across
   ZoneCommand zone (Facts (FactArg (Refresh refresh) down (AcrossArg across arg))) -> do
-    localdir <- liftIO $ Config.localDir
+    localdir <- Config.localDir
     target <- mkTarget zone arg
     let fname = ".facts-" <> toS target <> ".json"
         fpath = localdir </> Text.unpack fname
