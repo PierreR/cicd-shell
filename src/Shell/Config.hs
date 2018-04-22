@@ -53,23 +53,34 @@ configFilePath = do
     Nothing -> die ("no configuration file found in " <> toS (List.intercalate " or " paths))
     Just v -> pure v
 
-data ShellConfig
-  = ShellConfig
+data DhallConfig
+  = DhallConfig
   { _loginId       :: LText
   , _defaultStacks :: [LText]
   } deriving (Generic, Show)
 
+data ShellConfig
+  = ShellConfig
+  { _dhall :: DhallConfig
+  , _password :: Text
+  }
+
+makeClassy ''DhallConfig
 makeClassy ''ShellConfig
 
-instance Dhall.Interpret ShellConfig
+
+instance Dhall.Interpret DhallConfig
 
 -- | User AD login id
 userId :: (MonadIO m, MonadReader ShellConfig m) => m Text
-userId = asks (view (loginId.strict))
+userId = asks (view (dhall.loginId.strict))
 
 -- | User AD password
-userPwd :: IO Text
-userPwd = do
+userPwd :: (MonadIO m, MonadReader ShellConfig m) => m Text
+userPwd = asks (view password)
+
+passwordWizard :: IO Text
+passwordWizard = do
   localdir <- localDir
   let pwd_file = localdir </> ".pwd"
   ifM (Directory.doesFileExist pwd_file)
@@ -81,9 +92,13 @@ userPwd = do
       putText "Enter your AD password and press Enter ?"
       System.IO.hFlush stdout
       pwd <- withEcho False getLine
-      putText "Waiting ..."
-      Text.writeFile fname pwd
-      pure pwd
+      putText "Do you want to store the password locally ? Y/N"
+      getLine >>= \case
+        "Y" -> do
+          Text.writeFile fname pwd
+          putText "Your passport has been saved. To change it, use 'cicd pass'"
+          pure pwd
+        _ -> pure pwd
     withEcho :: Bool -> IO a -> IO a
     withEcho echo action = do
       old <- System.IO.hGetEcho stdin
@@ -92,10 +107,14 @@ userPwd = do
 -- | User default puppet stack
 userDefaultStacks ::(MonadIO io, MonadReader ShellConfig io) => io [Text]
 userDefaultStacks = do
-  asks (toListOf (defaultStacks.traverse.strict))
+  asks (toListOf (dhall.defaultStacks.traverse.strict))
 
-mkShellConfig :: MonadIO m => m ShellConfig
-mkShellConfig =
+mkShellConfig :: IO ShellConfig
+mkShellConfig = do
+  ShellConfig <$> mkDhallConfig <*> passwordWizard
+
+mkDhallConfig :: MonadIO m => m DhallConfig
+mkDhallConfig =
   liftIO $ Dhall.input auto =<< (toS <$> configFilePath)
   where
     auto ::  Dhall.Interpret a => Dhall.Type a
