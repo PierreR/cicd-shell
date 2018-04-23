@@ -93,11 +93,12 @@ wizard localdir = do
 passwordWizard :: FilePath -> IO Text
 passwordWizard fname = do
   pwd <- promptPassword
-  putText "You password will be saved locally in the devbox."
-  putText "Press enter to continue or 'N' if you want to prevent your password from being stored."
+  putText "We recommend saving the password locally."
+  putText "If you feel unsafe about this, you can always add a level0 running script to remove the file at shutdown"
+  putText "Enter 'Y' to continue or anything else including <Enter> to prevent the password from being stored."
   getLine >>= \case
-    "N" -> pure pwd
-    _ -> writePassword fname pwd *> pure pwd
+    "Y" -> writePassword fname pwd *> pure pwd
+    _ -> pure pwd
 
 writePassword :: FilePath-> Text -> IO ()
 writePassword fname pwd = do
