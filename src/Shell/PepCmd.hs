@@ -254,15 +254,17 @@ resultCmd pgUrl raw (Just jobid) Nothing _ =
   defCmd & pep .~ ("curl -s " <> (if raw then mempty else "-f -H \"Accept: application/vnd.pgrst.object+json\" ") <> "\"" <> pgUrl <> "?select=ret&jid=eq." <> jobid <> "\"" )
          & jq .~
            [r|
-             jq -r '(.ret |
-                     if .return.retcode == 0
-                     then "\u001B[1;32mSUCCESS\u001B[0m for "
-                     else "\u001B[1;31mFAILURE\u001B[0m for "
+             jq -r '(.ret | .[] |
+                     if .return.retcode and .return.retcode != 0
+                     then "\u001B[1;31mFAILURE\u001B[0m for "
+                     else "\u001B[1;32mSUCCESS\u001B[0m for "
                      end
                      + .id + ":",
-                     if .return.stderr != ""
+                     if .return.stderr and .return.stderr != ""
                      then .return.stdout + "\n******\n" + .return.stderr + "\n"
-                     else .return.stdout + "\n"
+                     elif .return.stdout and .return.stdout != ""
+                     then .return.stdout + "\n"
+                     else "\(.return)\n"
                      end)'
            |]
          & cmdMode .~ RetryMode
