@@ -110,24 +110,26 @@ You can toggle the `facts` query to target all hostgroups/stacks with the `--all
 ```
 λ ~ → cicd prod facts jenkins.slave --all
 {
-  "fqdn": "SVAPPCAVL595.cirb.lan",
-  "ip": "192.168.34.153",
-  "os": "CentOS 6.6",
-  "hostgroup": "irisbox",
+  "fqdn": "svappcavl736.prd.srv.cirb.lan",
+  "ip": "192.168.34.52",
+  "os": "RedHat 7.3",
+  "hostgroup": "ci",
   "subgroup": "jenkins",
-  "role": "slave"
-  "puppet run": "Tue Apr 18 14:26:15 CEST 2017",
-  "jenkins job": "633"
+  "role": "slave",
+  "instance": "middleware",
+  "puppet run": "Mon Apr 16 11:33:41 CEST 2018",
+  "jenkins job": "186"
 }
 {
-  "fqdn": "SVAPPCAVL649.prd.srv.cirb.lan",
-  "ip": "192.168.34.9",
-  "os": "RedHat 6.7",
-  "hostgroup": "iam",
+  "fqdn": "svappcavl771.prd.srv.cirb.lan",
+  "ip": "192.168.34.81",
+  "os": "RedHat 7.4",
+  "hostgroup": "ci",
   "subgroup": "jenkins",
-  "role": "slave"
-  "puppet run": "Tue Apr 18 14:26:15 CEST 2017",
-  "jenkins job": "633"
+  "role": "slave",
+  "instance": "fmx",
+  "puppet run": "Mon Apr 16 14:24:05 CEST 2018",
+  "jenkins job": "188"
 }
 ...
 ```
@@ -137,12 +139,13 @@ As usual, use `-n` to target a single node:
 {
   "fqdn": "svappcavl771.prd.srv.cirb.lan",
   "ip": "192.168.34.81",
-  "os": "RedHat 7.2",
-  "hostgroup": "fmx",
+  "os": "RedHat 7.4",
+  "hostgroup": "ci",
   "subgroup": "jenkins",
   "role": "slave",
-  "puppet run": "Thu Jan 26 11:06:00 CET 2017",
-  "jenkins job": "30"
+  "instance": "fmx",
+  "puppet run": "Mon Apr 16 14:24:05 CEST 2018",
+  "jenkins job": "188"
 }
 ```
 
