@@ -70,7 +70,7 @@ runCommand :: (MonadIO m , MonadReader Config.ShellConfig m) => Zone -> ExtraFla
 runCommand z flag cmd =  do
   maybe (pure ()) (liftIO . interactWith) (cmd ^. beforeMsg)
   cmdline <- shellCmdLine z (cmd^.pep)
-  unless (flag^.quiet) $ putText "Waiting for the following command to compute:" *> putText (cmd^.pep)
+  unless (flag^.quiet || flag^.dry) $ putText "Waiting for the following command to compute:" *> putText (cmd^.pep)
   when (flag^.dry) $ putText (cmd^.pep) *> liftIO exitSuccess
   void $ shell "ping -c1 stash.cirb.lan > /dev/null 2>&1" empty .||. die "cannot connect to stash.cirb.lan, check your connection"
   initTags z
@@ -208,6 +208,8 @@ run = \case
     runCommand zone (arg^.extraFlag) (setfactsCmd arg)
   ZoneCommand zone (Foreman arg) -> do
     mkTarget zone arg >>= runForeman (arg^.extraFlag) . foremanCmd Config.foremanUrl
+  ZoneCommand zone (Validate arg) -> do
+    mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . validateCmd
 
 main :: IO ()
 main = do

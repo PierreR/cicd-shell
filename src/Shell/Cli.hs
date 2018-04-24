@@ -52,6 +52,7 @@ data SubCommand
   | Result ResultArg
   | GenTags
   | Service (ServiceAction, ServiceName, Arg)
+  | Validate Arg
   deriving (Show)
 
 -- | Orchestrate command with an optional stack.
@@ -173,8 +174,9 @@ subCommandParser =
   <|> Runpuppet   <$> subcommand "runpuppet" "Apply puppet configuration" argParser
   <|> Sync        <$> subcommand "sync" "Sync metavar  data from master to nodes" across_parser
   <|> Setfacts    <$> subcommand "setfacts" "Set/update the 4 base machine facts" setfactParser
-  <|> Result      <$> subcommand "result" "Display the results of the most recent jobs executed by the user or for a specific id" resultParser
+  <|> Result      <$> subcommand "result" "Results of the most user recent jobs or for a specific id" resultParser
   <|> GenTags     <$  subcommand "gentags" "Generate node completion file" (pure ())
+  <|> Validate    <$> subcommand "validate" "Validate node with inspec" argParser
   where
     data_parser   = DataArg <$> optional (optText (long "key" <> short 'k' <> metavar "KEY" <> help "Property to look up for" )) <*> across_parser
     fact_parser   = FactArg <$> refreshParser <*> downParser <*> across_parser
