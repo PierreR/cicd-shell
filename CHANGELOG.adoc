@@ -4,12 +4,21 @@
 
 ### Breaking Changes
 
-WARNING: The https://github.com/CIRB/devbox/blob/master/user/config/shell.dhall[box.dhall] configuration file has been changed significantly in 2.0:
-+
+[WARNING]
+====
+The https://github.com/CIRB/devbox/blob/master/user/config/shell.dhall[box.dhall] configuration file has been changed significantly in 2.0:
+
 - `password` has been removed.
 - `defaultStack` has been renamed to `defaultStacks`. It is now a list.
 
 The cicd shell will ask for your AD password the first time you use it.
+====
+
+
+### Other changes
+- The verbose mode is now the default. The `--verbose` flag has been replaced by a `--quiet` flag.
+- New `validate` subcommand
+
 
 ## v1.8, 08/04/2018
 

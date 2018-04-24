@@ -1,5 +1,14 @@
 # CICD shell
-
+ifndef::site-gen-antora[]
+:toc:
+ifdef::backend-html5,backend-docbook5[]
+:toc-title:
+endif::[]
+:source-highlighter: highlightjs
+:icons: font
+endif::[]
+:language: bash
+:autofit-option:
 ## Setup
 
 To use the `cicd shell`, you need to fill in the https://github.com/CIRB/devbox/blob/master/user/config/shell[configuration file] located in `/vagrant/config/shell`.
@@ -30,16 +39,18 @@ The auto-completion feature helps you to complete the command. You can also requ
 .General help output for #cicd#
 ....
 → cicd
-CICD - command line utility (v1.4.0)
+CICD - command line utility (v2.0.6)
 
-Usage: cicd (doc | ZONE (console | stats | data | orch | facts | ping | du |
-            service | runpuppet | sync | setfacts | result | gentags))
+Usage: cicd (pass | doc | ZONE (console | stats | data | orch | facts | ping |
+            du | state | service | foreman | runpuppet | sync | setfacts |
+            result | gentags | validate))
 
 Available options:
   -h,--help                Show this help text
   ZONE                     ZONE (dev|testing|staging|prod)
 
 Available commands:
+  pass                     Change password
   doc                      Documentation utilities
   console                  Open the cicd console
   stats                    Stats (special permission required)
@@ -48,31 +59,34 @@ Available commands:
   facts                    Return essential facts about nodes
   ping                     Ping nodes
   du                       Return disk usage
-  service                  Service management for a specific node
   state                    Apply a specific configuration
+  service                  Service management for a specific node
+  foreman                  Display the foreman report in a browser
   runpuppet                Apply puppet configuration
-  sync                     Syncmetavar  data from master to nodes
+  sync                     Sync metavar  data from master to nodes
   setfacts                 Set/update the 4 base machine facts
-  result                   Display the results of the most recent jobs executed by the user or for a specific id
+  result                   Results of the most user recent jobs or for a specific id
   gentags                  Generate node completion file
+  validate                 Validate node with inspec
 ....
 
 .Help output for #facts#
 ```
 → cicd staging facts -h
-Usage: cicd facts [--down] [--all] [ROLE] [-n NODE] [-g GROUP] [-s STACK]
-                  [--raw] [-v|--verbose] [--dry]
+Usage: cicd facts [--refresh] [--down] [--all] [ROLE] [-n NODE] [-g GROUP]
+                  [-s STACK] [--raw] [--quiet] [--dry]
   Return essential facts about nodes
 
 Available options:
+  --refresh                Refresh the cache
+  --down                   Query disconnected node
+  --all                    Target whole the known stacks
   ROLE                     Role name maybe prefixed by a subgroup ('subgroup.role')
   -n NODE                  Target node
   -g GROUP                 Target subgroup
   -s STACK                 Target stack/hostgroup
-  --down                   Query down node
-  --all                    Target whole the known stacks
   --raw                    Raw output (no jq)
-  -v,--verbose             Display the executed command
+  --quiet                  Quieter output. Won't display the command.
   --dry                    Display the command without execution
   -h,--help                Show this help text
 ```
@@ -88,6 +102,8 @@ Available options:
 ### >_ facts
 
 The command displays a subset of important facts (static information) about your nodes such as the `fqdn`, `ip`, `os`, `role`, ...
+
+The facts are mostly static information. By default they are cached to give immediate feedback. To update the cache, use the `--refresh` flag.
 
 You can toggle the `facts` query to target all hostgroups/stacks with the `--all` flag. Here is how to get all facts for all slaves in every stack:
 
@@ -302,6 +318,10 @@ Available commands:
   modules                  Output all possible salt execution modules
   mod                      Doc about a specific salt module
 ```
+
+### >_ pass
+
+The `pass` subcommand is used to change the stored password. Handy whenever you change your AD password.
 
 ## Authentication
 ====
