@@ -265,7 +265,9 @@ resultCmd pgUrl raw (Just jobid) Nothing _ =
                      then .return.stdout + "\n******\n" + .return.stderr + "\n"
                      elif .return.stdout and .return.stdout != ""
                      then .return.stdout + "\n"
-                     else "\(.return)\n"
+                     elif .return | ([(.[] | type == "object" )] | all ) and map (has("changed"))
+                     then .return | .[] | select(.changes.stdout) | .changes.stdout | tostring
+                     else .return
                      end)'
            |]
          & cmdMode .~ RetryMode
@@ -289,7 +291,6 @@ foremanCmd foremanUrl target =
 
 validateCmd :: Target -> PepCmd
 validateCmd Target {_node= Just n} =
-  defCmd & pep .~ "pepper -t 600 " <> n <> " state.apply validate.host"
+  defCmd & pep .~ "pepper " <> n <> " --client=local_async state.apply validate.host"
 validateCmd target@Target{_node= Nothing} =
-  defCmd & pep .~ (pepperCompoundTarget False target  <> " state.apply validate.host")
-         & jq .~ "jq '.return[0]'"
+  defCmd & pep .~ (pepperCompoundTarget False target  <> " --client=local_async state.apply validate.host")
