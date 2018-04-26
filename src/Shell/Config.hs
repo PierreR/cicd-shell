@@ -28,13 +28,13 @@ module Shell.Config (
 ) where
 
 import qualified Data.List        as List
-import qualified Data.Text.IO     as Text
 import qualified Data.Text.Lazy   as Text.Lazy
 import qualified Data.Version     (showVersion)
 import qualified Dhall
 import qualified Paths_cicd_shell
 import qualified System.Directory as Directory
 import qualified System.IO
+import qualified System.Console.Haskeline as Haskeline
 
 import           Shell.Prelude
 import           Shell.Type
@@ -63,7 +63,7 @@ data ShellConfig
   = ShellConfig
   { _localdir :: FilePath
   , _dhall :: DhallConfig
-  , _password :: Text
+  , _password :: String
   }
 
 makeClassy ''DhallConfig
@@ -80,18 +80,17 @@ localDir :: (MonadIO m, MonadReader ShellConfig m) => m FilePath
 localDir = asks (view localdir)
 
 -- | User AD password
-userPwd :: (MonadIO m, MonadReader ShellConfig m) => m Text
+userPwd :: (MonadIO m, MonadReader ShellConfig m) => m String
 userPwd = asks (view password)
 
-wizard :: FilePath -> IO Text
+wizard :: FilePath -> IO [Char]
 wizard localdir = do
   let pwd_file = localdir </> ".pwd"
   ifM (Directory.doesFileExist pwd_file)
-    (withFile pwd_file ReadMode $ \h ->
-      Text.hGetLine h)
+    (System.IO.readFile pwd_file)
     (passwordWizard pwd_file)
 
-passwordWizard :: FilePath -> IO Text
+passwordWizard :: FilePath -> IO String
 passwordWizard fname = do
   pwd <- promptPassword
   putText "We recommend saving the password locally."
@@ -101,21 +100,16 @@ passwordWizard fname = do
     "Y" -> writePassword fname pwd *> pure pwd
     _ -> pure pwd
 
-writePassword :: FilePath-> Text -> IO ()
+writePassword :: FilePath-> String -> IO ()
 writePassword fname pwd = do
-  Text.writeFile fname pwd
+  System.IO.writeFile fname pwd
   putText "Your passport has been saved. To change it, use 'cicd pass'"
 
-promptPassword :: IO Text
+promptPassword :: IO String
 promptPassword = do
-  putText "Enter your AD password and press Enter"
-  System.IO.hFlush stdout
-  withEcho False getLine
-  where
-    withEcho :: Bool -> IO a -> IO a
-    withEcho echo action = do
-      old <- System.IO.hGetEcho stdin
-      bracket_ (System.IO.hSetEcho stdin echo) (System.IO.hSetEcho stdin old) action
+  Just pwd <- Haskeline.runInputT Haskeline.defaultSettings $ do
+    Haskeline.getPassword (Just '*') "Enter your AD password and press Enter\n"
+  pure pwd
 
 -- | User default puppet stack
 userDefaultStacks ::(MonadIO io, MonadReader ShellConfig io) => io [Text]

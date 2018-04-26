@@ -1,6 +1,9 @@
 # Changelog
 
-## v2.0, not yet released
+## v2.1, not yet released
+- New `validate` subcommand
+
+## v2.0, 28/04/2018
 
 ### Breaking Changes
 
@@ -14,13 +17,12 @@ The https://github.com/CIRB/devbox/blob/master/user/config/shell.dhall[box.dhall
 The cicd shell will ask for your AD password the first time you use it.
 ====
 
-
 ### Other changes
 - The verbose mode is now the default. The `--verbose` flag has been replaced by a `--quiet` flag.
-- New `validate` subcommand
 
 
 ## v1.8, 08/04/2018
+
 
 - The result of any `facts` command is cached when first invoked.
 You can use the `--refresh` flag to force the facts to be remotely fetched again.

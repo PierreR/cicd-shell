@@ -20,6 +20,7 @@ import           Data.Semigroup                            as Exports hiding (Ar
 import           Data.Text.Prettyprint.Doc                 as Exports (Doc, pretty, line)
 import           Data.Text.Prettyprint.Doc.Render.Terminal as Exports (AnsiStyle, putDoc)
 import           GHC.Exts                                  as Exports (fromList)
+import           Data.String                               as Exports (String)
 import           Numeric.Natural                           as Exports
 import           Protolude                                 as Exports hiding (Down, First (..),
                                                                        Last (..), break, getFirst,
