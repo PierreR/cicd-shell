@@ -24,6 +24,7 @@ module Shell.Config (
   , version
   , HasShellConfig(..)
   , ShellConfig(..)
+  , mockShellConfig
 ) where
 
 import qualified Data.List        as List
@@ -120,6 +121,10 @@ promptPassword = do
 userDefaultStacks ::(MonadIO io, MonadReader ShellConfig io) => io [Text]
 userDefaultStacks = do
   asks (toListOf (dhall.defaultStacks.traverse.strict))
+
+mockShellConfig :: NonEmpty Text -> ShellConfig
+mockShellConfig default_stacks =
+  ShellConfig { _localdir = mempty , _dhall = DhallConfig mempty (fromStrict <$>  (toList default_stacks)) , _password = mempty}
 
 mkShellConfig :: IO ShellConfig
 mkShellConfig = do

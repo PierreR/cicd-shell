@@ -4,6 +4,7 @@ import qualified Data.Text     as Text
 
 import           Shell.Prelude
 import           Shell.Type
+import           Shell.Target
 
 pepperCompoundTarget :: Bool -> Target -> Text
 pepperCompoundTarget across t

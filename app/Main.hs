@@ -15,16 +15,8 @@ import qualified Shell.Config                 as Config
 import           Shell.PepCmd
 import           Shell.Prelude                hiding (appendFile, die)
 import           Shell.Type
+import           Shell.Target
 
-getStacks :: (MonadIO m , MonadReader Config.ShellConfig m) => Maybe Text -> m (NonEmpty Text)
-getStacks s = do
-  ds <- Config.userDefaultStacks
-  pure $ fromList $ maybe ds (:ds) s
-
-mkTarget :: (MonadIO m , MonadReader Config.ShellConfig m) => Zone -> Arg -> m Target
-mkTarget (Zone _zone) Arg{..} = do
-  _stacks <- getStacks _stack
-  pure Target{..}
 
 shellCmdLine :: (MonadIO m, MonadReader Config.ShellConfig m) => Zone -> Text -> m Text
 shellCmdLine z@(Zone zone) pep = do

@@ -35,6 +35,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 
 import           Shell.Prelude
 import           Shell.Type
+import           Shell.Target
 import           Shell.PepCmd.Utils
 
 panic' = panic "The impossible happened. The option parser should void the case"

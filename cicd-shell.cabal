@@ -22,11 +22,13 @@ library
                        , Shell.PepCmd
                        , Shell.Prelude
                        , Shell.PepCmd.Utils
+                       , Shell.Target
   other-modules:       Paths_cicd_shell
                        , Shell.Options
   default-extensions:    FlexibleContexts
                        , LambdaCase
                        , NoImplicitPrelude
+                       , RecordWildCards
                        , OverloadedStrings
                        , StrictData
   build-depends:       base
