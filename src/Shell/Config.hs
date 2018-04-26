@@ -87,7 +87,8 @@ wizard :: FilePath -> IO [Char]
 wizard localdir = do
   let pwd_file = localdir </> ".pwd"
   ifM (Directory.doesFileExist pwd_file)
-    (System.IO.readFile pwd_file)
+    (withFile pwd_file ReadMode $ \h ->
+      System.IO.hGetLine h)
     (passwordWizard pwd_file)
 
 passwordWizard :: FilePath -> IO String
