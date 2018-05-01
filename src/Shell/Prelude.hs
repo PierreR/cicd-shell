@@ -14,7 +14,7 @@ import           Control.Lens                              as Exports (at, makeC
                                                                        view, _1, _2, _Just)
 import           Control.Lens.Operators                    as Exports hiding ((<.>))
 import           Control.Monad.Trans.Maybe
-import           Data.Foldable                             as Exports (foldl1)
+import           Data.Foldable                             as Exports (foldr1)
 import           Data.List.NonEmpty                        as Exports (cons)
 import           Data.Semigroup                            as Exports hiding (Arg (..))
 import           Data.Text.Prettyprint.Doc                 as Exports (Doc, pretty, line)
