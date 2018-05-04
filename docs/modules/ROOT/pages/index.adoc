@@ -347,7 +347,8 @@ These permissions should have been set for you already. If they don't, please co
 The first time you use the `cicd-shell`, a prompt will ask you for your AD password.
 This is required because every action realized is guarded by permission and recorded in database.
 
-The prompt will propose you to store the password. It is more convenient to do so and avoid retyping it every time.
+The prompt will propose you to store your password on the devbox.
+Accept the proposition in order to avoid retyping your password for each subsequent actions.
 
 Your password does not leave the devbox.
 If you feel it might be in danger sitting in the devbox filesystem, you can add a level0 running script to remove the #.pwd# file when the devbox shutdowns.
