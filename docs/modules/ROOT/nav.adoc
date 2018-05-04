@@ -12,3 +12,4 @@
 ** xref:index.adoc#_help[ &gt; _ help]
 * xref:index.adoc#_authentication[Authentication]
 * xref:index.adoc#_install_outside_the_devbox[Install outside the devbox]
+* xref:CHANGELOG.adoc[Changelog]
