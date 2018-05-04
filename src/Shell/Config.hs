@@ -125,6 +125,7 @@ mkShellConfig :: IO ShellConfig
 mkShellConfig = do
   home <- Directory.getHomeDirectory
   let _localdir = home </> ".local/share/cicd"
+  Directory.createDirectoryIfMissing True _localdir
   _dhall <- mkDhallConfig
   _password <- wizard _localdir
   pure $ ShellConfig {..}

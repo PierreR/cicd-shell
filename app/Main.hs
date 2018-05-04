@@ -35,7 +35,6 @@ initTags z@(Zone zone) = do
   let tagfile = localdir </> ".nodes-" <> toS zone
   found <- liftIO $ Directory.doesFileExist tagfile
   unless found $ do
-    liftIO $ Directory.createDirectoryIfMissing True localdir
     let cmd = genTagsCmd z (toS localdir)
     cmdline <- shellCmdLine z (cmd^.pep)
     inshell cmdline empty & shell (cmd^.jq) >>= \case
