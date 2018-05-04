@@ -329,10 +329,20 @@ The `pass` subcommand is used to change the stored password. Handy whenever you 
 ## Authentication
 ====
 The permissions to target machines and perform actions are realized through our Active directory.
-As an example to access the machines of the `middleware` hostgroup, you will need to be part of the `GP_APP_SALT_MIDDLEWARE` group.
+As an example to access the machines of the `irisbox` hostgroup, you will need to be part of the `GP_APP_SALT_IRISBOX` group.
 
 These permissions should have been set for you already. If they don't, please contact the `cicd` team.
 ====
+
+### AD password storage
+
+The first time you use the `cicd-shell`, a prompt will ask you for your AD password.
+This is required because every action realized is guarded by permission and recorded in database.
+
+The prompt will propose you to store the password. It is more convenient to do so and avoid retyping it every time.
+
+Your password does not leave the devbox.
+If you feel it might be in danger sitting in the devbox filesystem, you can add a level0 running script to remove the #.pwd# file when the devbox shutdowns.
 
 ## Install outside the devbox
 
