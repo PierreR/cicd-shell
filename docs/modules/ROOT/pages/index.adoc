@@ -276,6 +276,14 @@ Orchestrate commands are executed with:
 → cicd testing orch CMD
 ```
 
+### >_ foreman
+
+Open a browser and display the relevant foreman page related to your query. For instance to get a list of all jenkins slaves and the link to its complete report, type:
+
+```
+cicd prod foreman jenkins.slave -s ci
+```
+
 ### >_ console
 
 For longer session within a specific zone, you can save some typing by opening a `console` for that zone. Inside the console, you would omit the zone from the command line. Here is an example:
@@ -283,7 +291,7 @@ For longer session within a specific zone, you can save some typing by opening a
 ```
 → cicd staging console
 
-[cicd prod]$ facts
+[cicd staging]$ facts
 ```
 
 Another usage of the console is to run specific `salt` commands that are not exposed by the `cicd` command line. This is done via the #pep# shortcut. For instance:
