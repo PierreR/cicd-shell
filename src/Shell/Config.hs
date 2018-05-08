@@ -67,11 +67,13 @@ data ShellConfig
 makeClassy ''DhallConfig
 makeClassy ''ShellConfig
 
+instance HasDhallConfig ShellConfig  where dhallConfig = dhall
+
 instance Dhall.Interpret DhallConfig
 
 -- | User AD login id
-userId :: (MonadIO m, MonadReader ShellConfig m) => m Text
-userId = asks (view (dhall.loginId.strict))
+userId :: (MonadIO m, HasDhallConfig r, MonadReader r m) => m Text
+userId = asks (view (loginId.strict))
 
 -- | Directories where gentags & genhelp files are stored.
 localDir :: (MonadIO m, MonadReader ShellConfig m) => m FilePath

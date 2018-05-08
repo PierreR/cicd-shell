@@ -17,9 +17,14 @@ import           Shell.Prelude                hiding (appendFile, die)
 import           Shell.Type
 import           Shell.Target
 
+type App = ReaderT Config.ShellConfig IO ExitCode
 
-shellCmdLine :: (MonadIO m, MonadReader Config.ShellConfig m) => Zone -> Text -> m Text
-shellCmdLine z@(Zone zone) pep = do
+-- Build the nix shell command line that will run salt remotely.
+buildCmdLine :: (MonadIO m, MonadReader Config.ShellConfig m)
+             => Zone
+             -> Text -- salt command
+             -> m Text
+buildCmdLine z@(Zone zone) pep = do
   userid <- Config.userId
   userpwd <- Config.userPwd
   datadir <- liftIO $ Config.dataDir
@@ -29,18 +34,22 @@ shellCmdLine z@(Zone zone) pep = do
     then pure pgr
     else pure $ pgr <> " --command '" <> pep <> "'"
 
-initTags :: (MonadIO m, MonadReader Config.ShellConfig m) => Zone -> m ()
+-- Generate the file required to complete node fqdn
+initTags :: (MonadIO m, MonadReader Config.ShellConfig m)
+         => Zone
+         -> m ()
 initTags z@(Zone zone) = do
   localdir <- Config.localDir
   let tagfile = localdir </> ".nodes-" <> toS zone
   found <- liftIO $ Directory.doesFileExist tagfile
   unless found $ do
     let cmd = genTagsCmd z (toS localdir)
-    cmdline <- shellCmdLine z (cmd^.pep)
+    cmdline <- buildCmdLine z (cmd^.pep)
     inshell cmdline empty & shell (cmd^.jq) >>= \case
       ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") zone
       ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
 
+-- Generate the file required to display salt help with caching
 initHelp :: (MonadIO m, MonadReader Config.ShellConfig m) => m ()
 initHelp = do
   gen_help genSaltModListCmd "modlist"
@@ -52,15 +61,19 @@ initHelp = do
       found <- liftIO $ Directory.doesFileExist (fpath <> ".json")
       unless found $ do
         let cmd' = cmd (toS fpath)
-        cmdline <- shellCmdLine (Zone "dev") (cmd'^.pep)
+        cmdline <- buildCmdLine (Zone "dev") (cmd'^.pep)
         inshell cmdline empty & shell (cmd'^.jq) >>= \case
           ExitSuccess -> putStrLn (fpath <> " generated successfully.\n")
           ExitFailure _ -> putStrLn ("WARNING: cannot generate '" <> fpath <> "' (completion).\n")
 
-runCommand :: (MonadIO m , MonadReader Config.ShellConfig m) => Zone -> ExtraFlag -> PepCmd -> m ExitCode
+-- Generic run command
+runCommand :: Zone
+           -> ExtraFlag
+           -> PepCmd
+           -> App
 runCommand z flag cmd =  do
   maybe (pure ()) (liftIO . interactWith) (cmd ^. beforeMsg)
-  cmdline <- shellCmdLine z (cmd^.pep)
+  cmdline <- buildCmdLine z (cmd^.pep)
   unless (flag^.quiet || flag^.dry) $ putText "Waiting for the following command to compute:" *> putText (cmd^.pep)
   when (flag^.dry) $ putText (cmd^.pep) *> liftIO exitSuccess
   void $ shell "ping -c1 stash.cirb.lan > /dev/null 2>&1" empty .||. die "cannot connect to stash.cirb.lan, check your connection"
@@ -122,7 +135,7 @@ runForeman extraflag pep = do
   when (extraflag^.dry) $ putText pep *> liftIO exitSuccess
   shell pep empty
 
-run :: (MonadIO m, MonadReader Config.ShellConfig m) => Options -> m ExitCode
+run :: Options -> App
 run = \case
   Password -> do
     pwd <- liftIO $ Config.promptPassword
