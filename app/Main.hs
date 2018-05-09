@@ -1,29 +1,31 @@
-{-# LANGUAGE LambdaCase      #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Main where
 
 import           Control.Concurrent
+import qualified Data.List.NonEmpty           as NonEmpty
 import qualified Data.Text                    as Text
 import qualified System.Console.AsciiProgress as Progress
 import qualified System.Directory             as Directory
-import qualified Data.List.NonEmpty as NonEmpty
-import           Turtle                       hiding (FilePath, strict, view,
-                                               (</>), (<>))
+import           Turtle                       hiding (FilePath, strict, view, (</>), (<>))
 
 import           Shell.Cli
 import qualified Shell.Config                 as Config
 import           Shell.PepCmd
 import           Shell.Prelude                hiding (appendFile, die)
-import           Shell.Type
 import           Shell.Target
+import           Shell.Type
 
-type App = ReaderT Config.ShellConfig IO ExitCode
+-- The Application Monad. A simple wrapper around ReaderT
+newtype AppM a =
+  AppM {
+    unAppM :: ReaderT Config.ShellConfig IO a
+  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader Config.ShellConfig)
+
 
 -- Build the nix shell command line that will run salt remotely.
-buildCmdLine :: (MonadIO m, MonadReader Config.ShellConfig m)
-             => Zone
+buildCmdLine :: Zone
              -> Text -- salt command
-             -> m Text
+             -> AppM Text
 buildCmdLine z@(Zone zone) pep = do
   userid <- Config.userId
   userpwd <- Config.userPwd
@@ -35,9 +37,7 @@ buildCmdLine z@(Zone zone) pep = do
     else pure $ pgr <> " --command '" <> pep <> "'"
 
 -- Generate the file required to complete node fqdn
-initTags :: (MonadIO m, MonadReader Config.ShellConfig m)
-         => Zone
-         -> m ()
+initTags :: Zone -> AppM ()
 initTags z@(Zone zone) = do
   localdir <- Config.localDir
   let tagfile = localdir </> ".nodes-" <> toS zone
@@ -50,7 +50,7 @@ initTags z@(Zone zone) = do
       ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
 
 -- Generate the file required to display salt help with caching
-initHelp :: (MonadIO m, MonadReader Config.ShellConfig m) => m ()
+initHelp :: AppM ()
 initHelp = do
   gen_help genSaltModListCmd "modlist"
   gen_help genSaltModjsonCmd "modhelp"
@@ -70,7 +70,7 @@ initHelp = do
 runCommand :: Zone
            -> ExtraFlag
            -> PepCmd
-           -> App
+           -> AppM ExitCode
 runCommand z flag cmd =  do
   maybe (pure ()) (liftIO . interactWith) (cmd ^. beforeMsg)
   cmdline <- buildCmdLine z (cmd^.pep)
@@ -135,7 +135,7 @@ runForeman extraflag pep = do
   when (extraflag^.dry) $ putText pep *> liftIO exitSuccess
   shell pep empty
 
-run :: Options -> App
+run :: Options -> AppM ExitCode
 run = \case
   Password -> do
     pwd <- liftIO $ Config.promptPassword
@@ -218,8 +218,10 @@ run = \case
 main :: IO ()
 main = do
   cmd_options <- options (fromString ("CICD - command line utility (v" <> Config.version <> ")")) optionParser
-  exit_code <- runReaderT (run cmd_options) =<< Config.mkShellConfig
+  exit_code <- runApp (run cmd_options) =<< Config.mkShellConfig
   exitWith exit_code
+  where
+    runApp = runReaderT . unAppM
 
 interactWith :: CmdMsg -> IO ()
 interactWith = \case
