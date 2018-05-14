@@ -198,13 +198,15 @@ serviceCmd ServiceRestart _ Target {_node = Nothing} =
   panic "To restart a service, you need to specify a node with -n"
 
 -- | Display a set of interesting facts such as fqdn, ip, role, ...
-factCmd :: FilePath -> Text -> Bool -> Down -> Target -> PepCmd
+factCmd :: Maybe FilePath -> Text -> Bool -> Down -> Target -> PepCmd
 factCmd fpath _ across _ target@Target {_node = Nothing} =
   defCmd & pep .~ (pepperCompoundTarget across target <> " grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role instance puppetmaster_timestamp puppetmaster_jenkins_job")
          & jq .~
            [r|
              jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[0], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, instance, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}' \
-           |] <> " | tee " <> toS fpath <> " | jq ."
+           |]
+           <> maybe mempty (\p -> " | tee " <> toS p) fpath
+           <> " | jq ."
 factCmd _ pdbUrl _ (Down True) Target {_node = Just n} =
   defCmd & pep .~ ("pdbquery -t remote  -l " <> pdbUrl <> " facts " <> Text.toLower n)
          & jq .~
@@ -220,7 +222,9 @@ factCmd fpath _ _ (Down False) Target {_node = Just n} =
               jq '.return[0] |
               .[] |
               { fqdn, ip: .fqdn_ip4[0], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, instance, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job }' \
-           |] <> " | tee " <> toS fpath <> " | jq ."
+           |]
+           <> maybe mempty (\p -> " | tee " <> toS p) fpath
+           <> " | jq ."
 
 pingCmd :: Bool -> Target -> PepCmd
 pingCmd across target@Target {_node = Nothing} =
