@@ -40,17 +40,17 @@ test_compountTarget = do
 -- testing the readTarget test utils ...
 unit_readMinimalTarget :: IO ()
 unit_readMinimalTarget =
-  let expectation = Target Nothing ["cicd"] Nothing Nothing "dev"
+  let expectation = Target Nothing ["cicd"] Nothing Nothing Nothing "dev"
   in readTarget "[cicd].dev" @?= Just expectation
 
 unit_readSimpleTarget :: IO ()
 unit_readSimpleTarget =
-  let expectation = Target Nothing ["cicd"] Nothing (Just (Role (Just (Subgroup "salt")) "master")) "dev"
+  let expectation = Target Nothing ["cicd"] Nothing (Just (Role (Just (Subgroup "salt")) "master")) Nothing "dev"
   in readTarget "[cicd].salt.master.dev" @?= Just expectation
 
 unit_readDefHostgroupsTarget :: IO ()
 unit_readDefHostgroupsTarget =
-  let expectation = Target Nothing ["cicd", "ci"] Nothing (Just (Role (Just (Subgroup "salt")) "master")) "dev"
+  let expectation = Target Nothing ["cicd", "ci"] Nothing (Just (Role (Just (Subgroup "salt")) "master")) Nothing "dev"
   in readTarget "[cicd,ci].salt.master.dev" @?= Just expectation
 
 -- | Text reader for Target
@@ -68,9 +68,9 @@ readTarget s =
       mk_target Nothing Nothing z <$> read_hostgroup h
     _         -> Nothing
   where
-    mk_target (Just g) (Just r) z h = Target Nothing h Nothing (Just (Role (Just (Subgroup g)) r)) z
-    mk_target Nothing (Just r) z h = Target Nothing h Nothing (Just (Role Nothing r)) z
-    mk_target Nothing Nothing z h = Target Nothing h Nothing Nothing z
+    mk_target (Just g) (Just r) z h = Target Nothing h Nothing (Just (Role (Just (Subgroup g)) r)) Nothing z
+    mk_target Nothing (Just r) z h = Target Nothing h Nothing (Just (Role Nothing r)) Nothing z
+    mk_target Nothing Nothing z h = Target Nothing h Nothing Nothing Nothing z
     mk_target (Just _) Nothing _ _ = panic "Can't pass a subgroup without a role in this (local) context"
 
     read_hostgroup :: Text -> Maybe (NonEmpty Text)
