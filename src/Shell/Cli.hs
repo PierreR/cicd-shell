@@ -87,8 +87,9 @@ argParser
   = Arg
   <$> optional (arg roleParse (metavar "ROLE" <> help "Role name maybe prefixed by a subgroup ('subgroup.role')"))
   <*> optional (optText (metavar "NODE" <> short 'n' <> help "Target node"))
-  <*> optional (optText (metavar "GROUP" <> short 'g' <> help "Target subgroup"))
   <*> optional (optText (metavar "STACK" <> short 's' <> help "Target stack/hostgroup"))
+  <*> optional (optText (metavar "GROUP" <> short 'g' <> help "Target subgroup"))
+  <*> optional (optText (metavar "INSTANCE" <> short 'i' <> help "Target instance"))
   <*> extraFlagParser
 
 

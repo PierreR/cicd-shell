@@ -18,6 +18,7 @@ data Target = Target
   { _node     :: Maybe Text
   , _stacks   :: NonEmpty Text
   , _subgroup :: Maybe Text
+  , _inst     :: Maybe Text
   , _role     :: Maybe Role
   , _zone     :: Text
   } deriving (Show,Eq)
@@ -25,11 +26,11 @@ data Target = Target
 makeFieldsNoPrefix ''Target
 
 instance Pretty Target where
-  pretty t = pretty $ Text.intercalate "." (NonEmpty.head (t^.stacks) : catMaybes [fmap toS (t^.role), t^.subgroup] <> [ t^.zone])
+  pretty t = pretty $ Text.intercalate "." (NonEmpty.head (t^.stacks) : catMaybes [t^.subgroup, fmap toS (t^.role), t^.inst] <> [ t^.zone])
 
 instance StringConv Target Text  where
-  strConv _ (Target node stacks subgroup role zone) =
-    let s = catMaybes [node] <> toList stacks <> catMaybes [subgroup, toS <$> role] <> [zone]
+  strConv _ (Target node stacks subgroup inst role zone) =
+    let s = catMaybes [node] <> toList stacks <> catMaybes [subgroup, toS <$> role, inst] <> [zone]
     in Text.intercalate "-" s
 
 -- | Return a non empty list of stacks.

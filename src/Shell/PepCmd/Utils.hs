@@ -12,10 +12,11 @@ pepperCompoundTarget across t
                                       (if across then Nothing else Just (t^.stacks))
                                       (t^.subgroup)
                                       (t^.role)
+                                      (t^.inst)
                    <> "\""
   where
-    compound_target :: Text -> Maybe (NonEmpty Text) -> Maybe Text -> Maybe Role -> Text
-    compound_target z sx g r =
+    compound_target :: Text -> Maybe (NonEmpty Text) -> Maybe Text -> Maybe Role -> Maybe Text -> Text
+    compound_target z sx g r i =
       let role_target (Role (Just (Subgroup g')) r') = "G@subgroup:" <> g' <> " and G@role:" <> r'
           role_target (Role Nothing r') = "G@role:" <> r'
           surround a b c = a <> c <> b
@@ -25,6 +26,7 @@ pepperCompoundTarget across t
            , foldmap_hostgroup <$> sx
            , ("G@subgroup:" <>) <$> g
            , role_target <$> r
+           , ("G@instance:" <>) <$> i
            ]
 
 joinTargetWith x = Text.intercalate x . catMaybes

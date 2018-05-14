@@ -40,10 +40,11 @@ makeLenses ''ExtraFlag
 
 data Arg
   = Arg
-  { _role      :: Maybe Role
+  { _role      :: Maybe Role -- role needs to be parsed first
   , _node      :: Maybe Text
-  , _subgroup  :: Maybe Text
   , _stack     :: Maybe Text
+  , _subgroup  :: Maybe Text
+  , _inst      :: Maybe Text
   , _extraFlag :: ExtraFlag
   } deriving Show
 
