@@ -1,11 +1,10 @@
 { salt-user, salt-pass, salt-url, zone }:
 let
   pkgs = import ./pin.nix {};
-  hghc = pkgs.haskellPackages;
 in
 pkgs.stdenv.mkDerivation {
   name = "pepper-env";
-  buildInputs = [ pkgs.pepper pkgs.jq hghc.language-puppet ];
+  buildInputs = [ pkgs.pepper pkgs.jq ];
   shellHook = ''
   export SALTAPI_USER="${salt-user}"
   export SALTAPI_PASS="${salt-pass}"

@@ -14,6 +14,7 @@ import           Shell.PepCmd
 import           Shell.Prelude                hiding (appendFile, die)
 import           Shell.Target
 import           Shell.Type
+import qualified Shell.PuppetDB as PuppetDB
 
 -- The Application Monad. A simple wrapper around ReaderT
 newtype AppM a =
@@ -176,16 +177,17 @@ run = \case
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . pingCmd across
   ZoneCommand zone (Sync (AcrossArg across arg)) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . syncCmd across
-  ZoneCommand zone (Facts (FactArg (Refresh _) down@(Down True) (AcrossArg across arg))) -> do
+  ZoneCommand zone (Facts (FactArg (Refresh _) down@(Down True) (AcrossArg across arg@(Arg _ (Just n) _ _ _ _ )))) -> do
     target <- mkTarget zone arg
-    let cmd = factCmd Nothing Config.puppetdbUrl across down target
-    runCommand zone (arg^.extraFlag) cmd
+    let cmd = factCmd Nothing across down target
+    r <- liftIO $ PuppetDB.getFacts n
+    shell (cmd^.jq) (pure  (unsafeTextToLine (toS r)))
   ZoneCommand zone (Facts (FactArg (Refresh refresh) down@(Down False) (AcrossArg across arg))) -> do
     localdir <- Config.localDir
     target <- mkTarget zone arg
     let fname = ".facts-" <> toS target <> ".json"
         fpath = localdir </> Text.unpack fname
-        cmd = factCmd (Just fpath) Config.puppetdbUrl across down target
+        cmd = factCmd (Just fpath) across down target
     found <- liftIO $ Directory.doesFileExist fpath
     if (found && not refresh)
     then do

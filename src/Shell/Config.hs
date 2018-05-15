@@ -13,7 +13,8 @@ module Shell.Config (
   , pgUrl
   , promptPassword
   , writePassword
-  , puppetdbUrl
+  , puppetdbServer
+  , puppetdbPort
   , saltUrl
   , mkShellConfig
   , userId
@@ -151,10 +152,12 @@ pgUrl :: Zone -> Text
 pgUrl (Zone z) =
   "http://pgserver-cicd." <> infraPrefix z <> ".srv.cirb.lan/saltstack/salt_result"
 
--- | Puppetdb url
-puppetdbUrl :: Text
-puppetdbUrl =
-  "http://puppetdb.prd.srv.cirb.lan:8080"
+puppetdbServer :: Text
+puppetdbServer =
+  "puppetdb.prd.srv.cirb.lan"
+
+puppetdbPort :: Int
+puppetdbPort = 8080
 
 saltUrl :: Zone -> Text
 saltUrl (Zone z) =

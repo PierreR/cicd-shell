@@ -1,6 +1,10 @@
 # Changelog
 
-## v2.1, not yet released
+## v2.2, not yet released
+- Never cache facts when the `--down` flag is used.
+- Remove `language-puppet` dependency
+
+## v2.1
 - New `validate` subcommand
 - Add `-i` option to target instances
 - The pinned meta file (`.nixpkgs.json`) is now part of the project source

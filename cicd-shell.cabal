@@ -1,5 +1,5 @@
 name:                cicd-shell
-version:             2.1.2
+version:             2.2.0
 homepage:            ssh://git@stash.cirb.lan:7999/cicd/salt-shell.git
 license:             BSD3
 build-type:          Simple
@@ -23,6 +23,7 @@ library
                        , Shell.PepCmd
                        , Shell.Prelude
                        , Shell.PepCmd.Utils
+                       , Shell.PuppetDB
                        , Shell.Target
   other-modules:       Paths_cicd_shell
                        , Shell.Options
@@ -33,16 +34,20 @@ library
                        , OverloadedStrings
                        , StrictData
   build-depends:       base
+                       , aeson
                        , concurrent-output >= 1.9
+                       , data-default-class
                        , dhall >= 1.9
                        , directory >= 1.3
                        , filepath >= 1.4
                        , haskeline >= 0.7
                        , lens >= 4.15.2
+                       , neat-interpolation
                        , optparse-applicative >= 0.13
                        , prettyprinter >= 1.2
                        , prettyprinter-ansi-terminal >= 1.1
                        , raw-strings-qq
+                       , req
                        , transformers >= 0.5
                        , process >= 1.4
                        , protolude >= 0.2
