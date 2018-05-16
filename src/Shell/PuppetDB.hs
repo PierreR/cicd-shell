@@ -15,7 +15,7 @@ getFacts n = runReq def $ do
   let queryval = [text| ["=", "certname", "$n"] |] :: Text
       queryparam = "query" =: queryval
   r <- req GET
-    (http Config.puppetdbServer /: "v4" /: "facts")
+    (http Config.puppetdbServer /: "pdb" /: "query" /: "v4" /: "facts")
     NoReqBody
     lbsResponse
     $ (port Config.puppetdbPort)  <> queryparam

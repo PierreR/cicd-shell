@@ -154,7 +154,7 @@ pgUrl (Zone z) =
 
 puppetdbServer :: Text
 puppetdbServer =
-  "puppetdb.prd.srv.cirb.lan"
+  "puppet.prd.srv.cirb.lan"
 
 puppetdbPort :: Int
 puppetdbPort = 8080
