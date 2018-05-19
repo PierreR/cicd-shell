@@ -12,11 +12,11 @@ import NeatInterpolation
 
 getFacts :: MonadIO m => Text -> m LByteString
 getFacts n = runReq def $ do
-  let queryval = [text| ["=", "certname", "$n"] |] :: Text
-      queryparam = "query" =: queryval
-  r <- req GET
+  let param_val = [text| ["=", "certname", "$n"] |] :: Text
+      param = "query" =: param_val
+  r <- req POST
     (http Config.puppetdbServer /: "pdb" /: "query" /: "v4" /: "facts")
-    NoReqBody
+    (ReqBodyUrlEnc param)
     lbsResponse
-    $ (port Config.puppetdbPort)  <> queryparam
+    $ (port Config.puppetdbPort)
   pure $ responseBody r

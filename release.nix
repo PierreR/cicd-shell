@@ -1,5 +1,12 @@
+# You can build this repository using Nix by running:
+#
+#     $ nix build -f release.nix project
+#
+# You can run the builded cicd command in a nix shell with:
+#     $ nix run -r release.nix project
+#
 let
-  pkgs = import ~/.config/nixpkgs/pin.nix;
+  pkgs = import ./share/pin.nix {};
   dockerTools = pkgs.dockerTools;
   hlib = pkgs.haskell.lib;
   haskellPackages = pkgs.haskellPackages;
@@ -7,8 +14,7 @@ in
 rec {
   project = hlib.dontHaddock
     ( hlib.justStaticExecutables
-      ( haskellPackages.callPackage ./. {
-        }
+      ( haskellPackages.callPackage ./. { }
       )
     );
 
