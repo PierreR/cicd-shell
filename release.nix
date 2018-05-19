@@ -6,17 +6,24 @@
 #     $ nix run -r release.nix project
 #
 let
-  pkgs = import ./share/pin.nix {};
+  hoverlays = self: super:
+      let
+        hlib = super.haskell.lib;
+      in
+      {
+        haskellPackages = super.haskellPackages.override {
+          overrides = hself: hsuper: rec {
+            project = hlib.overrideCabal
+              ( hsuper.callPackage ./. { })
+              ( csuper: { executableSystemDepends = [ self.jq self.pepper ];});
+        };
+      };
+  };
+  pkgs = import ./share/pin.nix { overlays = [ hoverlays];};
   dockerTools = pkgs.dockerTools;
-  hlib = pkgs.haskell.lib;
-  haskellPackages = pkgs.haskellPackages;
 in
 rec {
-  project = hlib.dontHaddock
-    ( hlib.justStaticExecutables
-      ( haskellPackages.callPackage ./. { }
-      )
-    );
+  project =  pkgs.haskell.lib.justStaticExecutables ( pkgs.haskellPackages.project );
 
   docker = dockerTools.buildImage {
     name = "pi3r/cicd-shell";

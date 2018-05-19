@@ -24,18 +24,16 @@ newtype AppM a =
 
 
 -- Build the nix shell command line that will run salt remotely.
-buildCmdLine :: Zone
-             -> Text -- salt command
-             -> AppM Text
-buildCmdLine z@(Zone zone) pep = do
+exportEnvVar :: Zone
+             -> AppM ()
+exportEnvVar z@(Zone zone) = do
   userid <- Config.userId
   userpwd <- Config.userPwd
-  datadir <- liftIO $ Config.dataDir
-  let pgr = format ("nix-shell "%w%"/share/default.nix --argstr zone "%s%" --argstr salt-user "%s%" --argstr salt-pass "%w%" --argstr salt-url "%s)
-                    datadir zone userid userpwd (Config.saltUrl z)
-  if Text.null pep
-    then pure pgr
-    else pure $ pgr <> " --command '" <> pep <> "'"
+  export "SALTAPI_USER" userid
+  export "SALTAPI_PASS" (toS userpwd)
+  export "SALTAPI_EAUTH" "ldap"
+  export "SALTAPI_URL" (Config.saltUrl z)
+  export "ZONE" zone
 
 -- Generate the file required to complete node fqdn
 initTags :: Zone -> AppM ()
@@ -45,7 +43,7 @@ initTags z@(Zone zone) = do
   found <- liftIO $ Directory.doesFileExist tagfile
   unless found $ do
     let cmd = genTagsCmd z (toS localdir)
-    cmdline <- buildCmdLine z (cmd^.pep)
+    cmdline <- exportEnvVar z  *> pure (cmd^.pep)
     inshell cmdline empty & shell (cmd^.jq) >>= \case
       ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") zone
       ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
@@ -62,7 +60,7 @@ initHelp = do
       found <- liftIO $ Directory.doesFileExist (fpath <> ".json")
       unless found $ do
         let cmd' = cmd (toS fpath)
-        cmdline <- buildCmdLine (Zone "dev") (cmd'^.pep)
+        cmdline <- exportEnvVar (Zone "dev") *> pure (cmd'^.pep)
         inshell cmdline empty & shell (cmd'^.jq) >>= \case
           ExitSuccess -> putStrLn (fpath <> " generated successfully.\n")
           ExitFailure _ -> putStrLn ("WARNING: cannot generate '" <> fpath <> "' (completion).\n")
@@ -74,7 +72,7 @@ runCommand :: Zone
            -> AppM ExitCode
 runCommand z flag cmd =  do
   maybe (pure ()) (liftIO . interactWith) (cmd ^. beforeMsg)
-  cmdline <- buildCmdLine z (cmd^.pep)
+  cmdline <- exportEnvVar z *> pure (cmd^.pep)
   unless (flag^.quiet || flag^.dry) $ putText "Waiting for the following command to compute:" *> putText (cmd^.pep)
   when (flag^.dry) $ putText (cmd^.pep) *> liftIO exitSuccess
   void $ shell "ping -c1 stash.cirb.lan > /dev/null 2>&1" empty .||. die "cannot connect to stash.cirb.lan, check your connection"

@@ -72,9 +72,9 @@ makeClassy ''PepCmd
 consoleCmd :: Zone -> FilePath -> PepCmd
 consoleCmd (Zone zone) datadir =
   let
-    completion_cmd = "source " <> toS (datadir </> "share/completion.sh ") <> zone <> "; return"
+    fp = datadir </> "share/default.nix"
   in
-  defCmd & pep .~ completion_cmd
+  defCmd & pep .~ "nix-shell " <> toS fp <> " --argstr zone " <> zone
          & cmdMode .~ ConsoleMode
 
 -- | Regenerate the list of nodes cached for the auto-completion feature.

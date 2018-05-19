@@ -1,16 +1,12 @@
-{ salt-user, salt-pass, salt-url, zone }:
+{ zone }:
 let
   pkgs = import ./pin.nix {};
+  completion_file = ./completion.sh;
 in
 pkgs.stdenv.mkDerivation {
   name = "pepper-env";
-  buildInputs = [ pkgs.pepper pkgs.jq ];
   shellHook = ''
-  export SALTAPI_USER="${salt-user}"
-  export SALTAPI_PASS="${salt-pass}"
-  export SALTAPI_URL="${salt-url}"
-  export SALTAPI_EAUTH=ldap
-  export ZONE="${zone}"
+  source ${completion_file} ${zone}
   export PS1="\n\[\033[1;32m\][cicd ${zone}]$\[\033[0m\] "
   unalias -a
   alias facts="cicd ${zone} facts"
