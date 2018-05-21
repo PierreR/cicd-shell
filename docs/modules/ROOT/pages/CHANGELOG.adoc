@@ -1,6 +1,9 @@
 # Changelog
 
-## v2.2, not yet released
+## v2.3, not yet released
+- Remove the use of a nix-shell for executing each command
+
+## v2.2
 - Never cache facts when the `--down` flag is used.
 - Remove `language-puppet` dependency
 
