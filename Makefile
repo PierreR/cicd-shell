@@ -17,6 +17,15 @@ share/doc/cicd-shell.html: README.adoc
 share/doc/cicd-shell.pdf: README.adoc
 	@nix-shell -p asciidoctor --command "asciidoctor -r asciidoctor-pdf -b pdf $< -o $@"
 
+build-docker:
+	nix-build release.nix -A docker
+
+load-docker: build-docker
+	docker load < result
+
+run-docker:
+	./docker/run.sh $(CMD)
+
 clean:
 	@nix-shell --run "cabal clean"
 	rm -f share/doc/*.*

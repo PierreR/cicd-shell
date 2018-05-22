@@ -15,6 +15,14 @@ To use the `cicd shell`, you need to fill in the https://github.com/CIRB/devbox/
 
 The shell is installed with the devbox. Please read the section <<_install_outside_the_devbox, Install outside the devbox>> if you need to install it on a different system.
 
+It is also possible to run the shell within Docker. On linux for instance, you can do:
+
+.~/projects/bric/cicd/shell
+```
+make run-docker CMD='dev facts --refresh'
+#  or
+./docker/run.sh dev facts --refresh
+```
 
 ## Usage
 
@@ -355,7 +363,7 @@ If you feel it might be in danger sitting in the devbox filesystem, you can add 
 
 ## Install outside the devbox
 
-Before installing the `cicd-shell` on any linux systemfootnote:[`macos` might also work], you will need:
+Before installing the `cicd-shell` on any linux systemfootnote:[`macos` also works], you will need:
 
 . the https://nixos.org/nix/[nix package manager] installed and active for your user.
 . the https://github.com/CIRB/nixpkgs-config[cirb nixpkgs config]
