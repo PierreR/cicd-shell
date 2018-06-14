@@ -194,12 +194,6 @@ run = \case
       pure exitCode
     else
       runCommand zone (arg^.extraFlag) cmd
-  ZoneCommand _ (Data (DataArg Nothing (AcrossArg False (Arg Nothing Nothing Nothing _ _ _ )))) ->
-    die "Running data on all nodes within a stack without providing a key is currently prohibited"
-  ZoneCommand _ (Data (DataArg Nothing (AcrossArg True _))) ->
-    die "Running data across all stacks without providing a key is currently prohibited"
-  ZoneCommand zone (Data (DataArg key (AcrossArg across arg))) ->
-    mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . dataCmd across key
   ZoneCommand zone (Du arg) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . duCmd
   ZoneCommand zone (State (StateArg cmd node xflag)) ->

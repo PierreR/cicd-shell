@@ -2,7 +2,6 @@
 module Shell.Cli (
   optionParser
   , AcrossArg(..)
-  , DataArg(..)
   , FactArg(..)
   , ResultArg(..)
   , ResultType(..)
@@ -38,7 +37,6 @@ data DocType
 
 data SubCommand
   = Console
-  | Data DataArg
   | Facts FactArg
   | Foreman Arg
   | State StateArg
@@ -60,10 +58,6 @@ data OrchArg =
   OrchArg Text (Maybe Text) ExtraFlag
   deriving Show
 
-
-data DataArg =
-  DataArg (Maybe Text) AcrossArg -- ^ Query config data optionally with a key
-  deriving Show
 
 data StateArg =
   StateArg Text Text ExtraFlag
@@ -164,7 +158,6 @@ subCommandParser :: Parser SubCommand
 subCommandParser =
       Console     <$  subcommand "console" "Open the cicd console" (pure ())
   <|> Stats       <$  subcommand "stats" "Stats (special permission required)" (pure ())
-  <|> Data        <$> subcommand "data" "Return configuration data for a specific property" data_parser
   <|> Orchestrate <$> subcommand "orch" "Run an orchestration command on the infrastructure" orchParser
   <|> Facts       <$> subcommand "facts" "Return essential facts about nodes" fact_parser
   <|> Ping        <$> subcommand "ping" "Ping nodes" across_parser
@@ -179,7 +172,6 @@ subCommandParser =
   <|> GenTags     <$  subcommand "gentags" "Generate node completion file" (pure ())
   <|> Validate    <$> subcommand "validate" "Validate node with inspec" argParser
   where
-    data_parser   = DataArg <$> optional (optText (long "key" <> short 'k' <> metavar "KEY" <> help "Property to look up for" )) <*> across_parser
     fact_parser   = FactArg <$> refreshParser <*> downParser <*> across_parser
     across_parser = AcrossArg <$> switch (long "all" <> help "Target whole the known stacks" ) <*> argParser
 

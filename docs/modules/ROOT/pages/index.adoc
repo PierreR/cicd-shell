@@ -32,7 +32,6 @@ The name of the command line utility is #cicd#. The first mandatory position arg
 [%autofit]
 ```
 cicd ZONE facts                  [ROLE] [-n NODE] [-g GROUP] [-s STACK] [--all] [--down]
-cicd ZONE data   [-k KEY]        [ROLE] [-n NODE] [-g GROUP] [-s STACK] [--all]
 cicd ZONE runpuppet              [ROLE] [-n NODE] [-g GROUP] [-s STACK]
 cicd ZONE service ACTION SERVICE [ROLE] [-n NODE] [-g GROUP] [-s STACK]
 cicd ZONE orch    CMD                                        [-s STACK]
@@ -49,7 +48,7 @@ The auto-completion feature helps you to complete the command. You can also requ
 → cicd
 CICD - command line utility (v2.0.6)
 
-Usage: cicd (pass | doc | ZONE (console | stats | data | orch | facts | ping |
+Usage: cicd (pass | doc | ZONE (console | stats | orch | facts | ping |
             du | state | service | foreman | runpuppet | sync | setfacts |
             result | gentags | validate))
 
@@ -62,7 +61,6 @@ Available commands:
   doc                      Documentation utilities
   console                  Open the cicd console
   stats                    Stats (special permission required)
-  data                     Return configuration data for a specific property
   orch                     Run an orchestration command on the infrastructure
   facts                    Return essential facts about nodes
   ping                     Ping nodes
@@ -159,25 +157,6 @@ As usual, use `-n` to target a single node:
 
 TIP:  Use the `--down` flag  to gather `facts` on a disconnected minion.
 
-
-### >_ data
-
-The command displays configuration data about your node. For instance you might display the docker version of your jenkins slave:
-
-```
-→ cicd prod data jenkins.slave -k docker::version
-{
-  "fqdn": "svappcavl736.cirb.lan",
-  "subgroup": "jenkins",
-  "role": "slave",
-  "docker::version": "1.9.1-25.el7"
-}
-```
-
-To display ALL known configurations for a specific node:
-```
-→ cicd prod data -n svappcavl771.prd.srv.cirb.lan
-```
 
 ### >_ runpuppet
 
