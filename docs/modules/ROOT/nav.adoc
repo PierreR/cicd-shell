@@ -1,6 +1,5 @@
 * xref:index.adoc#_usage[Usage]
 ** xref:index.adoc#_facts[ &gt; _ facts]
-** xref:index.adoc#_data[ &gt; _ data]
 ** xref:index.adoc#_runpuppet[ &gt; _ runpuppet]
 ** xref:index.adoc#_result[ &gt; _ result]
 ** xref:index.adoc#_service[ &gt; _ service]
