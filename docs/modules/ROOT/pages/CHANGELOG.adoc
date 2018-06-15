@@ -1,9 +1,9 @@
 # Changelog
 
-## v2.3, not yet released
+## v2.4
 - Remove the `data` subcommand
 
-## v2.3, not yet released
+## v2.3
 - Remove the use of a nix-shell for executing each command
 - Provide a docker environment
 
