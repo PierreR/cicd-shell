@@ -350,7 +350,7 @@ Before installing the `cicd-shell` on any linux systemfootnote:[`macos` also wor
 You can then proceed to install with:
 
 ```
-nix-env -f ~/.config/nixpkgs/pin.nix -i cicd-shell <1>
+nix-env -f ~/.config/nixpkgs/pin.nix -iA cicd-shell <1>
 ```
 <1> the `-f` flag ensures that we point to the same nixpkgs version but can be omitted
 
