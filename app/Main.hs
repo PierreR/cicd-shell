@@ -190,7 +190,7 @@ run = \case
     if (found && not refresh)
     then do
       exitCode <- proc "jq" [ ".", toS fpath ] empty
-      when (exitCode == ExitSuccess) $ putText "\n↳ These facts are cached. Use --refresh for updated information."
+      when (exitCode == ExitSuccess) $ putText "\n> These facts are cached. Use --refresh for updated information."
       pure exitCode
     else
       runCommand zone (arg^.extraFlag) cmd

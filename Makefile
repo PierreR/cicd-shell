@@ -26,6 +26,9 @@ load-docker: build-docker
 run-docker:
 	./docker/run.sh $(CMD)
 
+push-docker:
+	docker push cicd-docker.repository.irisnet.be/cicd-shell
+
 clean:
 	@nix-shell --run "cabal clean"
 	rm -f share/doc/*.*

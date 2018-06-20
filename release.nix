@@ -26,7 +26,7 @@ rec {
   project =  pkgs.haskell.lib.justStaticExecutables ( pkgs.haskellPackages.project );
 
   docker = dockerTools.buildImage {
-    name = "pi3r/cicd-shell";
+    name = "cicd-docker.repository.irisnet.be/cicd-shell";
     fromImage = dockerTools.buildImage {
       name = "bash";
       contents = pkgs.bashInteractive;
