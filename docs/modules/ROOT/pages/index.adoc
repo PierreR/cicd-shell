@@ -18,14 +18,6 @@ The shell is installed with the devbox. On a different system, you can :
 - <<_install_outside_the_devbox, Install outside the devbox>>
 - <<_use_with_docker, Use the available docker>>
 
-It is also possible to run the shell within Docker. On linux for instance, you can do:
-
-.~/projects/bric/cicd/shell
-```
-make run-docker CMD='dev facts --refresh'
-#  or
-./docker/run.sh dev facts --refresh
-```
 
 ## Usage
 
@@ -346,12 +338,19 @@ If you feel it might be in danger sitting in the devbox filesystem, you can add 
 
 ## Use with docker
 
+[lowerroman]
+. Login to the Artifactory docker registry. This is mandatory for the first pulling of the image :
++
 ```
 docker login cicd-docker.repository.irisnet.be <1>
-./docker/run.sh dev facts <2>
 ```
-<1> login to the Artifactory docker registry is mandatory even for pulling. Use your encrypted password.
-<2> look at http://stash.cirb.lan/projects/CICD/repos/cicd-shell/browse/docker/run.sh[docker/run.sh] script and adjust it to your setting
+<1> Use your encrypted artifactory password when prompted.
+
+. To run the docker, you can copy/paste and adjust the content of http://stash.cirb.lan/projects/CICD/repos/cicd-shell/browse/docker/run.sh[docker/run.sh], make an alias or grep the whole script. Here is an example:
++
+```
+./docker/run.sh dev facts
+```
 
 ## Install outside the devbox
 
