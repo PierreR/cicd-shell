@@ -3,6 +3,8 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell       #-}
+
+-- | Salt target data type module specialized for the CIRB use case
 module Shell.Target where
 
 import qualified Data.List.NonEmpty        as NonEmpty

@@ -3,7 +3,7 @@
 {-# LANGUAGE RecordWildCards #-}
 
 
--- | Generate a 'PepCmd' command
+-- | Generate Pepper command (PepCmd).
 module Shell.PepCmd (
     PepCmd
   , CmdMode (..)

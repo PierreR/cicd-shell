@@ -5,22 +5,27 @@
 -- | Configuration data are either static or read from file.
 --
 -- The user config file is mandatory and expected to sit in
--- `/vagrant/config/shell` or `~/.config/cicd/shell` (in that order).
+-- '/vagrant/config/shell' or '~/.config/cicd/shell' (in that order).
 module Shell.Config (
-    dataDir
+  -- * User data
+    userId
+  , userPwd
+  , userDefaultStacks
+  -- * Infrastructure data
   , foremanUrl
-  , localDir
   , pgUrl
-  , promptPassword
-  , writePassword
   , puppetdbServer
   , puppetdbPort
   , saltUrl
-  , mkShellConfig
-  , userId
-  , userPwd
-  , userDefaultStacks
+  -- * Data of the executable (the cicd shell command line)
   , version
+  , dataDir
+  , localDir
+  -- * Functions
+  , mkShellConfig
+  , promptPassword
+  , writePassword
+  -- * Global configuration data type
   , HasShellConfig(..)
   , ShellConfig(..)
   , mockShellConfig
@@ -38,6 +43,7 @@ import qualified System.Console.Haskeline as Haskeline
 import           Shell.Prelude
 import           Shell.Type
 
+-- | Directories where shell data are located (for instance the completion script).
 dataDir :: IO FilePath
 dataDir = Paths_cicd_shell.getDataDir
 
@@ -72,11 +78,11 @@ instance HasDhallConfig ShellConfig  where dhallConfig = dhall
 
 instance Dhall.Interpret DhallConfig
 
--- | User AD login id
+-- | User AD login id.
 userId :: (MonadIO m, HasDhallConfig r, MonadReader r m) => m Text
 userId = asks (view (loginId.strict))
 
--- | Directories where gentags & genhelp files are stored.
+-- | Output directories where gentags & genhelp files are stored.
 localDir :: (MonadIO m, MonadReader ShellConfig m) => m FilePath
 localDir = asks (view localdir)
 
