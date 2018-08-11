@@ -10,7 +10,9 @@ let
       let
         hlib = super.haskell.lib;
         lib = super.lib;
-        filter =  path: type: type != "link" && baseNameOf path != ".stack-work";
+        filter =  path: type:
+                    type != "link" && baseNameOf path != ".stack-work"
+                                   && baseNameOf path != "stack.yaml";
       in
       {
         haskellPackages = super.haskellPackages.override {
