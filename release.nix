@@ -9,13 +9,18 @@ let
   hoverlays = self: super:
       let
         hlib = super.haskell.lib;
+        lib = super.lib;
+        filter =  path: type: type != "link" && baseNameOf path != ".stack-work";
       in
       {
         haskellPackages = super.haskellPackages.override {
           overrides = hself: hsuper: rec {
             project = hlib.overrideCabal
               ( hsuper.callPackage ./. { })
-              ( csuper: { executableSystemDepends = [ self.jq self.pepper ];});
+              ( csuper: { executableSystemDepends = [ self.jq self.pepper ];
+                          src =  lib.cleanSourceWith { inherit filter ; src = lib.cleanSource csuper.src;};
+                        }
+              );
         };
       };
   };
