@@ -3,4 +3,3 @@
 result
 stack.yaml
 dist/
-cicd-shell.nix
