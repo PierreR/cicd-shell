@@ -3,4 +3,4 @@
 result
 stack.yaml
 dist/
-default.nix
+cicd-shell.nix

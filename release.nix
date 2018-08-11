@@ -16,7 +16,7 @@ let
         haskellPackages = super.haskellPackages.override {
           overrides = hself: hsuper: rec {
             project = hlib.overrideCabal
-              ( hsuper.callPackage ./. { })
+              ( hsuper.callPackage ./cicd-shell.nix { })
               ( csuper: { executableSystemDepends = [ self.jq self.pepper ];
                           src =  lib.cleanSourceWith { inherit filter ; src = lib.cleanSource csuper.src;};
                         }
