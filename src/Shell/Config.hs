@@ -32,7 +32,7 @@ module Shell.Config (
 ) where
 
 import qualified Data.List        as List
-import qualified Data.Text.Lazy   as Text.Lazy
+import qualified Data.Text        as Text
 import qualified Data.Version     (showVersion)
 import qualified Dhall
 import qualified Paths_cicd_shell
@@ -143,7 +143,7 @@ mkDhallConfig =
   where
     auto ::  Dhall.Interpret a => Dhall.Type a
     auto = Dhall.autoWith
-      ( Dhall.defaultInterpretOptions { Dhall.fieldModifier = Text.Lazy.dropWhile (== '_') })
+      ( Dhall.defaultInterpretOptions { Dhall.fieldModifier = Text.dropWhile (== '_') })
 
 
 infraPrefix = \case
