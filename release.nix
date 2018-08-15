@@ -11,8 +11,9 @@ let
         hlib = super.haskell.lib;
         lib = super.lib;
         filter =  path: type:
-                    type != "link" && baseNameOf path != ".stack-work"
-                                   && baseNameOf path != "stack.yaml";
+                    type != "symlink" && baseNameOf path != ".stack-work"
+                                      && baseNameOf path != "stack.yaml"
+                                      && baseNameOf path != ".git";
       in
       {
         haskellPackages = super.haskellPackages.override {
@@ -20,7 +21,7 @@ let
             project = hlib.overrideCabal
               ( hsuper.callPackage ./cicd-shell.nix { })
               ( csuper: { executableSystemDepends = [ self.jq self.pepper ];
-                          src =  lib.cleanSourceWith { inherit filter ; src = lib.cleanSource csuper.src;};
+                          src = builtins.path { name = "cicd-shell"; inherit filter; path = csuper.src;};
                         }
               );
         };
