@@ -354,31 +354,40 @@ docker login cicd-docker.repository.irisnet.be <1>
 
 ## Install outside the devbox
 
-Before installing the `cicd-shell` on any linux systemfootnote:[`macos` also works], you will need:
+Outside the devbox, you can either use the https://nixos.org/nix/[nix] package manager or docker. For docker, please read <<_use_with_docker, the above paragraph>>.
 
-. the https://nixos.org/nix/[nix package manager] installed and active for your user.
-. the https://github.com/CIRB/nixpkgs-config[cirb nixpkgs config]
-
-You can then proceed to install with:
-
-```
-nix-env -f ~/.config/nixpkgs/pin.nix -iA cicd-shell <1>
-```
-<1> the `-f` flag ensures that we point to the same nixpkgs version but can be omitted
-
-TIP: You might want to place the configuration file in `~/.config/cicd/shell` instead of `/vagrant/config/shell`.
-
-====
-If you haven't installed `nix` already, here is the quick how to:
+Installing `nix` is simple and safefootnote:[nix is completly self-contained and isolated from your OS]:
 
 ```
 bash <(curl https://nixos.org/nix/install)
 ```
-This will perform a single-user installation of Nix, meaning that /nix is owned by the invoking user. The script will only invoke `sudo` to create /nix if it doesn’t already exist. At that point, the script will prompt you for a password.
 
-To activate `nix` in your shell, add the following line in your `.bash_profile`:
+This will perform a single-user installation of nix, meaning that /nix is owned by the invoking user.
+The script will only invoke `sudo` to create /nix if it doesn’t already exist. At that point, the script will prompt you for a password.
+To later delete nix, just remove the `/nix` folder from your system.
+
+To activate `nix` in your terminal, add the following line in your `.bash_profile`:
 
 ```
-source ~/.nix-profile/etc/profile.d/nix.sh'
+source ~/.nix-profile/etc/profile.d/nix.sh
 ```
-====
+
+The second step is to configure `nix` to use the https://cachix.org[cachix] binary cache:
+
+.Install cachix
+```
+nix-env -iA cachix -f https://github.com/NixOS/nixpkgs/tarball/1d4de0d552ae9aa66a5b8dee5fb0650a4372d148
+```
+
+.Use it to configure ~/.config/nix/nix.conf
+```
+cachix use cicd-shell
+```
+
+You can then proceed and install the `cicd-shell` with:
+
+```
+nix-env -i -f https://github.com/CIRB/cicd-shell/tarball/22f804994fe4233d875e792458fcda9a12e35faa
+```
+
+TIP: You might want to place the shell configuration file in `~/.config/cicd/shell.dhall` instead of `/vagrant/config/shell.dhall`.
