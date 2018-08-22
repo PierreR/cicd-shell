@@ -39,7 +39,7 @@ rec {
       name = "cicd-shell";
 
       paths = [
-        cicd-shell
+        (pkgs.haskell.lib.justStaticExecutables cicd-shell)
         pkgs.jq
         pkgs.pepper
       ];
