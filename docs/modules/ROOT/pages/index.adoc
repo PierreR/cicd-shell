@@ -169,11 +169,11 @@ Here are some examples:
 ```
 → cicd dev runpuppet <1>
 → cicd dev runpuppet -g jenkins <2>
-→ cicd dev runpuppet jenkins.slave <3>
+→ cicd dev runpuppet jenkins.slave --noop <3>
 ```
 <1> run puppet on all the dev nodes of your stack
 <2> run on a subgroup of machines
-<3> target a role
+<3> target a role in `--noop` mode
 
 In a second step, you use icon:terminal[] `result` to retrieve from the database the result of your callfootnote:[polling is currently the sole supported workflow, server push notification could be implemented in the future].
 
