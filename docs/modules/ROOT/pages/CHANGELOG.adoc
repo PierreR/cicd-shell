@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.5, 23/08/2018
+- Add `noop` arg for `runpuppet`
+
 ## v2.4, 10/08/2018
 - Remove the `data` subcommand
 

@@ -164,9 +164,9 @@ run = \case
     liftIO Config.dataDir >>= runCommand zone ExtraFlag{_raw = True, _quiet = True, _dry = False} . consoleCmd zone
   ZoneCommand zone GenTags ->
     Config.localDir >>= runCommand zone defExtraFlag . genTagsCmd zone
-  ZoneCommand zone (Runpuppet arg) -> do
+  ZoneCommand zone (Runpuppet (RunpuppetArg arg noop)) -> do
     target <- mkTarget zone arg
-    let cmd = runpuppetCmd target
+    let cmd = runpuppetCmd noop target
     exit <- runCommand zone (arg^.extraFlag) cmd
     putText "You can view the foreman report using:"
     void $ runForeman (ExtraFlag False False True) (foremanCmd Config.foremanUrl target) *> liftIO exitSuccess

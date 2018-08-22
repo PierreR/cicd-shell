@@ -83,7 +83,7 @@ genTagsCmd (Zone zone) cfdir =
   let nodefile = cfdir <> "/.nodes-" <> toS zone
   in defCmd & pep .~ "pepper \"*\" test.ping"
             & jq .~ ("jq '.return[0]' | jq keys | jq -r 'join (\" \")' > " <> toS nodefile)
-            & (beforeMsg ?~ CmdMsg False ("Generating " <> pretty nodefile))
+            & (beforeMsg ?~ CmdMsg False ("Generating " <> pretty nodefile <> line))
 
 -- | Regenerate the salt module list used for auto-completion
 genSaltModListCmd :: Text -> PepCmd
@@ -113,39 +113,42 @@ orchCmd cmd stack =
   defCmd & pep .~ ("pepper state.orchestrate --client=runner mods=orch." <> cmd <> " saltenv=" <> stack)
 
 -- | Run puppet command.
-runpuppetCmd :: Target -> PepCmd
-runpuppetCmd = \case
-  target@Target {_node = Nothing} ->
-    defCmd & pep .~ ( pepperCompoundTarget False target <> " --client=local_async cicd.run_puppet zone=" <> target^.zone <> " hostgroup=" <> NonEmpty.head(target^.stacks))
-           & jq .~ "jq '.return'"
-           & (beforeMsg ?~ CmdMsg True ("Run puppet on " <> pretty target))
+runpuppetCmd :: Bool -> Target -> PepCmd
+runpuppetCmd noop =
+  let
+    noop_arg = if noop then " noop=True" else mempty
+  in \case
+    target@Target {_node = Nothing} ->
+      defCmd & pep .~ ( pepperCompoundTarget False target <> " --client=local_async cicd.run_puppet zone=" <> target^.zone <> noop_arg <> " hostgroup=" <> NonEmpty.head(target^.stacks))
+             & jq .~ "jq '.return'"
+             & (beforeMsg ?~ CmdMsg True ("Run puppet on " <> pretty target))
 
-  target@Target {_node = Just n} ->
-    defCmd & pep .~ ( "pepper " <> n <> " -t 300 cicd.run_puppet zone=" <> target^.zone)
-           & jq .~ [r|
-                     jq -r '.return[] |
-                     to_entries |
-                     (.[] |
-                     if (.value|type) == "object" then
-                       ( if .value.retcode? == 0 then
-                           "\n\u001B[1;32mSUCCESS\u001B[0m for "
-                         else
-                          "\n\u001B[1;31mFAILURE\u001B[0m for "
-                         end
-                         + .key + ":" ,
-                         if .value.stderr? != "" then
-                           .value.stdout + "\n******\n" + .value.stderr?
-                         else
-                           .value.stdout?
-                         end
-                       )
-                     else
-                       .value
-                     end )'
-                   |]
-           & cmdMode .~ ProgressMode 300
+    target@Target {_node = Just n} ->
+      defCmd & pep .~ ( "pepper " <> n <> " -t 300 cicd.run_puppet zone=" <> target^.zone <> noop_arg)
+             & jq .~ [r|
+                       jq -r '.return[] |
+                       to_entries |
+                       (.[] |
+                       if (.value|type) == "object" then
+                         ( if .value.retcode? == 0 then
+                             "\n\u001B[1;32mSUCCESS\u001B[0m for "
+                           else
+                            "\n\u001B[1;31mFAILURE\u001B[0m for "
+                           end
+                           + .key + ":" ,
+                           if .value.stderr? != "" then
+                             .value.stdout + "\n******\n" + .value.stderr?
+                           else
+                             .value.stdout?
+                           end
+                         )
+                       else
+                         .value
+                       end )'
+                     |]
+             & cmdMode .~ ProgressMode 300
 
--- | Write one or more of [subgroup, role, hostgroup, zone] fact(s).
+--   | Write one or more of [subgroup, role, hostgroup, zone] fact(s).
 -- The command always executes on a single node.
 setfactsCmd :: SetfactArg -> PepCmd
 setfactsCmd SetfactArg {..} =

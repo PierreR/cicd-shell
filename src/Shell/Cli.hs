@@ -5,6 +5,7 @@ module Shell.Cli (
   , FactArg(..)
   , ResultArg(..)
   , ResultType(..)
+  , RunpuppetArg(..)
   , OrchArg(..)
   , StateArg(..)
   , DocType(..)
@@ -44,7 +45,7 @@ data SubCommand
   | Stats
   | Du Arg
   | Ping AcrossArg
-  | Runpuppet Arg
+  | Runpuppet RunpuppetArg
   | Setfacts SetfactArg
   | Sync AcrossArg
   | Result ResultArg
@@ -58,6 +59,9 @@ data OrchArg =
   OrchArg Text (Maybe Text) ExtraFlag
   deriving Show
 
+data RunpuppetArg =
+  RunpuppetArg Arg Bool
+  deriving Show
 
 data StateArg =
   StateArg Text Text ExtraFlag
@@ -100,6 +104,7 @@ orchParser =
   <$> argText (metavar "CMD" <> help "SubCommand to run")
   <*> optional (optText (short 's' <> help "Target stack/hostgroup" ))
   <*> extraFlagParser
+
 
 rawParser :: Parser Bool
 rawParser = switch (long "raw" <> help "Raw output (no jq)")
@@ -165,7 +170,7 @@ subCommandParser =
   <|> State       <$> subcommand "state" "Apply a specific configuration" stateParser
   <|> Service     <$> subcommand "service" "Service management for a specific node" statusParser
   <|> Foreman     <$> subcommand "foreman" "Display the foreman report in a browser" argParser
-  <|> Runpuppet   <$> subcommand "runpuppet" "Apply puppet configuration" argParser
+  <|> Runpuppet   <$> subcommand "runpuppet" "Apply puppet configuration" runpuppet_parser
   <|> Sync        <$> subcommand "sync" "Sync metavar  data from master to nodes" across_parser
   <|> Setfacts    <$> subcommand "setfacts" "Set/update the 4 base machine facts" setfactParser
   <|> Result      <$> subcommand "result" "Results of the most user recent jobs or for a specific id" resultParser
@@ -174,6 +179,7 @@ subCommandParser =
   where
     fact_parser   = FactArg <$> refreshParser <*> downParser <*> across_parser
     across_parser = AcrossArg <$> switch (long "all" <> help "Target whole the known stacks" ) <*> argParser
+    runpuppet_parser = RunpuppetArg <$> argParser <*> switch (long "noop" <> help "Run puppet with the --noop argument" )
 
 optionParser :: Parser Options
 optionParser =
