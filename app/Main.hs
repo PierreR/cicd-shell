@@ -169,7 +169,7 @@ run = \case
     let cmd = runpuppetCmd noop target
     exit <- runCommand zone (arg^.extraFlag) cmd
     putText "You can view the foreman report using:"
-    void $ runForeman (ExtraFlag False False True) (foremanCmd Config.foremanUrl target) *> liftIO exitSuccess
+    void $ putText (foremanCmd Config.foremanUrl target) *> liftIO exitSuccess
     pure exit
   ZoneCommand zone (Ping (AcrossArg across arg)) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . pingCmd across
