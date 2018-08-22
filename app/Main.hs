@@ -171,16 +171,16 @@ run = \case
     putText "You can view the foreman report using:"
     void $ putText (foremanCmd Config.foremanUrl target) *> liftIO exitSuccess
     pure exit
-  ZoneCommand zone (Ping (AcrossArg across arg)) ->
+  ZoneCommand zone (Ping (AcrossArg arg across)) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . pingCmd across
-  ZoneCommand zone (Sync (AcrossArg across arg)) ->
+  ZoneCommand zone (Sync (AcrossArg arg across)) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . syncCmd across
-  ZoneCommand zone (Facts (FactArg (Refresh _) down@(Down True) (AcrossArg across arg@(Arg _ (Just n) _ _ _ _ )))) -> do
+  ZoneCommand zone (Facts (FactArg (Refresh _) down@(Down True) (AcrossArg arg@(Arg _ (Just n) _ _ _ _ ) across))) -> do
     target <- mkTarget zone arg
     let cmd = factCmd Nothing across down target
     r <- liftIO $ PuppetDB.getFacts n
     shell (cmd^.jq) (pure  (unsafeTextToLine (toS r)))
-  ZoneCommand zone (Facts (FactArg (Refresh refresh) down@(Down False) (AcrossArg across arg))) -> do
+  ZoneCommand zone (Facts (FactArg (Refresh refresh) down@(Down False) (AcrossArg arg across))) -> do
     localdir <- Config.localDir
     target <- mkTarget zone arg
     let fname = ".facts-" <> toS target <> ".json"

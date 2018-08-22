@@ -71,8 +71,9 @@ data FactArg
   = FactArg Refresh Down AcrossArg -- ^ disconnect & across flags
   deriving Show
 
+-- we still want to be able to do cicd prod jenkins.slave --all
 data AcrossArg
-  = AcrossArg Bool Arg -- ^ Query with the across all stacks flag
+  = AcrossArg Arg Bool-- ^ Query with the across all stacks flag
   deriving Show
 
 
@@ -178,7 +179,7 @@ subCommandParser =
   <|> Validate    <$> subcommand "validate" "Validate node with inspec" argParser
   where
     fact_parser   = FactArg <$> refreshParser <*> downParser <*> across_parser
-    across_parser = AcrossArg <$> switch (long "all" <> help "Target whole the known stacks" ) <*> argParser
+    across_parser = AcrossArg <$> argParser <*> switch (long "all" <> help "Target whole the known stacks" )
     runpuppet_parser = RunpuppetArg <$> argParser <*> switch (long "noop" <> help "Run puppet with the --noop argument" )
 
 optionParser :: Parser Options
