@@ -6,42 +6,22 @@
 #     $ nix run -r release.nix project
 #
 let
-  overlay = self: super:
-    let
-      hlib = super.haskell.lib;
-      lib = super.lib;
-      filter =  path: type:
-                  type != "symlink" && baseNameOf path != ".stack-work"
-                                    && baseNameOf path != "stack.yaml"
-                                    && baseNameOf path != ".git";
-    in
-    {
-      haskellPackages = super.haskellPackages.override {
-        overrides = hself: hsuper: rec {
-          cicd-shell = hlib.overrideCabal
-            ( hsuper.callPackage ./cicd-shell.nix { })
-            ( csuper: { executableSystemDepends = [ self.jq self.pepper ];
-                        src = builtins.path { name = "cicd-shell"; inherit filter; path = csuper.src;};
-                      }
-            );
-        };
-      };
-      cicd-shell = hlib.justStaticExecutables self.haskellPackages.cicd-shell;
-  };
-  pkgs = import ./share/pin.nix { config = {}; overlays = [ overlay ];};
+  pkgs = import ./share/pin.nix { };
+  filter =  path: type:
+    type != "symlink" && baseNameOf path != ".stack-work"
+                      && baseNameOf path != "stack.yaml"
+                      && baseNameOf path != ".git";
+
+
+  cicd-shell = pkgs.haskell.lib.dontHaddock
+    ( pkgs.haskellPackages.callCabal2nix
+        "cicd-shell"
+        (builtins.path { name = "cicd-shell"; inherit filter; path = ./.; } )
+        { }
+    );
   dockerTools = pkgs.dockerTools;
 in
 rec {
-  project = pkgs.buildEnv {
-      name = "cicd-shell";
-
-      paths = [
-        pkgs.cicd-shell
-        pkgs.jq
-        pkgs.pepper
-      ];
-  };
-
   docker = dockerTools.buildImage {
     name = "cicd-docker.repository.irisnet.be/cicd-shell";
     fromImage = dockerTools.buildImage {
@@ -54,4 +34,15 @@ rec {
       "PATH=/usr/bin:/usr/sbin:${pkgs.bash}/bin:${pkgs.jq}/bin:${pkgs.pepper}/bin:${pkgs.iputils}/bin:${pkgs.coreutils}/bin"
     ];
   };
+
+  project = pkgs.buildEnv {
+      name = "cicd-shell";
+
+      paths = [
+        cicd-shell
+        pkgs.jq
+        pkgs.pepper
+      ];
+  };
+
 }
