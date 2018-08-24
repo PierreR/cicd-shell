@@ -7,10 +7,10 @@
 -- The user config file is mandatory and expected to sit in
 -- '/vagrant/config/shell' or '~/.config/cicd/shell' (in that order).
 module Shell.Config (
-  -- * User data
-    userId
-  , userPwd
-  , userDefaultStacks
+  -- * Global configuration data type
+    HasShellConfig(..)
+  , ShellConfig(..)
+  , HasDhallConfig(..)
   -- * Infrastructure data
   , foremanUrl
   , pgUrl
@@ -20,15 +20,11 @@ module Shell.Config (
   -- * Data of the executable (the cicd shell command line)
   , version
   , dataDir
-  , localDir
   -- * Functions
   , mkShellConfig
+  , mockShellConfig
   , promptPassword
   , writePassword
-  -- * Global configuration data type
-  , HasShellConfig(..)
-  , ShellConfig(..)
-  , mockShellConfig
 ) where
 
 import qualified Data.List        as List
@@ -60,8 +56,8 @@ configFilePath = do
 
 data DhallConfig
   = DhallConfig
-  { _loginId       :: LText
-  , _defaultStacks :: [LText]
+  { _loginId       :: Text
+  , _defaultStacks :: [Text]
   } deriving (Generic, Show)
 
 data ShellConfig
@@ -77,18 +73,6 @@ makeClassy ''ShellConfig
 instance HasDhallConfig ShellConfig  where dhallConfig = dhall
 
 instance Dhall.Interpret DhallConfig
-
--- | User AD login id.
-userId :: (MonadIO m, HasDhallConfig r, MonadReader r m) => m Text
-userId = asks (view (loginId.strict))
-
--- | Output directories where gentags & genhelp files are stored.
-localDir :: (MonadIO m, MonadReader ShellConfig m) => m FilePath
-localDir = asks (view localdir)
-
--- | User AD password
-userPwd :: (MonadIO m, MonadReader ShellConfig m) => m String
-userPwd = asks (view password)
 
 wizard :: FilePath -> IO [Char]
 wizard localdir = do
@@ -119,14 +103,9 @@ promptPassword = do
     Haskeline.getPassword (Just '*') "Enter your AD password and press Enter\n"
   pure pwd
 
--- | User default puppet stack
-userDefaultStacks ::(MonadIO io, MonadReader ShellConfig io) => io [Text]
-userDefaultStacks = do
-  asks (toListOf (dhall.defaultStacks.traverse.strict))
-
 mockShellConfig :: NonEmpty Text -> ShellConfig
 mockShellConfig default_stacks =
-  ShellConfig { _localdir = mempty , _dhall = DhallConfig mempty (fromStrict <$>  (toList default_stacks)) , _password = mempty}
+  ShellConfig { _localdir = mempty , _dhall = DhallConfig mempty (toList default_stacks) , _password = mempty}
 
 mkShellConfig :: IO ShellConfig
 mkShellConfig = do
