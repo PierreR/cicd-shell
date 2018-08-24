@@ -39,7 +39,7 @@ instance StringConv Target Text  where
 -- When one stack is specified though the command line, ignore the defaultstacks defined by the configuration file.
 getStacks :: (MonadIO m , MonadReader ShellConfig m) => Maybe Text -> m (NonEmpty Text)
 getStacks s = do
-  ds <- view $ Config.defaultStacks
+  ds <- view Config.defaultStacks
   pure $ fromList $ maybe ds (:[]) s
 
 mkTarget :: (MonadIO m , MonadReader ShellConfig m) => Zone -> Arg -> m Target

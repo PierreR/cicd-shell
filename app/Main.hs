@@ -175,6 +175,8 @@ run = \case
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . pingCmd across
   ZoneCommand zone (Sync (AcrossArg arg across)) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . syncCmd across
+  ZoneCommand _ (Facts (FactArg (Refresh _) (Down True) (AcrossArg (Arg _ Nothing _ _ _ _ ) _ ))) ->
+    putText "The '--down' flag requires the specification of a node (use '-n')" *> liftIO exitFailure
   ZoneCommand zone (Facts (FactArg (Refresh _) down@(Down True) (AcrossArg arg@(Arg _ (Just n) _ _ _ _ ) across))) -> do
     target <- mkTarget zone arg
     let cmd = factCmd Nothing across down target
