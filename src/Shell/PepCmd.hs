@@ -119,7 +119,7 @@ runpuppetCmd noop =
     noop_arg = if noop then " noop=True" else mempty
   in \case
     target@Target {_node = Nothing} ->
-      defCmd & pep .~ ( pepperCompoundTarget False target <> " --client=local_async cicd.run_puppet zone=" <> target^.zone <> noop_arg <> " hostgroup=" <> NonEmpty.head(target^.stacks))
+      defCmd & pep .~ ( pepperCompoundTarget False target <> " --client=local_async cicd.run_puppet zone=" <> target^.zone <> noop_arg)
              & jq .~ "jq '.return'"
              & (beforeMsg ?~ CmdMsg True ("Run puppet on " <> pretty target))
 
