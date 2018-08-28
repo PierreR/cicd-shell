@@ -113,9 +113,12 @@ orchCmd cmd stack =
   defCmd & pep .~ ("pepper state.orchestrate --client=runner mods=orch." <> cmd <> " saltenv=" <> stack)
 
 -- | Run puppet command.
-runpuppetCmd :: Bool -> Target -> PepCmd
-runpuppetCmd noop =
+runpuppetCmd :: Maybe Text -> Bool -> Target -> PepCmd
+runpuppetCmd stack noop =
   let
+    stack_arg = case stack of
+      Nothing -> mempty
+      Just s  ->  " hostgroup=" <> s
     noop_arg = if noop then " noop=True" else mempty
   in \case
     target@Target {_node = Nothing} ->
@@ -124,7 +127,7 @@ runpuppetCmd noop =
              & (beforeMsg ?~ CmdMsg True ("Run puppet on " <> pretty target))
 
     target@Target {_node = Just n} ->
-      defCmd & pep .~ ( "pepper " <> n <> " -t 300 cicd.run_puppet zone=" <> target^.zone <> noop_arg)
+      defCmd & pep .~ ( "pepper " <> n <> " -t 300 cicd.run_puppet zone=" <> target^.zone <> noop_arg <> stack_arg)
              & jq .~ [r|
                        jq -r '.return[] |
                        to_entries |

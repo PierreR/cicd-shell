@@ -161,6 +161,13 @@ The command runs the puppet agent on one or multiple nodes. When a node is speci
 → cicd dev runpuppet -n svappcavl000.dev.srv.cirb.lan
 ```
 
+If you need to pass the `--environment` to the `puppet agent` command you should specify the stack with the `-s` optionfootnote:[this might useful for the first 'runpuppet']. This will only work when targeting a single node :
+
+```
+→ result/bin/cicd dev runpuppet -n irisbox.dev.srv.cirb.lan -s irisbox --dry
+pepper irisbox.dev.srv.cirb.lan -t 300 cicd.run_puppet zone=dev hostgroup=irisbox
+```
+
 On all other cases, the command first asks for confirmation, then returns quickly with a `jobid`.
 The process is asynchronous because it might take quite a while to complete.
 
