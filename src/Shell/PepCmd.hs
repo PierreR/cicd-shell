@@ -259,8 +259,12 @@ dataCmd _ (Just key) Target {_node= Just n} =
 resultCmd :: Text -> Bool -> Maybe Text -> Maybe Natural -> Text -> PepCmd
 resultCmd _ _ Nothing (Just 0) _ = panic "NUM should be > 0"
 resultCmd pgUrl _ Nothing (Just num) user =
-  defCmd & pep .~ "curl -f -s -H \"Range: 0-" <> show (num - 1) <> "\" \"" <> pgUrl <> "?user=eq." <> user <> "&order=jid.desc\""
-         & jq .~ "jq -C '.'"
+  if num <= 100
+    then
+    defCmd & pep .~ "curl -f -s -H \"Range: 0-" <> show (num - 1) <> "\" \"" <> pgUrl <> "?user=eq." <> user <> "&order=jid.desc\""
+           & jq .~ "jq -C '.'"
+    else
+    panic "NUM should be <=100. Maybe you meant to use `-j`"
 resultCmd pgUrl raw (Just jobid) Nothing _ =
   defCmd & pep .~ ("curl -s " <> (if raw then mempty else "-f -H \"Accept: application/vnd.pgrst.object+json\" ") <> "\"" <> pgUrl <> "?select=ret&jid=eq." <> jobid <> "\"" )
          & jq .~
