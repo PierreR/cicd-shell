@@ -135,7 +135,11 @@ infraPrefix = \case
 -- | Pgserver url
 pgUrl :: Zone -> Text
 pgUrl (Zone z) =
-  "http://pgserver-cicd." <> infraPrefix z <> ".srv.cirb.lan/saltstack/salt_result"
+  -- Quick fix to account for the fact that there is no RP in DMZ
+  -- The long term solution will be a standalone postgrest server using an external db.
+  let url = if z == "prod" then "svappcavl938" else "pgserver-cicd"
+  in
+  "http://" <> url <> "." <> infraPrefix z <> ".srv.cirb.lan/saltstack/salt_result"
 
 puppetdbServer :: Text
 puppetdbServer =
