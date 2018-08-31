@@ -13,6 +13,7 @@ module Shell.Options (
   , long
   , short
   , switch
+  , flag
   , help
   , metavar
   , auto

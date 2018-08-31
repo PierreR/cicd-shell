@@ -73,15 +73,15 @@ runCommand :: Zone
 runCommand z flag cmd =  do
   maybe (pure ()) (liftIO . interactWith) (cmd ^. beforeMsg)
   cmdline <- exportEnvVar z *> pure (cmd^.pep)
-  unless (flag^.quiet || flag^.dry) $ putText "Waiting for the following command to compute:" *> putText (cmd^.pep)
-  when (flag^.dry) $ putText (cmd^.pep) *> liftIO exitSuccess
+  unless (flag^.verbosity == Quiet || flag^.dry.coerced) $ putText "Waiting for the following command to compute:" *> putText (cmd^.pep)
+  when (flag^.dry.coerced) $ putText (cmd^.pep) *> liftIO exitSuccess
   void $ shell "ping -c1 stash.cirb.lan > /dev/null 2>&1" empty .||. die "cannot connect to stash.cirb.lan, check your connection"
   initTags z
   initHelp
   case cmd^.cmdMode of
     ConsoleMode -> interactiveShell cmdline
     NormalMode ->
-      if (flag^.raw)
+      if (flag^.raw.coerced)
       then shell cmdline empty
       else inshell cmdline empty & shell (cmd^.jq)
     ProgressMode t ->
@@ -90,7 +90,7 @@ runCommand z flag cmd =  do
               whileM_ (not <$> Progress.isComplete pg) $ do
                 threadDelay $ 1000 * 1000
                 Progress.tickN pg 1
-            nixcmd' = if (flag^.raw)
+            nixcmd' = if (flag^.raw.coerced)
                       then cmdline
                       else cmdline <> " | " <> (cmd^.jq)
         pg <- Progress.newProgressBar Progress.def { Progress.pgTotal = t
@@ -119,7 +119,7 @@ runCommand z flag cmd =  do
               break
           (ExitSuccess, stdout, _) -> do
             let stdout' = select (textToLines stdout)
-            if (flag^.raw) then procs "jq" [ "."] stdout' else shells (cmd^.jq) stdout' -- .[].ret | {id, return}
+            if (flag^.raw.coerced) then procs "jq" [ "."] stdout' else shells (cmd^.jq) stdout' -- .[].ret | {id, return}
             break
       case e of
         Just _ -> pure ExitSuccess
@@ -130,8 +130,8 @@ runCommand z flag cmd =  do
 
 runForeman :: (MonadIO m) => ExtraFlag -> Text -> m ExitCode
 runForeman extraflag pep = do
-  unless (extraflag^.quiet) $ putText pep
-  when (extraflag^.dry) $ putText pep *> liftIO exitSuccess
+  when (extraflag^.verbosity == Verbose) $ putText pep
+  when (extraflag^.dry.coerced) $ putText pep *> liftIO exitSuccess
   shell pep empty
 
 run :: Options -> AppM ExitCode
@@ -161,7 +161,7 @@ run = \case
   ZoneCommand zone Stats ->
     runCommand zone defExtraFlag statCmd
   ZoneCommand zone Console ->
-    liftIO Config.dataDir >>= runCommand zone ExtraFlag{_raw = True, _quiet = True, _dry = False} . consoleCmd zone
+    liftIO Config.dataDir >>= runCommand zone ExtraFlag{_raw = Raw True, _verbosity = Quiet, _dry = Dry False} . consoleCmd zone
   ZoneCommand zone GenTags ->
     view Config.localdir >>= runCommand zone defExtraFlag . genTagsCmd zone
   ZoneCommand zone (Runpuppet (RunpuppetArg arg noop)) -> do

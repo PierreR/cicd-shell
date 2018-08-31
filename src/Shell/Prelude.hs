@@ -11,7 +11,7 @@ module Shell.Prelude (
 import           Control.Lens                              as Exports (at, makeClassy,
                                                                        makeFieldsNoPrefix,
                                                                        makeLenses, strict, toListOf,
-                                                                       view, _1, _2, _Just)
+                                                                       view, _1, _2, _Just, coerced)
 import           Control.Lens.Operators                    as Exports hiding ((<.>))
 import           Control.Monad.Trans.Maybe
 import           Data.Foldable                             as Exports (foldr1)

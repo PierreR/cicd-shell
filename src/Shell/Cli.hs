@@ -107,18 +107,18 @@ orchParser =
   <*> extraFlagParser
 
 
-rawParser :: Parser Bool
-rawParser = switch (long "raw" <> help "Raw output (no jq)")
+rawParser :: Parser Raw
+rawParser = flag (Raw False) (Raw True) (long "raw" <> help "Raw output (no jq)")
 
 downParser :: Parser Down
 downParser = Down <$> switch (long "down" <> help "Query disconnected node")
 refreshParser = Refresh <$> switch (long "refresh" <> help "Refresh the cache")
 
-quietParser :: Parser Bool
-quietParser = switch (long "quiet" <> help "Quieter output. Won't display the command.")
+quietParser :: Parser Verbosity
+quietParser = flag Verbose Quiet (long "quiet" <> help "Quieter output. Won't display the command.")
 
-dryParser :: Parser Bool
-dryParser = switch (long "dry" <> help "Display the command without execution")
+dryParser :: Parser Dry
+dryParser = flag (Dry False) (Dry True) (long "dry" <> help "Display the command without execution")
 
 resultParser :: Parser ResultArg
 resultParser

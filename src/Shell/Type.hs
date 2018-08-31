@@ -26,15 +26,22 @@ instance StringConv Role Text  where
   strConv _ (Role Nothing r)             = r
   strConv _ (Role (Just (Subgroup g)) r) = g <> "." <> r
 
+data Verbosity
+  = Quiet
+  | Verbose -- ^ Print the `pepper` command to stdout
+  deriving (Show, Eq)
+
+newtype Dry = Dry Bool deriving (Generic, Show)
+newtype Raw = Raw Bool deriving (Generic, Show)
 
 data ExtraFlag
   = ExtraFlag
-  { _raw   :: Bool -- ^ Display the result with no `jq` pretty printer
-  , _quiet :: Bool -- ^ Print the `pepper` command to stdout
-  , _dry   :: Bool -- ^ Print the command and exit
+  { _raw   :: Raw -- ^ Display the result with no `jq` pretty printer
+  , _verbosity :: Verbosity
+  , _dry   :: Dry -- ^ Print the command and exit
   } deriving (Show, Generic)
 
-defExtraFlag = ExtraFlag False False False
+defExtraFlag = ExtraFlag (Raw False) Verbose (Dry False)
 
 makeLenses ''ExtraFlag
 
