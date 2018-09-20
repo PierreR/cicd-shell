@@ -13,4 +13,5 @@
 ** xref:index.adoc#_pass[ &gt; _ pass]
 * xref:index.adoc#_authentication[Authentication]
 * xref:index.adoc#_install_outside_the_devbox[Install outside the devbox]
+* xref:index.adoc#_troubleshooting[Troubleshouting]
 * xref:CHANGELOG.adoc[Changelog]
