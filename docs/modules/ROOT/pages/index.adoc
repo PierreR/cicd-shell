@@ -398,3 +398,14 @@ nix-env -i -f https://github.com/CIRB/cicd-shell/tarball/v2.5.7
 ```
 
 TIP: You might want to place the shell configuration file in `~/.config/cicd/shell.dhall` instead of `/vagrant/config/shell.dhall`.
+
+## Troubleshooting
+
+### FQDN
+
+By convention, all machines should have a *lowercase* fqdn.
+Salt is caching the fqdn of the machine when it first boots in a file called `/etc/salt/minion_id`.
+
+Sometimes machines are created with a wrong fqdn and are corrected afterward.
+In that case, the `minion_id` file might still contain the wrong value (if nothing has been done to correct it).
+One easy way to fix that issue is to remove the file and reload the salt-minion agent.
