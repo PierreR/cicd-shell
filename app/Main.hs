@@ -71,11 +71,11 @@ runCommand :: Zone
            -> PepCmd
            -> AppM ExitCode
 runCommand z flag cmd =  do
-  maybe (pure ()) (liftIO . interactWith) (cmd ^. beforeMsg)
-  cmdline <- exportEnvVar z *> pure (cmd^.pep)
   unless (flag^.verbosity == Quiet || flag^.dry.coerced) $ putText "Waiting for the following command to compute:" *> putText (cmd^.pep)
   when (flag^.dry.coerced) $ putText (cmd^.pep) *> liftIO exitSuccess
+  maybe (pure ()) (liftIO . interactWith) (cmd ^. beforeMsg)
   void $ shell "ping -c1 stash.cirb.lan > /dev/null 2>&1" empty .||. die "cannot connect to stash.cirb.lan, check your connection"
+  cmdline <- exportEnvVar z *> pure (cmd^.pep)
   initTags z
   initHelp
   case cmd^.cmdMode of
