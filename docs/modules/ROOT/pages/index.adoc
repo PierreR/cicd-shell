@@ -394,7 +394,7 @@ cachix use cicd-shell
 You can then proceed and install the `cicd-shell` with:
 
 ```
-nix-env -i -f https://github.com/CIRB/cicd-shell/tarball/v2.5.7
+nix-env -i -f https://github.com/CIRB/cicd-shell/tarball/v2.5.10
 ```
 
 TIP: You might want to place the shell configuration file in `~/.config/cicd/shell.dhall` instead of `/vagrant/config/shell.dhall`.
