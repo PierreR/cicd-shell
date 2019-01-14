@@ -1,5 +1,5 @@
 name:                cicd-shell
-version:             2.5.11
+version:             2.6.0
 synopsis:            Command line tool that interfaces cicd services
 homepage:            ssh://git@stash.cirb.lan:7999/cicd/salt-shell.git
 license:             BSD3
@@ -36,11 +36,11 @@ library
                        , RecordWildCards
                        , OverloadedStrings
                        , StrictData
-  build-depends:       base > 4.10 && < 5
+  build-depends:       base > 4.11 && < 5
                        , aeson
                        , concurrent-output >= 1.9
                        , data-default-class
-                       , dhall >= 1.15
+                       , dhall >= 1.19
                        , directory >= 1.3
                        , filepath >= 1.4
                        , haskeline >= 0.7

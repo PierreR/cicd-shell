@@ -74,8 +74,8 @@ instance HasDhallConfig ShellConfig  where dhallConfig = dhall
 
 instance Dhall.Interpret DhallConfig
 
-wizard :: FilePath -> IO [Char]
-wizard localdir = do
+getPassword :: FilePath -> IO String
+getPassword localdir = do
   let pwd_file = localdir </> ".pwd"
   ifM (Directory.doesFileExist pwd_file)
     (withFile pwd_file ReadMode $ \h ->
@@ -113,7 +113,12 @@ mkShellConfig = do
   let _localdir = home </> ".local/share/cicd"
   Directory.createDirectoryIfMissing True _localdir
   _dhall <- mkDhallConfig
-  _password <- wizard _localdir
+  when (_dhall^.loginId.to Text.null) $ do
+    putText "CRITICAL: the LOGINID environment variable is empty."
+    panic "The cicd shell needs to know your AD username to go on."
+  when (_dhall^.defaultStacks.to null) $ do
+    putText "WARNING: no default stacks defined in your shell.dhall configuration file."
+  _password <- getPassword _localdir
   pure $ ShellConfig {..}
 
 mkDhallConfig :: MonadIO m => m DhallConfig
@@ -123,7 +128,6 @@ mkDhallConfig =
     auto ::  Dhall.Interpret a => Dhall.Type a
     auto = Dhall.autoWith
       ( Dhall.defaultInterpretOptions { Dhall.fieldModifier = Text.dropWhile (== '_') })
-
 
 infraPrefix = \case
   "prod" -> "prd"

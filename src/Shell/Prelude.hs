@@ -8,7 +8,7 @@ module Shell.Prelude (
   , touchFile
 ) where
 
-import           Control.Lens                              as Exports (at, makeClassy,
+import           Control.Lens                              as Exports (to, at, makeClassy,
                                                                        makeFieldsNoPrefix,
                                                                        makeLenses, strict, toListOf,
                                                                        view, _1, _2, _Just, coerced)
@@ -22,7 +22,7 @@ import           Data.Text.Prettyprint.Doc.Render.Terminal as Exports (AnsiStyle
 import           GHC.Exts                                  as Exports (fromList)
 import           Data.String                               as Exports (String)
 import           Numeric.Natural                           as Exports
-import           Protolude                                 as Exports hiding (Down, First (..),
+import           Protolude                                 as Exports hiding (to, Down, First (..),
                                                                        Last (..), break, getFirst,
                                                                        getLast, (%), (<&>), (<>))
 import           System.Console.Concurrent                 (createProcessConcurrent,
