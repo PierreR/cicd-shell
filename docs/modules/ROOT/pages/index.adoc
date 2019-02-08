@@ -111,8 +111,8 @@ You can toggle the `facts` query to target all hostgroups/stacks with the `--all
 ```
 λ ~ → cicd prod facts jenkins.slave --all
 {
-  "fqdn": "svappcavl736.prd.srv.cirb.lan",
-  "ip": "192.168.34.52",
+  "fqdn": "svappcavlxxx.prd.srv.cirb.lan",
+  "ip": "192.xxx.xx.x",
   "os": "RedHat 7.3",
   "hostgroup": "ci",
   "subgroup": "jenkins",
@@ -122,8 +122,8 @@ You can toggle the `facts` query to target all hostgroups/stacks with the `--all
   "jenkins job": "186"
 }
 {
-  "fqdn": "svappcavl771.prd.srv.cirb.lan",
-  "ip": "192.168.34.81",
+  "fqdn": "svappcavlxxx.prd.srv.cirb.lan",
+  "ip": "192.xxx.xx.x",
   "os": "RedHat 7.4",
   "hostgroup": "ci",
   "subgroup": "jenkins",
@@ -138,8 +138,8 @@ As usual, use `-n` to target a single node:
 ```
 → cicd prod facts -n svappcavl771.prd.srv.cirb.lan
 {
-  "fqdn": "svappcavl771.prd.srv.cirb.lan",
-  "ip": "192.168.34.81",
+  "fqdn": "svappcavlxxx.prd.srv.cirb.lan",
+  "ip": "192.xxx.xx.xx",
   "os": "RedHat 7.4",
   "hostgroup": "ci",
   "subgroup": "jenkins",
@@ -159,13 +159,6 @@ The command runs the puppet agent on one or multiple nodes. When a node is speci
 
 ```
 → cicd dev runpuppet -n svappcavl000.dev.srv.cirb.lan
-```
-
-If you need to pass the `--environment` to the `puppet agent` command you should specify the stack with the `-s` optionfootnote:[this might useful for the first 'runpuppet']. This will only work when targeting a single node :
-
-```
-→ result/bin/cicd dev runpuppet -n irisbox.dev.srv.cirb.lan -s irisbox --dry
-pepper irisbox.dev.srv.cirb.lan -t 300 cicd.run_puppet zone=dev hostgroup=irisbox
 ```
 
 On all other cases, the command first asks for confirmation, then returns quickly with a `jobid`.
@@ -205,7 +198,7 @@ To know if a service is up and running, you would use:
 ```
 → cicd prod service status docker jenkins.slave
 {
-  "svappcavl736.prd.srv.cirb.lan": true
+  "svappcavlxxx.prd.srv.cirb.lan": true
 }
 ```
 You can also restart a service. However such operation in only allowed for a single machine. Here is how to restart the `nexus` service :
@@ -220,7 +213,7 @@ You can also restart a service. However such operation in only allowed for a sin
 
 The command displays disk usage. Try:
 ```
-→ cicd staging du -n svappcavl703.sta.srv.cirb.lan
+→ cicd staging du -n svappcavlxxx.sta.srv.cirb.lan
 ```
 
 ### >_ setfacts
@@ -287,7 +280,7 @@ Another usage of the console is to run specific `salt` commands that are not exp
 
 [%autofit]
 ```
-$ pep -G 'hostgroup:iam' file.replace '/etc/resolv.conf' pattern='192.168.34.250' repl='192.168.34.244' <1>
+$ pep -G 'hostgroup:iam' file.replace '/etc/resolv.conf' pattern='192.168.xx.x' repl='192.168.xx.x' <1>
 
 $ pep -L fqdn1,fqdn2 --client=local_async cicd.run_agent <2>
 ```
