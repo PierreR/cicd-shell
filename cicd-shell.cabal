@@ -6,7 +6,7 @@ license:             BSD3
 build-type:          Simple
 category:            Utility
 maintainer:          pradermecker@cirb.brussels
-extra-source-files:  README.adoc
+extra-source-files:  README.md
                      , tests/Shell/*.golden
 cabal-version:       1.12
 
