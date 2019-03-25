@@ -10,7 +10,6 @@ module Shell.PepCmd (
   , CmdMsg (CmdMsg)
   , HasPepCmd(..)
   , consoleCmd
-  , dataCmd
   , duCmd
   , factCmd
   , foremanCmd
@@ -165,6 +164,7 @@ setfactsCmd SetfactArg {..} =
            , ("role=" <>) <$> _role
            , ("instance=" <>) <$> _inst
            , ("zone=" <>) <$> _zone
+           , ("dc=" <>) <$> _dc
            ]
 
 -- | Sync minion with the saltmaster
@@ -206,10 +206,10 @@ serviceCmd ServiceRestart _ Target {_node = Nothing} =
 -- | Display a set of interesting facts such as fqdn, ip, role, ...
 factCmd :: Maybe FilePath -> Bool -> Down -> Target -> PepCmd
 factCmd fpath across _ target@Target {_node = Nothing} =
-  defCmd & pep .~ (pepperCompoundTarget across target <> " grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role instance puppetmaster_timestamp puppetmaster_jenkins_job")
+  defCmd & pep .~ (pepperCompoundTarget across target <> " grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role instance dc puppetmaster_timestamp puppetmaster_jenkins_job")
          & jq .~
            [r|
-             jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[0], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, instance, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}' \
+             jq '.return[] | .[] | { fqdn, ip: .fqdn_ip4[0], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, instance, dc, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}' \
            |]
            <> maybe mempty (\p -> " | tee " <> toS p) fpath
            <> " | jq ."
@@ -221,12 +221,12 @@ factCmd _ _ (Down True) Target {_node = Just _} =
              {hostgroup, subgroup, role, "os": "\(.operatingsystem) \(.operatingsystemrelease)", "ip": .ipaddress, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job}'
            |]
 factCmd fpath _ (Down False) Target {_node = Just n} =
-  defCmd & pep .~ ("pepper " <> n <> " grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role instance puppetmaster_timestamp puppetmaster_jenkins_job")
+  defCmd & pep .~ ("pepper " <> n <> " grains.item os osrelease fqdn fqdn_ip4 hostgroup subgroup role instance dc puppetmaster_timestamp puppetmaster_jenkins_job")
          & jq .~
            [r|
               jq '.return[0] |
               .[] |
-              { fqdn, ip: .fqdn_ip4[0], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, instance, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job }' \
+              { fqdn, ip: .fqdn_ip4[0], os:  "\(.os) \(.osrelease)", hostgroup, subgroup, role, instance, dc, "puppet run": .puppetmaster_timestamp, "jenkins job" : .puppetmaster_jenkins_job }' \
            |]
            <> maybe mempty (\p -> " | tee " <> toS p) fpath
            <> " | jq ."
@@ -238,22 +238,6 @@ pingCmd across target@Target {_node = Nothing} =
 pingCmd _ Target {_node = Just n} =
   defCmd & pep .~ ( "pepper '" <> n <> "' test.ping")
       & jq .~ "jq '.return[0]'"
-
--- | Display configuration (puppet) data.
-dataCmd :: Bool -> Maybe Text -> Target -> PepCmd
-dataCmd _ Nothing Target {_node= Just n} =
-  defCmd & pep .~ ("pepper " <> n <> " pillar.items delimiter='/'")
-         & jq .~ "jq '.return[0]'"
-dataCmd True Nothing Target {_node= Nothing} = panic'
-dataCmd False Nothing target@Target {_node= Nothing} =
-  defCmd & pep .~ (pepperCompoundTarget False target  <> " pillar.items delimiter='/'")
-         & jq .~ "jq '.return[0]'"
-dataCmd across (Just key) target@Target {_node= Nothing} =
-  defCmd & pep .~ "( " <> pepperCompoundTarget across target <> " grains.item fqdn subgroup role ; " <> pepperCompoundTarget across target <> " pillar.item " <> key <> " delimiter='/' )"
-         & jq .~ "jq -s '.[0].return[0] * .[1].return[0]' | jq '.[] | { fqdn, subgroup, role, " <> key <> "}'"
-dataCmd _ (Just key) Target {_node= Just n} =
-  defCmd & pep .~ ("pepper " <> n <> " pillar.item " <> key <> " delimiter='/'")
-         & jq .~ "jq '.return[0]'"
 
 -- | Fetch the result of previous commands from the pgserver.
 resultCmd :: Text -> Raw -> Maybe Text -> Maybe Natural -> Text -> PepCmd

@@ -151,6 +151,7 @@ setfactParser
   <*> optional (optText (long "role" <> metavar "ROLE" <> help "Set role fact"))
   <*> optional (optText (long "instance" <> metavar "INSTANCE" <> help "Set instance fact"))
   <*> optional (optText (long "zone" <> metavar "ZONE" <> help "Set zone fact"))
+  <*> optional (optText (long "dc" <> metavar "DATACENTER" <> help "Set dc fact"))
   <*> extraFlagParser
 
 statusParser :: Parser (ServiceAction, ServiceName, Arg)

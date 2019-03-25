@@ -13,18 +13,18 @@ let
                       && baseNameOf path != ".git";
 
 
-  dhall = pkgs.haskell.lib.dontCheck (pkgs.haskellPackages.dhall_1_19_1.override {
-            megaparsec = pkgs.haskellPackages.megaparsec_7_0_4;
-            repline = pkgs.haskellPackages.repline_0_2_0_0;
-          });
-  neat-interpolation = pkgs.haskell.lib.dontCheck (pkgs.haskellPackages.neat-interpolation_0_3_2_4.override {
-            megaparsec = pkgs.haskellPackages.megaparsec_7_0_4;
-          });
+  # dhall = pkgs.haskell.lib.dontCheck (pkgs.haskellPackages.dhall_1_19_1.override {
+  #           megaparsec = pkgs.haskellPackages.megaparsec_7_0_4;
+  #           repline = pkgs.haskellPackages.repline_0_2_0_0;
+  #         });
+  # neat-interpolation = pkgs.haskell.lib.dontCheck (pkgs.haskellPackages.neat-interpolation_0_3_2_4.override {
+  #           megaparsec = pkgs.haskellPackages.megaparsec_7_0_4;
+  #         });
   cicd-shell = pkgs.haskell.lib.dontHaddock
     ( pkgs.haskellPackages.callCabal2nix
         "cicd-shell"
         (builtins.path { name = "cicd-shell"; inherit filter; path = ./.; } )
-        { inherit dhall neat-interpolation; }
+        { }
     );
   dockerTools = pkgs.dockerTools;
 in

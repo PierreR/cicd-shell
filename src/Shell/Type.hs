@@ -65,6 +65,7 @@ data SetfactArg
   , _role      :: Maybe Text
   , _inst      :: Maybe Text
   , _zone      :: Maybe Text
+  , _dc        :: Maybe Text
   , _extraFlag :: ExtraFlag
   } deriving Show
 
