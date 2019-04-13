@@ -41,11 +41,11 @@ The auto-completion feature helps you to complete the command. You can also requ
 .General help output for #cicd#
 ....
 → cicd
-CICD - command line utility (v2.0.6)
+CICD - command line utility (v2.6.2)
 
-Usage: cicd (pass | doc | ZONE (console | stats | orch | facts | ping |
-            du | state | service | foreman | runpuppet | sync | setfacts |
-            result | gentags | validate))
+Usage: cicd (pass | doc | ZONE (console | stats | orch | facts | ping | du |
+            state | service | foreman | runpuppet | sync | setfacts | result |
+            gentags | validate))
 
 Available options:
   -h,--help                Show this help text
@@ -376,7 +376,7 @@ The second step is to configure `nix` to use the https://cachix.org[cachix] bina
 
 .Install cachix
 ```
-nix-env -iA cachix -f https://github.com/NixOS/nixpkgs/tarball/1d4de0d552ae9aa66a5b8dee5fb0650a4372d148
+nix-env -iA cachix -f https://cachix.org/api/v1/install
 ```
 
 .Use it to configure ~/.config/nix/nix.conf
@@ -387,7 +387,7 @@ cachix use cicd-shell
 You can then proceed and install the `cicd-shell` with:
 
 ```
-nix-env -i -f https://github.com/CIRB/cicd-shell/tarball/v2.5.11
+nix-env -i -f https://github.com/CIRB/cicd-shell/tarball/v2.6.2
 ```
 
 TIP: You might want to place the shell configuration file in `~/.config/cicd/shell.dhall` instead of `/vagrant/config/shell.dhall`.
