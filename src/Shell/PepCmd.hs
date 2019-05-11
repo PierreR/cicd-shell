@@ -9,6 +9,7 @@ module Shell.PepCmd (
   , CmdMode (..)
   , CmdMsg (CmdMsg)
   , HasPepCmd(..)
+  , runCmd
   , consoleCmd
   , duCmd
   , factCmd
@@ -179,6 +180,11 @@ stateCmd :: Text -> Text -> PepCmd
 stateCmd  cmd n =
   defCmd & pep .~ ("pepper " <> n <> " state.apply " <> cmd)
          & jq .~ "jq '.return[0]'"
+
+-- | Run a command to a specific node (salt-run)
+runCmd :: Text -> (Maybe Text) -> PepCmd
+runCmd cmd n =
+  defCmd & pep .~ "pepper --client=runner " <> cmd <> (maybe mempty (" minion_id=" <>) n)
 
 -- | Disk usage
 duCmd :: Target -> PepCmd

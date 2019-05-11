@@ -8,6 +8,7 @@ module Shell.Cli (
   , RunpuppetArg(..)
   , OrchArg(..)
   , StateArg(..)
+  , RunArg(..)
   , DocType(..)
   , Options(..)
   , SubCommand(..)
@@ -41,6 +42,7 @@ data SubCommand
   | Facts FactArg
   | Foreman Arg
   | State StateArg
+  | Run RunArg
   | Orchestrate OrchArg
   | Stats
   | Du Arg
@@ -61,6 +63,10 @@ data OrchArg =
 
 data RunpuppetArg =
   RunpuppetArg Arg Bool
+  deriving Show
+
+data RunArg =
+  RunArg Text (Maybe Text) ExtraFlag
   deriving Show
 
 data StateArg =
@@ -91,6 +97,12 @@ argParser
   <*> optional (optText (metavar "INSTANCE" <> short 'i' <> long "instance" <> help "Target instance"))
   <*> extraFlagParser
 
+runParser :: Parser RunArg
+runParser =
+  RunArg
+  <$> argText (metavar "CMD" <> help "SubCommand to run")
+  <*> optional (optText (metavar "NODE" <> short 'n' <> help "Target node"))
+  <*> extraFlagParser
 
 stateParser :: Parser StateArg
 stateParser =
@@ -103,7 +115,7 @@ orchParser :: Parser OrchArg
 orchParser =
   OrchArg
   <$> argText (metavar "CMD" <> help "SubCommand to run")
-  <*> optional (optText (short 's' <> help "Target stack/hostgroup" ))
+  <*> optional (optText (metavar "STACK" <> short 's' <> help "Target stack/hostgroup" ))
   <*> extraFlagParser
 
 
@@ -164,17 +176,18 @@ statusParser
 subCommandParser :: Parser SubCommand
 subCommandParser =
       Console     <$  subcommand "console" "Open the cicd console" (pure ())
-  <|> Stats       <$  subcommand "stats" "Stats (special permission required)" (pure ())
-  <|> Orchestrate <$> subcommand "orch" "Run an orchestration command on the infrastructure" orchParser
   <|> Facts       <$> subcommand "facts" "Return essential facts about nodes" fact_parser
-  <|> Ping        <$> subcommand "ping" "Ping nodes" across_parser
-  <|> Du          <$> subcommand "du" "Return disk usage" argParser
-  <|> State       <$> subcommand "state" "Apply a specific configuration" stateParser
-  <|> Service     <$> subcommand "service" "Service management for a specific node" statusParser
-  <|> Foreman     <$> subcommand "foreman" "Display the foreman report in a browser" argParser
   <|> Runpuppet   <$> subcommand "runpuppet" "Apply puppet configuration" runpuppet_parser
-  <|> Sync        <$> subcommand "sync" "Sync metavar  data from master to nodes" across_parser
   <|> Setfacts    <$> subcommand "setfacts" "Set/update the 4 base machine facts" setfactParser
+  <|> Foreman     <$> subcommand "foreman" "Display the foreman report in a browser" argParser
+  <|> Orchestrate <$> subcommand "orch" "Run an orchestration command on the infrastructure" orchParser
+  <|> Run         <$> subcommand "run" "Execute a command on the master" runParser
+  <|> Service     <$> subcommand "service" "Service management for a specific node" statusParser
+  <|> State       <$> subcommand "state" "Apply a specific configuration" stateParser
+  <|> Du          <$> subcommand "du" "Return disk usage" argParser
+  <|> Ping        <$> subcommand "ping" "Ping nodes" across_parser
+  <|> Sync        <$> subcommand "sync" "Sync metavar  data from master to nodes" across_parser
+  <|> Stats       <$  subcommand "stats" "Stats (special permission required)" (pure ())
   <|> Result      <$> subcommand "result" "Results of the most user recent jobs or for a specific id" resultParser
   <|> GenTags     <$  subcommand "gentags" "Generate node completion file" (pure ())
   <|> Validate    <$> subcommand "validate" "Validate node with inspec" argParser
