@@ -1,5 +1,5 @@
 name:                cicd-shell
-version:             2.6.3
+version:             2.7.0
 synopsis:            Command line tool that interfaces cicd services
 homepage:            ssh://git@stash.cirb.lan:7999/cicd/salt-shell.git
 license:             BSD3

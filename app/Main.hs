@@ -212,7 +212,8 @@ run = \case
     runCommand zone (arg^.extraFlag) (setfactsCmd arg)
   ZoneCommand zone (Foreman arg) -> do
     mkTarget zone arg >>= runForeman (arg^.extraFlag) . foremanCmd Config.foremanUrl
-  ZoneCommand zone (Validate arg) -> do
+  ZoneCommand zone (Run (RunArg cmd node xflag)) -> runCommand zone xflag (runCmd cmd node)
+  ZoneCommand zone (Validate arg) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . validateCmd
 
 main :: IO ()

@@ -41,10 +41,10 @@ The auto-completion feature helps you to complete the command. You can also requ
 .General help output for #cicd#
 ....
 → cicd
-CICD - command line utility (v2.6.2)
+CICD - command line utility (v2.7.0)
 
-Usage: cicd (pass | doc | ZONE (console | stats | orch | facts | ping | du |
-            state | service | foreman | runpuppet | sync | setfacts | result |
+Usage: cicd (pass | doc | ZONE (console | facts | runpuppet | setfacts | foreman
+            | orch | run | service | state | du | ping | sync | stats | result |
             gentags | validate))
 
 Available options:
@@ -55,17 +55,18 @@ Available commands:
   pass                     Change password
   doc                      Documentation utilities
   console                  Open the cicd console
-  stats                    Stats (special permission required)
-  orch                     Run an orchestration command on the infrastructure
   facts                    Return essential facts about nodes
-  ping                     Ping nodes
-  du                       Return disk usage
-  state                    Apply a specific configuration
-  service                  Service management for a specific node
-  foreman                  Display the foreman report in a browser
   runpuppet                Apply puppet configuration
-  sync                     Sync metavar  data from master to nodes
   setfacts                 Set/update the 4 base machine facts
+  foreman                  Display the foreman report in a browser
+  orch                     Run an orchestration command on the infrastructure
+  run                      Execute a command on the master
+  service                  Service management for a specific node
+  state                    Apply a specific configuration
+  du                       Return disk usage
+  ping                     Ping nodes
+  sync                     Sync metavar  data from master to nodes
+  stats                    Stats (special permission required)
   result                   Results of the most user recent jobs or for a specific id
   gentags                  Generate node completion file
   validate                 Validate node with inspec
@@ -244,6 +245,14 @@ This command target one single node for safety reasons. If you wish to target mu
 [cicd dev]$ pep -C "G@subgroup:puppet and G@hostgroup:cicd" state.apply puppet4-agent
 ```
 
+### >_ foreman
+
+Open a browser and display the relevant foreman page related to your query. For instance to get a list of all jenkins slaves and the link to its complete report, type:
+
+```
+cicd prod foreman jenkins.slave -s ci
+```
+
 ### >_ orch
 
 Salt is able to orchestrate deployment scenarios across machines.
@@ -258,12 +267,20 @@ Orchestrate commands are executed with:
 → cicd testing orch CMD
 ```
 
-### >_ foreman
+### >_ run
 
-Open a browser and display the relevant foreman page related to your query. For instance to get a list of all jenkins slaves and the link to its complete report, type:
+Execute a command (called 'runner' in Salt) on the salt master.
 
 ```
-cicd prod foreman jenkins.slave -s ci
+→ cicd prod run CMD -n NODE
+```
+
+This command would usually concern a single node:
+
+.clean certificats (will only work in production zone)
+```
+→ cicd prod run puppet.clean_certs -n NODE
+
 ```
 
 ### >_ console

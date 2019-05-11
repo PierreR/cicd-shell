@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.7, to be released
+- Add `run` subcommand
+
 ## v2.6, 14/12/2018
 - Use the LOGINID environment variable to get the user AD login by default.
 - Add `dc` fact
