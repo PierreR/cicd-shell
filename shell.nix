@@ -2,4 +2,4 @@
 #
 #     $ nix-shell
 #
-(import ./release.nix).project.env
+(import ./release.nix).project

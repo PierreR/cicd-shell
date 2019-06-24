@@ -49,7 +49,7 @@ version = Data.Version.showVersion Paths_cicd_shell.version
 configFilePath :: IO FilePath
 configFilePath = do
   _HOME <- liftIO $ Directory.getHomeDirectory
-  let paths = ["/vagrant/config/shell.dhall", _HOME </> ".config/cicd/shell.dhall"]
+  let paths = ["/vagrant/config/shell.dhall", "/vagrant/shared/config/shell.dhall", _HOME </> ".config/cicd/shell.dhall"]
   findFirstPath paths >>= \case
     Nothing -> die ("no configuration file found in " <> toS (List.intercalate " or " paths))
     Just v -> pure v
