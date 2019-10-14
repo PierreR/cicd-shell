@@ -5,11 +5,17 @@
 # You can run the builded cicd command in a nix shell with:
 #     $ nix run -r release.nix project
 #
+{
+  pkgs ? import ./share/pin.nix { }
+}:
 let
-  pkgs = import ./share/pin.nix { };
   filter =  path: type:
     type != "symlink" && baseNameOf path != ".stack-work"
                       && baseNameOf path != "stack.yaml"
+                      && baseNameOf path != "stack.yaml.lock"
+                      && baseNameOf path != "dist-newstyle"
+                      && baseNameOf path != "cabal.project.local"
+                      && baseNameOf path != ".envrc"
                       && baseNameOf path != ".git";
 
 

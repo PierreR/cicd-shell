@@ -2,4 +2,4 @@
 #
 #     $ nix-shell
 #
-(import ./release.nix).project
+(import ./release.nix {}).project
