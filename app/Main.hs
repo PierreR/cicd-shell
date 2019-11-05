@@ -77,7 +77,6 @@ runCommand z flag cmd =  do
   void $ shell "ping -c1 stash.cirb.lan > /dev/null 2>&1" empty .||. die "cannot connect to stash.cirb.lan, check your connection"
   cmdline <- exportEnvVar z *> pure (cmd^.pep)
   initTags z
-  initHelp
   case cmd^.cmdMode of
     ConsoleMode -> interactiveShell cmdline
     NormalMode ->
