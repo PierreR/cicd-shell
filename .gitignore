@@ -3,3 +3,6 @@
 result
 stack.yaml
 dist/
+dist-newstyle/
+cabal.project.local
+stack.yaml.lock
