@@ -16,6 +16,7 @@ let
                       && baseNameOf path != "dist-newstyle"
                       && baseNameOf path != "cabal.project.local"
                       && baseNameOf path != ".envrc"
+                      && baseNameOf path != "salt.nix"
                       && baseNameOf path != ".git";
 
 
@@ -26,6 +27,8 @@ let
   # neat-interpolation = pkgs.haskell.lib.dontCheck (pkgs.haskellPackages.neat-interpolation_0_3_2_4.override {
   #           megaparsec = pkgs.haskellPackages.megaparsec_7_0_4;
   #         });
+
+  pepper = pkgs.callPackage ./salt.nix {};
   cicd-shell = pkgs.haskell.lib.dontHaddock
     ( pkgs.haskellPackages.callCabal2nix
         "cicd-shell"
@@ -33,8 +36,15 @@ let
         { }
     );
   dockerTools = pkgs.dockerTools;
+
+  exec = pkgs.haskell.lib.justStaticExecutables cicd-shell;
+
 in
+
 rec {
+
+  inherit cicd-shell;
+
   docker = dockerTools.buildImage {
     name = "cicd-docker.repository.irisnet.be/cicd-shell";
     fromImage = dockerTools.buildImage {
@@ -48,13 +58,21 @@ rec {
     ];
   };
 
+  shell = pkgs.mkShell {
+    buildInputs = [
+      exec
+      pkgs.jq
+      pepper
+    ];
+  };
+
   project = pkgs.buildEnv {
       name = "cicd-shell";
 
       paths = [
-        (pkgs.haskell.lib.justStaticExecutables cicd-shell)
+        exec
         pkgs.jq
-        pkgs.pepper
+        pepper
       ];
   };
 
