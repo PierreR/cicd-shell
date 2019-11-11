@@ -1,0 +1,12 @@
+---
+repos:
+  - repo: local
+    hooks:
+      - id: check-nix-fmt
+        name: 'Check nix fmt'
+        entry: 'nixpkgs-fmt'
+        files: \.nix$
+        language: system
+        stages:
+          - commit
+          - push

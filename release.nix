@@ -16,7 +16,9 @@ let
                       && baseNameOf path != "dist-newstyle"
                       && baseNameOf path != "cabal.project.local"
                       && baseNameOf path != ".envrc"
+                      && baseNameOf path != ".pre-commit-config.yaml"
                       && baseNameOf path != "salt.nix"
+                      && baseNameOf path != "shell.nix"
                       && baseNameOf path != ".git";
 
 
