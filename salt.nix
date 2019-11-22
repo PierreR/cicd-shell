@@ -16,7 +16,13 @@ python2Packages.buildPythonApplication rec {
 
   buildInputs = with python2Packages; [ setuptools setuptools_scm salt ];
   checkInputs = with python2Packages; [
-    pytest mock pyzmq pytest-rerunfailures pytestcov cherrypy tornado_4
+    pytest
+    mock
+    pyzmq
+    pytest-rerunfailures
+    pytestcov
+    cherrypy
+    tornado_4
   ];
 
   meta = with lib; {

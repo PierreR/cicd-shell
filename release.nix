@@ -5,21 +5,20 @@
 # You can run the builded cicd command in a nix shell with:
 #     $ nix run -r release.nix project
 #
-{
-  pkgs ? import ./share/pin.nix { }
+{ pkgs ? import ./share/pin.nix {}
 }:
 let
-  filter =  path: type:
+  filter = path: type:
     type != "symlink" && baseNameOf path != ".stack-work"
-                      && baseNameOf path != "stack.yaml"
-                      && baseNameOf path != "stack.yaml.lock"
-                      && baseNameOf path != "dist-newstyle"
-                      && baseNameOf path != "cabal.project.local"
-                      && baseNameOf path != ".envrc"
-                      && baseNameOf path != ".pre-commit-config.yaml"
-                      && baseNameOf path != "salt.nix"
-                      && baseNameOf path != "shell.nix"
-                      && baseNameOf path != ".git";
+    && baseNameOf path != "stack.yaml"
+    && baseNameOf path != "stack.yaml.lock"
+    && baseNameOf path != "dist-newstyle"
+    && baseNameOf path != "cabal.project.local"
+    && baseNameOf path != ".envrc"
+    && baseNameOf path != ".pre-commit-config.yaml"
+    && baseNameOf path != "salt.nix"
+    && baseNameOf path != "shell.nix"
+    && baseNameOf path != ".git";
 
 
   # dhall = pkgs.haskell.lib.dontCheck (pkgs.haskellPackages.dhall_1_19_1.override {
@@ -32,10 +31,11 @@ let
 
   pepper = pkgs.callPackage ./salt.nix {};
   cicd-shell = pkgs.haskell.lib.dontHaddock
-    ( pkgs.haskellPackages.callCabal2nix
+    (
+      pkgs.haskellPackages.callCabal2nix
         "cicd-shell"
-        (builtins.path { name = "cicd-shell"; inherit filter; path = ./.; } )
-        { }
+        (builtins.path { name = "cicd-shell"; inherit filter; path = ./.; })
+        {}
     );
   dockerTools = pkgs.dockerTools;
 
@@ -54,7 +54,7 @@ rec {
       contents = pkgs.bashInteractive;
     };
     # config.Entrypoint = [ "${pkgs.bash}/bin/bash"];
-    config.Entrypoint = [ "${project}/bin/cicd"];
+    config.Entrypoint = [ "${project}/bin/cicd" ];
     config.Env = [
       "PATH=/usr/bin:/usr/sbin:${pkgs.bash}/bin:${pkgs.jq}/bin:${pkgs.pepper}/bin:${pkgs.iputils}/bin:${pkgs.coreutils}/bin"
     ];
@@ -69,13 +69,13 @@ rec {
   };
 
   project = pkgs.buildEnv {
-      name = "cicd-shell";
+    name = "cicd-shell";
 
-      paths = [
-        exec
-        pkgs.jq
-        pepper
-      ];
+    paths = [
+      exec
+      pkgs.jq
+      pepper
+    ];
   };
 
 }
