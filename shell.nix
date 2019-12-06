@@ -11,4 +11,9 @@ pkgs.mkShell {
     nixpkgs-fmt
     ghcEnv
   ];
+  shellHook = ''
+    export NIX_GHC='${ghcEnv}'
+    export NIX_GHC_LIBDIR='${ghcEnv}/lib/ghc-'$(ghc --numeric-version)
+  '';
+
 }
