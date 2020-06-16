@@ -1,1 +1,8 @@
-cradle: {cabal: {component: "lib:cicd-shell"}}
+cradle:
+  multi:
+    - path: "./src"
+      config: { cradle: {cabal: {component: "lib:cicd-shell"}} }
+    - path: "./tests"
+      config: { cradle: {cabal: {component: "test"}} }
+    - path: "./app"
+      config: { cradle: {cabal: {component: "exe:cicd"}} }

@@ -200,4 +200,4 @@ optionParser :: Parser Options
 optionParser =
       Password <$ subcommand "pass" "Change password" (pure ())
   <|> DocCommand <$> subcommand "doc" "Documentation utilities" docTypeParser
-  <|> ZoneCommand . Zone <$> argText (metavar "ZONE" <> help "ZONE (dev|testing|staging|prod)") <*> subCommandParser
+  <|> ZoneCommand . Zone <$> argText (metavar "ZONE" <> help "ZONE (dev|testing|staging|prod)" <> completeWith ["dev", "testing", "staging", "prod"]) <*> subCommandParser

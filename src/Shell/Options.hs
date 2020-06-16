@@ -17,6 +17,7 @@ module Shell.Options (
   , help
   , metavar
   , auto
+  , completeWith
 ) where
 
 import           Options.Applicative

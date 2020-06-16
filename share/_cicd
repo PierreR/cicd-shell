@@ -1,0 +1,270 @@
+#compdef cicd
+#
+#  Completion script for cicd
+
+local ret=1
+
+
+_stack () {
+  compadd bas bos editoria brucat fidus fmx genericservices bruciel navapermisenv mapfish urbisaas urbisonline geoservertools urbistools hms iam irisbox nova middleware plone smartcity tms urbisaddress editoria blockchain klimcicc cicd jenkins k8s
+}
+
+_node () {
+  local zone="$1"
+  compadd $(cat "$HOME/.local/share/cicd/.nodes-${zone}")
+}
+
+_modules () {
+  compadd $(cat "$HOME/.local/share/cicd/.modlist")
+}
+
+_services () {
+  local zone="$1"
+  case $zone in
+      sandbox)
+          compadd nginx salt-master salt-minion jenkins puppetmaster puppetdb
+          ;;
+      dev)
+          compadd nginx salt-master salt-minion
+          ;;
+      testing|staging)
+          compadd nginx salt-master salt-minion
+          ;;
+      prod)
+          compadd nginx salt-master salt-minion postgrest-saltstack postgrest-saltstack_dev postgrest-saltstack_staging nexus jenkins puppetmaster puppetdb sonar
+          ;;
+   esac
+}
+
+_puppet4_agent () {
+  local -a options
+  options=('-n:node fqdn'
+           '-h:display help'
+           '--raw:raw output (no jq)'
+           '--quiet:remove display of salt executed command'
+           '--dry:test, noop run'
+          )
+  _describe 'values' options && ret=0
+}
+
+_1subcommand () {
+    case $words[2] in
+        doc)
+            local -a options
+            options=('html: open the documentation in a browser'
+                     'modules: list all possible salt modules'
+                     'mod: display doc for a specific salt module'
+                    )
+            _describe 'values' options && ret=0
+            ;;
+        *)
+            local -a options
+            options=('facts:return static facts'
+                     'ping:ping nodes'
+                     'data:return configuration data by key'
+                     'du:return disk usage'
+                     'service:service management on one node'
+                     'runpuppet:apply puppet configuration'
+                     'run:run a command on the saltmaster'
+                     'sync:sync data between minions and the saltmaster'
+                     'orch:apply an orchestration command'
+                     'result:display command result'
+                     'setfacts:set machine base facts'
+                     'state:apply a salt configuration'
+                     'console:open console'
+                     'gentags: generate node completion file'
+                     'validate: validate nodes'
+                     'foreman: display the foreman report in a browser'
+                    )
+            _describe 'values' options && ret=0
+            ;;
+     esac
+}
+
+_2stackcommand () {
+    case $words[3] in
+        orch)
+            local -a options
+            options=('-s:stack name'
+                     '-h:display help'
+                    )
+            _describe 'values' options && ret=0
+            ;;
+        result)
+            local -a options
+            options=('-j:job id'
+                     '-n: number of result to display'
+                     '-h:display help'
+                    )
+            _describe 'values' options && ret=0
+            ;;
+        data)
+            local -a options
+            options=('-s:stack name'
+                     '-k:property to look at for'
+                     '-n:node fqdn'
+                     '-g:group name'
+                     '-h:display help'
+                     '--all:target all hostgroups'
+                     '--raw:raw output (no jq)'
+                     '--quiet:remove display of salt executed command'
+                     '--dry:test, noop run'
+                    )
+            _describe -t 'values' options && ret=0
+            ;;
+        facts)
+            local -a options
+            options=('-s:stack name'
+                     '-n:node fqdn'
+                     '-g:group name'
+                     '-h:display help'
+                     '--all:target all hostgroups'
+                     '--down:target disconnected nodes'
+                     '--raw:raw output (no jq)'
+                     '--quiet:remove display of salt executed command'
+                     '--dry:test, noop run'
+                    )
+            _describe 'values' options && ret=0
+            ;;
+        sync|ping|foreman)
+            local -a options
+            options=('-s:stack name'
+                     '--all:target all hostgroups'
+                     '-n:node fqdn'
+                     '-g:group name'
+                     '-h:display help'
+                     '--quiet:remove display of salt executed command'
+                     '--dry:test, noop run'
+                    )
+            _describe 'values' options && ret=0
+            ;;
+        runpuppet)
+            local -a options
+            options=('-s:stack name'
+                     '-n:node fqdn'
+                     '-g:group name'
+                     '-h:display help'
+                     '--dry:test, noop run'
+                    )
+            _describe 'values' options && ret=0
+            ;;
+        setfacts)
+            local -a options
+            options=('-n:node fqdn'
+                     '-h:display help'
+                     '--raw:raw output (no jq)'
+                     '--quiet:remove display of salt executed command'
+                     '--dry:test, noop run'
+                    )
+            _describe 'values' options && ret=0
+            ;;
+        run)
+            compadd puppet.clean_certs
+            ;;
+        state)
+            compadd puppet4.agent users
+            ;;
+        du)
+            local -a options
+            options=('-s:stack name'
+                     '-n:node fqdn'
+                     '-g:group name'
+                     '-h:display help'
+                     '--raw:raw output (no jq)'
+                     '--quiet:display the executed command'
+                     '--dry:test, noop run'
+                    )
+            _describe 'values' options && ret=0
+            ;;
+        service)
+            local servicecmd=(
+                             'status:service status'
+                             'restart:restart service'
+                             )
+            # _describe -t commands 'value' servicecmd && ret=0
+            compadd status restart && ret=0
+            ;;
+        mod)
+            _modules && ret=0
+           ;;
+    esac
+}
+
+
+if (( CURRENT == 2 )); then
+    compadd dev testing staging prod doc && ret=0
+fi
+
+if (( CURRENT == 3 )); then
+   _1subcommand
+fi
+
+if (( CURRENT == 4 )); then
+    _2stackcommand
+fi
+
+if (( CURRENT == 5 )); then
+    case $words[4] in
+        "-s")
+            _stack && ret=0
+        ;;
+        "-n")
+            _node $words[2] && ret=0
+        ;;
+        status|reload)
+            _services $words[2] && ret=0
+        ;;
+        'puppet4.agent')
+            _puppet4_agent && ret=0
+        ;;
+    esac
+fi
+
+if (( CURRENT == 6 )); then
+    case $words[5] in
+        "-n")
+            _node $words[2] && ret=0
+        ;;
+    esac
+    case $words[3] in
+        setfacts)
+            compadd -P '--' hostgroup subgroup role instance zone dc && ret=0
+        ;;
+        runpuppet)
+            compadd -P '--' noop && ret=0
+        ;;
+    esac
+fi
+
+if (( CURRENT == 7 )); then
+    # echo "$words[5]"
+    case $words[6] in
+        "-n")
+            _node $words[2] && ret=0
+        ;;
+    esac
+fi
+if (( CURRENT == 8 )); then
+    case $words[3] in
+        setfacts)
+            compadd -P '--' subgroup role hostgroup zone && ret=0
+        ;;
+    esac
+fi
+
+if (( CURRENT == 10 )); then
+    case $words[3] in
+        setfacts)
+            compadd -P '--' subgroup role hostgroup zone && ret=0
+        ;;
+    esac
+fi
+
+if (( CURRENT == 12 )); then
+    case $words[3] in
+        setfacts)
+            compadd -P '--' subgroup role hostgroup zone && ret=0
+        ;;
+    esac
+fi
+return ret

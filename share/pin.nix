@@ -1,9 +1,6 @@
-let
-  nixpkgs = builtins.fromJSON (builtins.readFile ./.nixpkgs.json);
-in
 import (
   fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/${nixpkgs.rev}.tar.gz";
-    inherit (nixpkgs) sha256;
+    url = "https://releases.nixos.org/nixos/20.03/nixos-20.03.1950.48723f48ab9/nixexprs.tar.xz";
+    sha256 = "1qhjvig1a0h1025wmf490y4brvzxqim5jkjvvv5kdnmhc2mczljz";
   }
 )
