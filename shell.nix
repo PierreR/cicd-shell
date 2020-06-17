@@ -7,7 +7,6 @@ pkgs.haskellPackages.shellFor {
   buildInputs = with pkgs; [
     zlib.dev
     zlib.out
-    gitAndTools.pre-commit
     cabal-install
   ];
 

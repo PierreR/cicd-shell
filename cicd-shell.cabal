@@ -14,9 +14,6 @@ cabal-version:       2.0
 Data-Files:
     share/*.nix
   , share/completion.sh
-  , share/.nixpkgs.json
-  , share/doc/cicd-shell.html
-  , share/doc/cicd-shell.pdf
   , share/_cicd
 
 library
