@@ -16,7 +16,6 @@ pkgs.stdenv.mkDerivation {
     alias ping="cicd ${zone} ping"
     alias runpuppet="cicd ${zone} runpuppet"
     alias sync="cicd ${zone} sync"
-    alias result="cicd ${zone} result"
     alias gentags="cicd ${zone} gentags"
     alias service="cicd ${zone} service"
     alias state="cicd ${zone} state"

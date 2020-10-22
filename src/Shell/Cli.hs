@@ -3,8 +3,6 @@ module Shell.Cli (
   optionParser
   , AcrossArg(..)
   , FactArg(..)
-  , ResultArg(..)
-  , ResultType(..)
   , RunpuppetArg(..)
   , OrchArg(..)
   , StateArg(..)
@@ -19,13 +17,6 @@ import qualified Data.Text     as Text
 import           Shell.Options
 import           Shell.Prelude
 import           Shell.Type
-
-data ResultArg = ResultArg ExtraFlag ResultType deriving Show
-
-data ResultType
-  = ResultJob Text
-  | ResultNum Natural
-  deriving (Show)
 
 data Options
   = ZoneCommand Zone SubCommand
@@ -50,7 +41,6 @@ data SubCommand
   | Runpuppet RunpuppetArg
   | Setfacts SetfactArg
   | Sync AcrossArg
-  | Result ResultArg
   | GenTags
   | Service (ServiceAction, ServiceName, Arg)
   | Validate Arg
@@ -132,12 +122,6 @@ quietParser = flag Verbose Quiet (long "quiet" <> help "Quieter output. Won't di
 dryParser :: Parser Dry
 dryParser = flag (Dry False) (Dry True) (long "dry" <> help "Display the command without execution")
 
-resultParser :: Parser ResultArg
-resultParser
-  = ResultArg
-  <$> extraFlagParser
-  <*> (ResultNum <$> optRead auto (short 'n' <> help "Number of results to display") <|> ResultJob <$> optText (metavar "JOB" <> short 'j' <> help "Job id"))
-
 roleParse :: Text -> Maybe Role
 roleParse = parse_role . Text.splitOn "."
   where parse_role [g, r] = Just $ Role (Just (Subgroup g)) r
@@ -188,7 +172,6 @@ subCommandParser =
   <|> Ping        <$> subcommand "ping" "Ping nodes" across_parser
   <|> Sync        <$> subcommand "sync" "Sync metavar  data from master to nodes" across_parser
   <|> Stats       <$  subcommand "stats" "Stats (special permission required)" (pure ())
-  <|> Result      <$> subcommand "result" "Results of the most user recent jobs or for a specific id" resultParser
   <|> GenTags     <$  subcommand "gentags" "Generate node completion file" (pure ())
   <|> Validate    <$> subcommand "validate" "Validate node with inspec" argParser
   where

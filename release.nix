@@ -5,8 +5,7 @@
 # You can run the builded cicd command in a nix shell with:
 #     $ nix run -r release.nix project
 #
-{ pkgs ? import ./share/pin.nix {}
-}:
+{ pkgs ? import ./share/pin.nix { } }:
 let
   filter = path: type:
     type != "symlink" && baseNameOf path != ".stack-work"
@@ -28,21 +27,17 @@ let
   # neat-interpolation = pkgs.haskell.lib.dontCheck (pkgs.haskellPackages.neat-interpolation_0_3_2_4.override {
   #           megaparsec = pkgs.haskellPackages.megaparsec_7_0_4;
   #         });
-
-  pepper = pkgs.callPackage ./salt.nix {};
+  pepper = pkgs.callPackage ./salt.nix { };
   cicd-shell = pkgs.haskell.lib.dontHaddock
     (
       pkgs.haskellPackages.callCabal2nix
         "cicd-shell"
         (builtins.path { name = "cicd-shell"; inherit filter; path = ./.; })
-        {}
+        { }
     );
   dockerTools = pkgs.dockerTools;
-
   exec = pkgs.haskell.lib.justStaticExecutables cicd-shell;
-
 in
-
 rec {
 
   inherit cicd-shell;

@@ -2,4 +2,6 @@
 #
 #     $ nix-build
 #
-(import ./release.nix {}).project
+{ pkgs ? import ./share/pin.nix { } }:
+
+(import ./release.nix { inherit pkgs; }).project

@@ -8,7 +8,7 @@
 module Shell.Type where
 
 import           Data.Text.Prettyprint.Doc
-import           GHC.Show                  (Show (..))
+import           GHC.Show()
 import           Shell.Prelude
 
 newtype Zone = Zone Text deriving Show

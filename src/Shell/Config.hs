@@ -70,9 +70,9 @@ data ShellConfig
 makeClassy ''DhallConfig
 makeClassy ''ShellConfig
 
-instance HasDhallConfig ShellConfig  where dhallConfig = dhall
+instance HasDhallConfig ShellConfig where dhallConfig = dhall
 
-instance Dhall.Interpret DhallConfig
+instance Dhall.FromDhall DhallConfig
 
 getPassword :: FilePath -> IO String
 getPassword localdir = do
@@ -125,9 +125,8 @@ mkDhallConfig :: MonadIO m => m DhallConfig
 mkDhallConfig =
   liftIO $ Dhall.input auto =<< (toS <$> configFilePath)
   where
-    auto ::  Dhall.Interpret a => Dhall.Type a
-    auto = Dhall.autoWith
-      ( Dhall.defaultInterpretOptions { Dhall.fieldModifier = Text.dropWhile (== '_') })
+    auto = Dhall.genericAutoWith
+      (Dhall.defaultInterpretOptions { Dhall.fieldModifier = Text.dropWhile (== '_') })
 
 infraPrefix = \case
   "prod" -> "prd"

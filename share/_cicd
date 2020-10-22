@@ -68,7 +68,6 @@ _1subcommand () {
                      'run:run a command on the saltmaster'
                      'sync:sync data between minions and the saltmaster'
                      'orch:apply an orchestration command'
-                     'result:display command result'
                      'setfacts:set machine base facts'
                      'state:apply a salt configuration'
                      'console:open console'
@@ -86,14 +85,6 @@ _2stackcommand () {
         orch)
             local -a options
             options=('-s:stack name'
-                     '-h:display help'
-                    )
-            _describe 'values' options && ret=0
-            ;;
-        result)
-            local -a options
-            options=('-j:job id'
-                     '-n: number of result to display'
                      '-h:display help'
                     )
             _describe 'values' options && ret=0

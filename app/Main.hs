@@ -203,10 +203,6 @@ run = \case
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . serviceCmd action name
   ZoneCommand zone (Orchestrate (OrchArg cmd s flag)) ->
     NonEmpty.head <$> (getStacks s) >>= runCommand zone flag . orchCmd cmd
-  ZoneCommand zone (Result (ResultArg flag (ResultNum n))) ->
-    view (Config.loginId) >>= runCommand zone flag . resultCmd (Config.pgUrl zone) (flag^.raw) Nothing (Just n)
-  ZoneCommand zone (Result (ResultArg flag (ResultJob j))) ->
-    view (Config.loginId) >>= runCommand zone flag . resultCmd (Config.pgUrl zone) (flag^.raw) (Just j) Nothing
   ZoneCommand zone (Setfacts arg) ->
     runCommand zone (arg^.extraFlag) (setfactsCmd arg)
   ZoneCommand zone (Foreman arg) -> do

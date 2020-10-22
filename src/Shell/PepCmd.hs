@@ -19,7 +19,6 @@ module Shell.PepCmd (
   , genSaltModjsonCmd
   , orchCmd
   , pingCmd
-  , resultCmd
   , runpuppetCmd
   , serviceCmd
   , setfactsCmd
@@ -38,7 +37,6 @@ import           Shell.Type
 import           Shell.Target
 import           Shell.PepCmd.Utils
 
-panic' = panic "The impossible happened. The option parser should void the case"
 
 -- | Each command determines an appropriate mode to be run with.
 data CmdMode
@@ -244,39 +242,6 @@ pingCmd across target@Target {_node = Nothing} =
 pingCmd _ Target {_node = Just n} =
   defCmd & pep .~ ( "pepper '" <> n <> "' test.ping")
       & jq .~ "jq '.return[0]'"
-
--- | Fetch the result of previous commands from the pgserver.
-resultCmd :: Text -> Raw -> Maybe Text -> Maybe Natural -> Text -> PepCmd
-resultCmd _ _ Nothing (Just 0) _ = panic "NUM should be > 0"
-resultCmd pgUrl _ Nothing (Just num) user =
-  if num <= 100
-    then
-    defCmd & pep .~ "curl -f -s -H \"Range: 0-" <> show (num - 1) <> "\" \"" <> pgUrl <> "?user=eq." <> user <> "&order=jid.desc\""
-           & jq .~ "jq -C '.'"
-    else
-    panic "NUM should be <=100. Maybe you meant to use `-j`"
-resultCmd pgUrl (Raw raw) (Just jobid) Nothing _ =
-  defCmd & pep .~ ("curl -s " <> (if raw then mempty else "-f -H \"Accept: application/vnd.pgrst.object+json\" ") <> "\"" <> pgUrl <> "?select=ret&jid=eq." <> jobid <> "\"" )
-         & jq .~
-           [r|
-             jq -r '(.ret | .[] |
-                     if .return.retcode and .return.retcode != 0
-                     then "\u001B[1;31mFAILURE\u001B[0m for "
-                     else "\u001B[1;32mSUCCESS\u001B[0m for "
-                     end
-                     + .id + ":",
-                     if .return.stderr and .return.stderr != ""
-                     then .return.stdout + "\n******\n" + .return.stderr + "\n"
-                     elif .return.stdout and .return.stdout != ""
-                     then .return.stdout + "\n"
-                     elif .return | ([(.[] | type == "object" )] | all ) and map (has("changed"))
-                     then .return | .[] | select(.changes.stdout) | .changes.stdout | tostring
-                     else .return
-                     end)'
-           |]
-         & cmdMode .~ RetryMode
-resultCmd _ _ Nothing Nothing _ = panic'
-resultCmd _ _ (Just _) (Just _) _ = panic'
 
 foremanCmd :: Text -> Target -> Text
 foremanCmd foremanUrl target =
