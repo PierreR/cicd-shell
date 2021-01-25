@@ -201,8 +201,6 @@ run = \case
     runCommand zone xflag (stateCmd cmd node)
   ZoneCommand zone (Service (action, name, arg)) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . serviceCmd action name
-  ZoneCommand zone (Orchestrate (OrchArg cmd s flag)) ->
-    NonEmpty.head <$> (getStacks s) >>= runCommand zone flag . orchCmd cmd
   ZoneCommand zone (Setfacts arg) ->
     runCommand zone (arg^.extraFlag) (setfactsCmd arg)
   ZoneCommand zone (Foreman arg) -> do

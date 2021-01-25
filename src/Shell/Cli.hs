@@ -4,7 +4,6 @@ module Shell.Cli (
   , AcrossArg(..)
   , FactArg(..)
   , RunpuppetArg(..)
-  , OrchArg(..)
   , StateArg(..)
   , RunArg(..)
   , DocType(..)
@@ -34,7 +33,6 @@ data SubCommand
   | Foreman Arg
   | State StateArg
   | Run RunArg
-  | Orchestrate OrchArg
   | Stats
   | Du Arg
   | Ping AcrossArg
@@ -45,11 +43,6 @@ data SubCommand
   | Service (ServiceAction, ServiceName, Arg)
   | Validate Arg
   deriving (Show)
-
--- | Orchestrate command with an optional stack.
-data OrchArg =
-  OrchArg Text (Maybe Text) ExtraFlag
-  deriving Show
 
 data RunpuppetArg =
   RunpuppetArg Arg Bool
@@ -99,13 +92,6 @@ stateParser =
   StateArg
   <$> argText (metavar "CMD" <> help "SubCommand to run")
   <*> optText (metavar "NODE" <> short 'n' <> help "Target node")
-  <*> extraFlagParser
-
-orchParser :: Parser OrchArg
-orchParser =
-  OrchArg
-  <$> argText (metavar "CMD" <> help "SubCommand to run")
-  <*> optional (optText (metavar "STACK" <> short 's' <> help "Target stack/hostgroup" ))
   <*> extraFlagParser
 
 
@@ -164,7 +150,6 @@ subCommandParser =
   <|> Runpuppet   <$> subcommand "runpuppet" "Apply puppet configuration" runpuppet_parser
   <|> Setfacts    <$> subcommand "setfacts" "Set/update the 4 base machine facts" setfactParser
   <|> Foreman     <$> subcommand "foreman" "Display the foreman report in a browser" argParser
-  <|> Orchestrate <$> subcommand "orch" "Run an orchestration command on the infrastructure" orchParser
   <|> Run         <$> subcommand "run" "Execute a command on the master" runParser
   <|> Service     <$> subcommand "service" "Service management for a specific node" statusParser
   <|> State       <$> subcommand "state" "Apply a specific configuration" stateParser

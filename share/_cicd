@@ -67,12 +67,10 @@ _1subcommand () {
                      'runpuppet:apply puppet configuration'
                      'run:run a command on the saltmaster'
                      'sync:sync data between minions and the saltmaster'
-                     'orch:apply an orchestration command'
                      'setfacts:set machine base facts'
                      'state:apply a salt configuration'
                      'console:open console'
                      'gentags: generate node completion file'
-                     'validate: validate nodes'
                      'foreman: display the foreman report in a browser'
                     )
             _describe 'values' options && ret=0
@@ -82,13 +80,6 @@ _1subcommand () {
 
 _2stackcommand () {
     case $words[3] in
-        orch)
-            local -a options
-            options=('-s:stack name'
-                     '-h:display help'
-                    )
-            _describe 'values' options && ret=0
-            ;;
         data)
             local -a options
             options=('-s:stack name'
