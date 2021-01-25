@@ -6,7 +6,6 @@ module Shell.Cli (
   , RunpuppetArg(..)
   , StateArg(..)
   , RunArg(..)
-  , DocType(..)
   , Options(..)
   , SubCommand(..)
   ) where
@@ -19,13 +18,7 @@ import           Shell.Type
 
 data Options
   = ZoneCommand Zone SubCommand
-  | DocCommand DocType
   | Password
-
-data DocType
-  = HtmlDoc
-  | ModListDoc
-  | ModDoc Text
 
 data SubCommand
   = Console
@@ -119,11 +112,6 @@ serviceParse "status"  = Just ServiceStatus
 serviceParse "restart" = Just ServiceRestart
 serviceParse _         = Nothing
 
-docTypeParser =
-      HtmlDoc <$ subcommand "html" "Open the documentation in a browser" (pure ())
-  <|> ModListDoc <$ subcommand "modules" "Output all possible salt execution modules" (pure ())
-  <|> ModDoc <$> subcommand "mod" "Doc about a specific salt module" (argText (metavar "NAME" <> help "Module name"))
-
 setfactParser :: Parser SetfactArg
 setfactParser
   = SetfactArg
@@ -167,5 +155,4 @@ subCommandParser =
 optionParser :: Parser Options
 optionParser =
       Password <$ subcommand "pass" "Change password" (pure ())
-  <|> DocCommand <$> subcommand "doc" "Documentation utilities" docTypeParser
   <|> ZoneCommand . Zone <$> argText (metavar "ZONE" <> help "ZONE (dev|testing|staging|prod)" <> completeWith ["dev", "testing", "staging", "prod"]) <*> subCommandParser

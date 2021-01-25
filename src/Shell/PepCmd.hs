@@ -15,9 +15,6 @@ module Shell.PepCmd (
   , factCmd
   , foremanCmd
   , genTagsCmd
-  , genSaltModListCmd
-  , genSaltModjsonCmd
-  , orchCmd
   , pingCmd
   , runpuppetCmd
   , serviceCmd
@@ -83,18 +80,6 @@ genTagsCmd (Zone zone) cfdir =
             & jq .~ ("jq '.return[0]' | jq keys | jq -r 'join (\" \")' > " <> toS nodefile)
             & (beforeMsg ?~ CmdMsg False ("Generating " <> pretty nodefile <> line))
 
--- | Regenerate the salt module list used for auto-completion
-genSaltModListCmd :: Text -> PepCmd
-genSaltModListCmd fpath =
-  let jsonfile = fpath <> ".json"
-  in defCmd & pep .~ "pepper --client=runner doc.execution"
-            & jq .~ ("jq '.return[0] | keys' | tee " <> jsonfile <> " | jq -r 'join (\" \")' > " <>  fpath)
-
--- | Regenerate the module documentation file.
-genSaltModjsonCmd :: Text -> PepCmd
-genSaltModjsonCmd fpath =
-  defCmd & pep .~ "pepper --client=runner doc.execution"
-         & jq .~ ("jq '.return[0]' > " <> fpath <> ".json")
 
 -- | Command to gather stats about up and down nodes.
 statCmd :: PepCmd
@@ -104,11 +89,6 @@ statCmd =
            [r|
               jq '.return[0] | [.up , .up + .down | length] as $stats | {up, down, stats: "\($stats[0]) up of \($stats[1])"}'
            |]
-
--- | Orchestration command.
-orchCmd :: Text -> Text -> PepCmd
-orchCmd cmd stack =
-  defCmd & pep .~ ("pepper state.orchestrate --client=runner mods=orch." <> cmd <> " saltenv=" <> stack)
 
 -- | Run puppet command.
 runpuppetCmd :: Maybe Text -> Bool -> Target -> PepCmd

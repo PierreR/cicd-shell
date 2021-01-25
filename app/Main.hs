@@ -48,22 +48,6 @@ initTags z@(Zone zone) = do
       ExitSuccess -> printf ("`cicd "%s% " gentags` completed successfully.\n") zone
       ExitFailure _ -> printf "WARNING: cannot generate node completion file.\n"
 
--- Generate the file required to display salt help with caching
-initHelp :: AppM ()
-initHelp = do
-  gen_help genSaltModListCmd "modlist"
-  gen_help genSaltModjsonCmd "modhelp"
-  where
-    gen_help cmd tag = do
-      localdir <- view Config.localdir
-      let fpath = localdir </> "." <> tag
-      found <- liftIO $ Directory.doesFileExist (fpath <> ".json")
-      unless found $ do
-        let cmd' = cmd (toS fpath)
-        cmdline <- exportEnvVar (Zone "dev") *> pure (cmd'^.pep)
-        inshell cmdline empty & shell (cmd'^.jq) >>= \case
-          ExitSuccess -> putStrLn (fpath <> " generated successfully.\n")
-          ExitFailure _ -> putStrLn ("WARNING: cannot generate '" <> fpath <> "' (completion).\n")
 
 -- Generic run command
 runCommand :: Zone
@@ -139,24 +123,6 @@ run = \case
     pwd <- liftIO $ Config.promptPassword
     file <- (</> ".pwd") <$> view Config.localdir
     liftIO $ Config.writePassword file pwd *> exitSuccess
-  DocCommand HtmlDoc -> do
-    datadir <- liftIO Config.dataDir
-    browser <- fromMaybe "firefox" <$> need "BROWSER"
-    let help_fp = Text.pack (datadir <> "/share/doc/cicd-shell.html")
-    proc browser
-         [help_fp] empty
-  DocCommand ModListDoc -> do
-    localdir <- view Config.localdir
-    let fpath = localdir </> ".modlist.json"
-    found <- liftIO $ Directory.doesFileExist fpath
-    unless found $ initHelp
-    proc "jq" [ ".", toS fpath ] empty
-  DocCommand (ModDoc mod) -> do
-    localdir <- view Config.localdir
-    let fpath = localdir </> ".modhelp.json"
-    found <- liftIO $ Directory.doesFileExist fpath
-    unless found $ initHelp
-    proc "jq" [ "-r", (".[\"" <> mod <> "\"]"), toS fpath ] empty
   ZoneCommand zone Stats ->
     runCommand zone defExtraFlag statCmd
   ZoneCommand zone Console ->
