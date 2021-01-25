@@ -1,5 +1,5 @@
 name:                cicd-shell
-version:             2.8.2
+version:             2.8.3
 synopsis:            Command line tool that interfaces cicd services
 homepage:            ssh://git@stash.cirb.lan:7999/cicd/salt-shell.git
 license:             BSD3
@@ -24,7 +24,6 @@ library
                        , Shell.PepCmd
                        , Shell.Prelude
                        , Shell.PepCmd.Utils
-                       , Shell.PuppetDB
                        , Shell.Target
   other-modules:       Paths_cicd_shell
                        , Shell.Options
@@ -47,7 +46,6 @@ library
                        , prettyprinter >= 1.6
                        , prettyprinter-ansi-terminal >= 1.1
                        , raw-strings-qq
-                       , req >= 3.2
                        , transformers >= 0.5
                        , process >= 1.6
                        , protolude >= 0.2

@@ -15,7 +15,6 @@ newtype Zone = Zone Text deriving Show
 newtype Subgroup = Subgroup Text deriving (Show,Eq)
 
 newtype ServiceName = ServiceName Text deriving Show
-newtype Down = Down Bool deriving Show
 newtype Refresh = Refresh Bool deriving Show
 
 data ServiceAction = ServiceStatus | ServiceRestart deriving (Show)

@@ -50,7 +50,7 @@ data StateArg =
   deriving Show
 
 data FactArg
-  = FactArg Refresh Down AcrossArg -- ^ disconnect & across flags
+  = FactArg Refresh AcrossArg -- ^ disconnect & across flags
   deriving Show
 
 -- we still want to be able to do cicd prod jenkins.slave --all
@@ -91,8 +91,6 @@ stateParser =
 rawParser :: Parser Raw
 rawParser = flag (Raw False) (Raw True) (long "raw" <> help "Raw output (no jq)")
 
-downParser :: Parser Down
-downParser = Down <$> switch (long "down" <> help "Query disconnected node")
 refreshParser = Refresh <$> switch (long "refresh" <> help "Refresh the cache")
 
 quietParser :: Parser Verbosity
@@ -148,7 +146,7 @@ subCommandParser =
   <|> GenTags     <$  subcommand "gentags" "Generate node completion file" (pure ())
   <|> Validate    <$> subcommand "validate" "Validate node with inspec" argParser
   where
-    fact_parser   = FactArg <$> refreshParser <*> downParser <*> across_parser
+    fact_parser   = FactArg <$> refreshParser <*> across_parser
     across_parser = AcrossArg <$> argParser <*> switch (long "all" <> help "Target whole the known stacks" )
     runpuppet_parser = RunpuppetArg <$> argParser <*> switch (long "noop" <> help "Run puppet with the --noop argument" )
 

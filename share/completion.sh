@@ -80,7 +80,7 @@ _cmdalias () {
     fi
 
     if [[ "$cur" == --* ]]; then
-        COMPREPLY=( $( compgen -W "--raw --verbose --all --down --subgroup --role --hostgroup --zone --dry" -- $cur ) )
+        COMPREPLY=( $( compgen -W "--raw --verbose --all --subgroup --role --hostgroup --zone --dry" -- $cur ) )
     fi
     ret=0;
 } &&

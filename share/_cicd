@@ -22,7 +22,7 @@ _services () {
   local zone="$1"
   case $zone in
       sandbox)
-          compadd nginx salt-master salt-minion jenkins puppetmaster puppetdb
+          compadd nginx salt-master salt-minion jenkins puppetmaster
           ;;
       dev)
           compadd nginx salt-master salt-minion
@@ -31,7 +31,7 @@ _services () {
           compadd nginx salt-master salt-minion
           ;;
       prod)
-          compadd nginx salt-master salt-minion postgrest-saltstack postgrest-saltstack_dev postgrest-saltstack_staging nexus jenkins puppetmaster puppetdb sonar
+          compadd nginx salt-master salt-minion jenkins puppetmaster sonar
           ;;
    esac
 }
@@ -101,7 +101,6 @@ _2stackcommand () {
                      '-g:group name'
                      '-h:display help'
                      '--all:target all hostgroups'
-                     '--down:target disconnected nodes'
                      '--raw:raw output (no jq)'
                      '--quiet:remove display of salt executed command'
                      '--dry:test, noop run'

@@ -14,8 +14,6 @@ module Shell.Config (
   -- * Infrastructure data
   , foremanUrl
   , pgUrl
-  , puppetdbServer
-  , puppetdbPort
   , saltUrl
   -- * Data of the executable (the cicd shell command line)
   , version
@@ -139,13 +137,6 @@ infraPrefix = \case
 pgUrl :: Zone -> Text
 pgUrl (Zone z) =
   "http://pgserver-cicd." <> infraPrefix z <> ".srv.cirb.lan/saltstack/salt_result"
-
-puppetdbServer :: Text
-puppetdbServer =
-  "puppet.prd.srv.cirb.lan"
-
-puppetdbPort :: Int
-puppetdbPort = 8080
 
 saltUrl :: Zone -> Text
 saltUrl (Zone z) =
