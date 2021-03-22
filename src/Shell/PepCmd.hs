@@ -22,7 +22,6 @@ module Shell.PepCmd (
   , statCmd
   , stateCmd
   , syncCmd
-  , validateCmd
 ) where
 
 import qualified Data.Text         as Text
@@ -230,9 +229,3 @@ foremanCmd foremanUrl target =
                                                           ]
   in
   "xdg-open " <> foremanUrl <> url <> " &> /dev/null"
-
-validateCmd :: Target -> PepCmd
-validateCmd Target {_node= Just n} =
-  defCmd & pep .~ "pepper " <> n <> " --client=local_async state.apply validate.host"
-validateCmd target@Target{_node= Nothing} =
-  defCmd & pep .~ (pepperCompoundTarget False target  <> " --client=local_async state.apply validate.host")

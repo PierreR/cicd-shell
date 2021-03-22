@@ -157,8 +157,6 @@ run = \case
   ZoneCommand zone (Foreman arg) -> do
     mkTarget zone arg >>= runForeman (arg^.extraFlag) . foremanCmd Config.foremanUrl
   ZoneCommand zone (Run (RunArg cmd node xflag)) -> runCommand zone xflag (runCmd cmd node)
-  ZoneCommand zone (Validate arg) ->
-    mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . validateCmd
 
 main :: IO ()
 main = do

@@ -34,7 +34,6 @@ data SubCommand
   | Sync AcrossArg
   | GenTags
   | Service (ServiceAction, ServiceName, Arg)
-  | Validate Arg
   deriving (Show)
 
 data RunpuppetArg =
@@ -144,7 +143,6 @@ subCommandParser =
   <|> Sync        <$> subcommand "sync" "Sync metavar  data from master to nodes" across_parser
   <|> Stats       <$  subcommand "stats" "Stats (special permission required)" (pure ())
   <|> GenTags     <$  subcommand "gentags" "Generate node completion file" (pure ())
-  <|> Validate    <$> subcommand "validate" "Validate node with inspec" argParser
   where
     fact_parser   = FactArg <$> refreshParser <*> across_parser
     across_parser = AcrossArg <$> argParser <*> switch (long "all" <> help "Target whole the known stacks" )
