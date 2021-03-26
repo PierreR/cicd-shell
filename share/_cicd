@@ -68,7 +68,6 @@ _1subcommand () {
                      'run:run a command on the saltmaster'
                      'sync:sync data between minions and the saltmaster'
                      'setfacts:set machine base facts'
-                     'state:apply a salt configuration'
                      'console:open console'
                      'gentags: generate node completion file'
                      'foreman: display the foreman report in a browser'
@@ -141,9 +140,6 @@ _2stackcommand () {
             ;;
         run)
             compadd puppet.clean_certs
-            ;;
-        state)
-            compadd puppet4.agent users
             ;;
         du)
             local -a options

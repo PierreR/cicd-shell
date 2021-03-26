@@ -60,10 +60,6 @@ _cmdalias () {
             COMPREPLY=( $(compgen -W "-n" -- $cur ) )
             return 0
             ;;
-        state)
-            COMPREPLY=( $(compgen -W "puppet4.agent" -- $cur ) )
-            return 0
-            ;;
         "-n")
             local nodes=$(cat "$HOME/.local/share/cicd/.nodes-${zone}")
             COMPREPLY=( $(compgen -W "$nodes" -- $cur ) )
@@ -84,7 +80,7 @@ _cmdalias () {
     fi
     ret=0;
 } &&
-complete -F _cmdalias data runpuppet du facts result service sync ping doc setfacts state foreman
+complete -F _cmdalias data runpuppet du facts result service sync ping doc setfacts foreman
 complete -F _pep pep
 
 # end

@@ -4,7 +4,6 @@ module Shell.Cli (
   , AcrossArg(..)
   , FactArg(..)
   , RunpuppetArg(..)
-  , StateArg(..)
   , RunArg(..)
   , Options(..)
   , SubCommand(..)
@@ -24,7 +23,6 @@ data SubCommand
   = Console
   | Facts FactArg
   | Foreman Arg
-  | State StateArg
   | Run RunArg
   | Stats
   | Du Arg
@@ -42,10 +40,6 @@ data RunpuppetArg =
 
 data RunArg =
   RunArg Text (Maybe Text) ExtraFlag
-  deriving Show
-
-data StateArg =
-  StateArg Text Text ExtraFlag
   deriving Show
 
 data FactArg
@@ -78,14 +72,6 @@ runParser =
   <$> argText (metavar "CMD" <> help "SubCommand to run")
   <*> optional (optText (metavar "NODE" <> short 'n' <> help "Target node"))
   <*> extraFlagParser
-
-stateParser :: Parser StateArg
-stateParser =
-  StateArg
-  <$> argText (metavar "CMD" <> help "SubCommand to run")
-  <*> optText (metavar "NODE" <> short 'n' <> help "Target node")
-  <*> extraFlagParser
-
 
 rawParser :: Parser Raw
 rawParser = flag (Raw False) (Raw True) (long "raw" <> help "Raw output (no jq)")
@@ -137,7 +123,6 @@ subCommandParser =
   <|> Foreman     <$> subcommand "foreman" "Display the foreman report in a browser" argParser
   <|> Run         <$> subcommand "run" "Execute a command on the master" runParser
   <|> Service     <$> subcommand "service" "Service management for a specific node" statusParser
-  <|> State       <$> subcommand "state" "Apply a specific configuration" stateParser
   <|> Du          <$> subcommand "du" "Return disk usage" argParser
   <|> Ping        <$> subcommand "ping" "Ping nodes" across_parser
   <|> Sync        <$> subcommand "sync" "Sync metavar  data from master to nodes" across_parser

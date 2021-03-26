@@ -20,7 +20,6 @@ module Shell.PepCmd (
   , serviceCmd
   , setfactsCmd
   , statCmd
-  , stateCmd
   , syncCmd
 ) where
 
@@ -151,12 +150,6 @@ syncCmd across target@Target { _node = Nothing} =
   defCmd & pep .~ (pepperCompoundTarget across target <> " saltutil.sync_all")
 syncCmd _ Target {_node = Just n} =
   defCmd & pep .~ ("pepper '" <> n <> "' saltutil.sync_all")
-
--- | Apply a configuration with state.
-stateCmd :: Text -> Text -> PepCmd
-stateCmd  cmd n =
-  defCmd & pep .~ ("pepper " <> n <> " state.apply " <> cmd)
-         & jq .~ "jq '.return[0]'"
 
 -- | Run a command to a specific node (salt-run)
 runCmd :: Text -> (Maybe Text) -> PepCmd

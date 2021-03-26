@@ -148,8 +148,6 @@ run = \case
       runCommand zone (arg^.extraFlag) cmd
   ZoneCommand zone (Du arg) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . duCmd
-  ZoneCommand zone (State (StateArg cmd node xflag)) ->
-    runCommand zone xflag (stateCmd cmd node)
   ZoneCommand zone (Service (action, name, arg)) ->
     mkTarget zone arg >>= runCommand zone (arg^.extraFlag) . serviceCmd action name
   ZoneCommand zone (Setfacts arg) ->
