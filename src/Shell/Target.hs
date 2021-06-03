@@ -30,8 +30,8 @@ makeFieldsNoPrefix ''Target
 instance Pretty Target where
   pretty t = pretty $ Text.intercalate "." (NonEmpty.head (t^.stacks) : catMaybes [t^.subgroup, fmap toS (t^.role), t^.inst] <> [ t^.zone])
 
-instance StringConv Target Text  where
-  strConv _ (Target node stacks subgroup role inst zone) =
+instance ConvertText Target Text  where
+  toS (Target node stacks subgroup role inst zone) =
     let s = catMaybes [node] <> toList stacks <> catMaybes [subgroup, toS <$> role, inst] <> [zone]
     in Text.intercalate "-" s
 

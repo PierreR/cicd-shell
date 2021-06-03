@@ -1,5 +1,5 @@
 name:                cicd-shell
-version:             2.8.5
+version:             2.8.6
 synopsis:            Command line tool that interfaces cicd services
 homepage:            ssh://git@stash.cirb.lan:7999/cicd/salt-shell.git
 license:             BSD3
@@ -42,13 +42,13 @@ library
                        , haskeline >= 0.7
                        , lens >= 4.18
                        , neat-interpolation
-                       , optparse-applicative >= 0.15
+                       , optparse-applicative >= 0.16
                        , prettyprinter >= 1.6
                        , prettyprinter-ansi-terminal >= 1.1
                        , raw-strings-qq
                        , transformers >= 0.5
                        , process >= 1.6
-                       , protolude >= 0.2
+                       , protolude >= 0.3
                        , text
   default-language:    Haskell2010
   ghc-options: -Wall -Wno-name-shadowing -Wno-missing-signatures

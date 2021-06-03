@@ -21,9 +21,9 @@ data ServiceAction = ServiceStatus | ServiceRestart deriving (Show)
 
 data Role = Role (Maybe Subgroup) Text deriving (Show, Eq)
 
-instance StringConv Role Text  where
-  strConv _ (Role Nothing r)             = r
-  strConv _ (Role (Just (Subgroup g)) r) = g <> "." <> r
+instance ConvertText Role Text  where
+  toS (Role Nothing r)             = r
+  toS (Role (Just (Subgroup g)) r) = g <> "." <> r
 
 data Verbosity
   = Quiet

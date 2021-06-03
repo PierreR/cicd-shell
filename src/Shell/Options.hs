@@ -42,7 +42,7 @@ argParseToReadM f = do
     s <- Opts.readerAsk
     case f (toS s) of
         Just a  -> return a
-        Nothing -> Opts.readerAbort Opts.ShowHelpText
+        Nothing -> Opts.readerAbort (Opts.ShowHelpText Nothing)
 
 argText :: Mod ArgumentFields Text -> Parser Text
 argText = arg Just

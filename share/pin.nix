@@ -1,6 +1,6 @@
 import (
   fetchTarball {
-    url = "https://releases.nixos.org/nixos/20.09/nixos-20.09.2405.e065200fc90/nixexprs.tar.xz";
-    sha256 = "1p7d6ssn6k3y0pbddna9ggczgglwf4lkvalc4p256g54vyhlfxzd";
+    url = "https://releases.nixos.org/nixos/21.05/nixos-21.05.641.5237039cc1e/nixexprs.tar.xz";
+    sha256 = "006025hw2613ihh232r09722p5i37mr7an30pq9zpr7crah8pwg5";
   }
 )
